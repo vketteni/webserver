@@ -1,6 +1,6 @@
 #include "../incl/Webserver.hpp"
 
-#define PORT 8080
+#define PORT 8082
 #define MAX_CONNECTIONS 10
 #define BUFFER_SIZE 1024
 
@@ -110,14 +110,66 @@ int main(int argc, char **argv, char **envp)
                     read_buffers[poll_fds[i].fd] += std::string(buffer, valread);
 
                     // Check if the message is complete (simplified logic, you can adjust for your protocol)
-                    if (read_buffers[poll_fds[i].fd].find("\r\n\r\n") != std::string::npos) {
-                        // Process the complete request
-                        std::cout << "Complete request received from client" << std::endl;
-                        write_buffers[poll_fds[i].fd] = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!"; // Response
+                if (read_buffers[poll_fds[i].fd].find("\r\n\r\n") != std::string::npos) {
+                    // Process the complete request
+                    std::cout << "Complete request received from client" << std::endl;
+           //         write_buffers[poll_fds[i].fd] = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!"; // Response
+                      std::string html_response =
+					"HTTP/1.1 200 OK\r\n"
+					"Content-Type: text/html\r\n"
+					"Content-Length: ";
 
-                        // Switch to POLLOUT to monitor for writable events
-                        poll_fds[i].events = POLLOUT;
-                    }
+					std::string html_body =
+					"<!DOCTYPE html>\n"
+					"<html>\n"
+				    "<head>\n"
+				    "<title>Welcome to Hennis World!</title>\n"
+				    "<style>\n"
+				    "html { color-scheme: dark green; }\n"
+				    "body { width: 35em; margin: 0 auto;\n"
+				    "font-family: Tahoma, Arial, Arial, serif;\n"
+				    "background-color: #90ee00;\n"
+				    "color: #f08080}\n"
+				    "a {\n"
+				    "    color: #0066cc;\n"
+				    "}\n"
+				    "a:hover {\n"
+				    "    color: #ff0000;\n"
+				    "}\n"
+				    ".input-box {\n"
+				    "    margin-top: 20px;\n"
+				    "}\n"
+				    "</style>\n"
+				    "</head>\n"
+				    "<body>\n"
+				    "<h1>Welcome to VinHennis World!</h1>\n"
+				    "<p>Think of a number between 0 and 15</p>\n"
+				    "<p>That's your spirit animal: "
+				    "<a href=\"https://www.tiktok.com/@bangkokpost.official/video/7415169714932043026\">click here</a>.</p>\n"
+				    "<p>You as a flower: "
+				    "<a href=\"https://www.google.com/search?sca_esv=7746fac465ae621b&sca_upv=1&q=fledermaus+blume&udm=2&fbs=AEQNm0A6bwEop21ehxKWq5cj-cHa02QUie7apaStVTrDAEoT1FdmHTSMJP_rxgj2yFrTtBkpn7UArWKMytkxok4kynJeftYBbqn-Ez1pg2pPqfulAAELa9yA80L_cabL9a6EJ4sNogkLT1whdNbW2y6Ka0Llqz6M0tEc1mD0fQnpgheyhLwK9mtDc-zJ2yTyPMZ0mV7RzKWn&sa=X&sqi=2&ved=2ahUKEwjF7Z_G4OCIAxUT_rsIHaGXPUoQtKgLegQIDRAB&biw=960&bih=880&dpr=1\">click here</a>.</p>\n"
+				    "<div class=\"input-box\">\n"
+				    "    <label for=\"userInput\">What's your superpower?:</label><br>\n"
+				    "    <input type=\"text\" id=\"userInput\" name=\"userInput\" placeholder=\"Answer me please..\">\n"
+				    "</div>\n"
+				    "<p><em>Thank you for visiting.</em></p>\n"
+				    "</body>\n"
+				    "</html>\n";
+
+						// Calculate content length
+						int content_length = html_body.length();
+
+						// Append the content length to the header
+						std::ostringstream oss;
+						oss << content_length; // Convert int to string
+						html_response += oss.str() + "\r\n\r\n" + html_body;
+
+    					// Set the response for the client
+    						write_buffers[poll_fds[i].fd] = html_response;
+
+    					// Switch to POLLOUT to monitor for writable events
+    						poll_fds[i].events = POLLOUT;
+    					}
                 } else if (valread == 0) {
                     // Client disconnected, clean up
                     std::cout << "Client disconnected" << std::endl;
