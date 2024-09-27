@@ -6,6 +6,7 @@
 # include <unistd.h>
 # include <netinet/in.h>
 # include <sys/socket.h>
+# include <arpa/inet.h> // for socket programming
 # include <poll.h>
 # include <fcntl.h>
 # include <map>
