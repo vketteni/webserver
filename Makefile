@@ -1,7 +1,7 @@
 NAME=webserv
 CC=c++
 
-MAIN = main
+MAIN = main Server
 
 OBJ_DIR= obj/
 SRC_DIR= src/
