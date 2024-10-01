@@ -41,15 +41,20 @@ Server::~Server()
 */
 bool Server::parseConfig()
 {
-    std::ifstream configFile(config_path.c_str());
-    if (!configFile.is_open())
+    std::ifstream config_file(config_path.c_str());
+    if (!config_file.is_open())
 	{
+		char cwd[100];
+		getcwd(cwd, sizeof(cwd));
+		debug(cwd);
+		debug(config_path);
+		perror("ifstream");
         std::cerr << "Failed to open configuration file: " << config_path << "\n";
         return false;
     }
 
     std::string line;
-    while (getline(configFile, line))
+    while (getline(config_file, line))
 	{
         // Remove whitespace
         line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
@@ -60,18 +65,19 @@ bool Server::parseConfig()
             std::string port;
             while (getline(ss, port, ','))
 			{
-                int portNum = std::atoi(port.c_str());
-                if (portNum > 0 && portNum < 65536)
+                int port_num = std::atoi(port.c_str());
+                if (port_num > 0 && port_num < 65536)
 				{
-                    serverPorts.push_back(portNum);
+                    serverPorts.push_back(port_num);
                 }
 				else
 				{
-                    std::cerr << "Invalid port number: " << portNum << "\n";
+                    std::cerr << "Invalid port number: " << port_num << "\n";
                 }
             }
         }
     }
+	config_file.close();
 
     if (serverPorts.empty())
 	{
@@ -80,9 +86,9 @@ bool Server::parseConfig()
     }
 
     std::cout << "Configured to listen on ports: ";
-    for (std::vector<int>::iterator portIt = serverPorts.begin(); portIt != serverPorts.end(); ++portIt)
+    for (std::vector<int>::iterator port_it = serverPorts.begin(); port_it != serverPorts.end(); ++port_it)
 	{
-        std::cout << *portIt << " ";
+        std::cout << *port_it << " ";
     }
     std::cout << "\n";
 
@@ -95,7 +101,7 @@ bool Server::parseConfig()
 */
 bool Server::setupServerSockets()
 {
-    for (std::vector<int>::iterator portIt = serverPorts.begin(); portIt != serverPorts.end(); ++portIt)
+    for (std::vector<int>::iterator port_it = serverPorts.begin(); port_it != serverPorts.end(); ++port_it)
 	{
         int server_fd = socket(AF_INET, SOCK_STREAM, 0);
         if (server_fd == -1)
@@ -114,7 +120,7 @@ bool Server::setupServerSockets()
         }
 
         // Bind to the specified port on all interfaces
-		int server_port = *portIt;
+		int server_port = *port_it;
         struct sockaddr_in addr;
         std::memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
@@ -225,6 +231,18 @@ void Server::checkTimeouts(void)
     }
 }
 
+struct MatchClientFd
+{
+    int client_fd;
+    
+    MatchClientFd(int fd) : client_fd(fd) {}
+    
+    bool operator()(const pollfd& pfd) const
+	{
+        return pfd.fd == client_fd;
+    }
+};
+
 /*
 	 Method: 		Server::eventLoop
 	 Description: 	Main event loop using poll()
@@ -265,19 +283,22 @@ void Server::eventLoop()
                 }
 				else
 				{
-					ClientHandler client = client_handlers[i];
+					int client_fd = poll_fds[i].fd;
                     // Event on client socket, handle client request
-                    if (!handleClient(client))
+                    if (!handleClient(client_fd))
                     {
                         std::cout << "Disconnecting client on fd " << poll_fds[i].fd << "\n";
-                        close(client.fd);
+                        close(client_fd);
                         poll_fds.erase(poll_fds.begin() + i);
                         client_handlers.erase(client_handlers.begin() + i);
                         --i;
                     }
                     else
                     {
-                        client.setLastActivity(std::time(NULL));
+						int i = 0;
+						for (;(client_handlers[i].fd != client_fd); ++i)
+							;
+                        client_handlers[i].setLastActivity(std::time(NULL));
                     }
                 }
             }
@@ -323,24 +344,19 @@ bool Server::handleNewConnection(int server_fd)
     return true;
 }
 
-struct MatchClientFd
-{
-    int client_fd;
-    
-    MatchClientFd(int fd) : client_fd(fd) {}
-    
-    bool operator()(const pollfd& pfd) const
-	{
-        return pfd.fd == client_fd;
-    }
-};
-
 /* 
 	Method: 		Server::closeAllSockets
 	Description: 	Handles client communication
 */
-bool Server::handleClient(ClientHandler & client)
+bool Server::handleClient(int client_fd)
 {
+	int i = 0;
+	for (;(client_handlers[i].fd != client_fd); ++i)
+		;
+	if (client_handlers[i].fd != client_fd)
+		return false;
+	ClientHandler client = client_handlers[i];
+
     if (!client.readRequest()) 
 	{
         std::cout << "Failed to read client request.\n";

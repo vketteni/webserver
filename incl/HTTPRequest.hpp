@@ -14,12 +14,12 @@ class HTTPRequest
 {
 	private:
 		bool 				_complete;
-		const std::string	_method;
-		const std::string	_raw;
-		const std::string	_request_line;
-		const std::string	_uri;
-		const std::string	_headers;
-		const std::string	_body;
+		std::string			_method;
+		std::string			_raw;
+		std::string			_request_line;
+		std::string			_uri;
+		std::string			_headers;
+		std::string			_body;
 
 
 	public:

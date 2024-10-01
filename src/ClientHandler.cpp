@@ -34,7 +34,7 @@ bool ClientHandler::readRequest()
 {
     const size_t chunk_size = 1024;
     char buffer[chunk_size];
-    ssize_t bytes_read = recv(this->fd, buffer, sizeof(buffer), 0);
+    ssize_t bytes_read = recv(this->fd, buffer, chunk_size, 0);
     
 	while (true)
 	{
@@ -77,70 +77,6 @@ bool ClientHandler::readRequest()
     // If the request is incomplete, return true to wait for more data
     return true;
 }
-
-
-// {
-//     const size_t chunk_size = 1024;
-//     char buffer[chunk_size];
-//     ssize_t bytes_read;
-
-//     while (true) 
-//     {
-//         // Attempt to read from the client socket
-//         bytes_read = recv(this->fd, buffer, sizeof(buffer), 0);
-
-//         if (bytes_read == -1) 
-//         {
-//             if (errno == EWOULDBLOCK || errno == EAGAIN) 
-//             {
-//                 // No data available for now, wait for the next poll() event
-//                 break;
-//             }
-//             else 
-//             {
-//                 perror("recv");
-//                 return false;
-//             }
-//         }
-//         else if (bytes_read == 0) 
-//         {
-//             // Client has closed the connection
-//             std::cout << "Client disconnected.\n";
-//             return false;
-//         }
-
-//         // Append the data to the request buffer
-//         _request_buffer.append(buffer, bytes_read);
-
-//         // Check if we've received the end of the headers (double CRLF)
-//         if (_request_buffer.find("\r\n\r\n") != std::string::npos) 
-//         {
-//             // Headers are fully received; now we can proceed to process the request
-//             std::cout << "Full HTTP headers received.\n";
-
-//             // Handle Content-Length to know if there is a body
-//             std::string content_length_str = parseHeaderValue("Content-Length");
-//             if (!content_length_str.empty()) 
-//             {
-//                 int contentLength = std::stoi(content_length_str);
-//                 if (_request_buffer.size() >= contentLength + _request_buffer.find("\r\n\r\n") + 4) 
-//                 {
-//                     std::cout << "Full request body received.\n";
-//                     return true;
-//                 }
-//             }
-//             else 
-//             {
-//                 // No Content-Length (could be a GET request), just return
-//                 return true;
-//             }
-//         }
-//     }
-
-//     // We haven't received the full request yet, but we should return true
-//     // so the event loop can continue and call readRequest() again later.
-//     return true;
-// }
 
 bool ClientHandler::sendResponse(void)
 {

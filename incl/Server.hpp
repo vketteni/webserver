@@ -15,6 +15,7 @@
 #include <arpa/inet.h>
 #include <csignal>
 #include "ClientHandler.hpp"
+#include "Debug.hpp"
 
 
 // Constants
@@ -39,7 +40,7 @@ class Server {
 		bool setupServerSockets();
 		void eventLoop();
 		bool handleNewConnection(int server_fd);
-		bool handleClient(ClientHandler & client);
+		bool handleClient(int client_fd);
 		void closeAllSockets();
 		void checkTimeouts(void);
 };

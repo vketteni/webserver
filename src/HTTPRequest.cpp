@@ -11,14 +11,24 @@ HTTPRequest::HTTPRequest(const std::string &raw) : _complete(false), _method("")
 
 HTTPRequest &HTTPRequest::operator=(const HTTPRequest &other)
 {
-	(void)other;
+	if (this != &other)
+	{
+		this->_body = other._body;
+		this->_headers = other._headers;
+		this->_method = other._method;
+		this->_raw = other._raw;
+		this->_request_line = other._request_line;
+		this->_uri = other._uri;
+		this->_complete = other._complete;
+	}
 	return *this;
 }
 
 bool HTTPRequest::parseRequest(const std::string &raw)
 {
 	(void)raw;
-	return false;
+	_complete = true;
+	return true;
 }
 
 const std::string& HTTPRequest::getMethod() const
