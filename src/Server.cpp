@@ -26,7 +26,7 @@ void signalHandler(int signum)
 }
 
 // Constructor
-Server::Server(const std::string& configPath) : configPath(configPath), running(false)
+Server::Server(const std::string& config_path) : config_path(config_path), running(false)
 {}
 
 // Destructor
@@ -41,10 +41,10 @@ Server::~Server()
 */
 bool Server::parseConfig()
 {
-    std::ifstream configFile(configPath.c_str());
+    std::ifstream configFile(config_path.c_str());
     if (!configFile.is_open())
 	{
-        std::cerr << "Failed to open configuration file: " << configPath << "\n";
+        std::cerr << "Failed to open configuration file: " << config_path << "\n";
         return false;
     }
 

@@ -22,13 +22,13 @@ const int BACKLOG = 10;
 
 class Server {
 	public:
-		Server(const std::string& configPath);
+		Server(const std::string& config_path);
 		~Server();
 		bool start();
 		void stop();
 
 	private:
-		std::string configPath;
+		std::string config_path;
 		std::vector<int> serverPorts;
 		std::vector<int> server_fds;
 		std::vector<ClientHandler> client_handlers;
@@ -38,7 +38,7 @@ class Server {
 		bool parseConfig();
 		bool setupServerSockets();
 		void eventLoop();
-		bool handleNewConnection(int listen_fd);
+		bool handleNewConnection(int server_fd);
 		bool handleClient(ClientHandler & client);
 		void closeAllSockets();
 		void checkTimeouts(void);
