@@ -1,7 +1,7 @@
 NAME=webserv
 CC=c++
 
-MAIN = main Server
+MAIN = main Server ClientHandler HTTPRequest HTTPResponse
 
 OBJ_DIR= obj/
 SRC_DIR= src/
