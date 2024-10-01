@@ -32,8 +32,8 @@ void ClientHandler::setLastActivity(time_t last_activity)
 
 bool ClientHandler::readRequest() 
 {
-    const size_t chunkSize = 1024;
-    char buffer[chunkSize];
+    const size_t chunk_size = 1024;
+    char buffer[chunk_size];
     ssize_t bytes_read = recv(this->fd, buffer, sizeof(buffer), 0);
     
 	while (true)
@@ -62,15 +62,15 @@ bool ClientHandler::readRequest()
 		
 		if (_request_buffer.find("\r\n\r\n") != std::string::npos) 
 		{
-			HTTPRequest httpRequest;
-			if (!httpRequest.parseRequest(_request_buffer)) 
+			HTTPRequest http_request;
+			if (!http_request.parseRequest(_request_buffer)) 
 			{
 				// If parsing fails, return an error
 				std::cerr << "Failed to parse HTTP request.\n";
 				return false;
 			}
 
-			this->_request = httpRequest; // Store the parsed request in a class member
+			this->_request = http_request; // Store the parsed request in a class member
 			return true;  // Successfully parsed the request
 		}
 	}
@@ -151,7 +151,7 @@ bool ClientHandler::sendResponse(void)
     // if (method == "GET") 
     // {
     //     // Handle GET request logic
-    //     _response.setStatusCode(200);  // OK
+    //     _response.setstatus_code(200);  // OK
     //     _response.setBody("Hello, World!");  // Simple response body
     //     _response.addHeader("Content-Type", "text/plain");
     // } 
@@ -160,12 +160,12 @@ bool ClientHandler::sendResponse(void)
     //     // Handle POST request (e.g., file upload)
     //     if (!handleUpload()) 
     //     {
-    //         _response.setStatusCode(500);  // Internal Server Error
+    //         _response.setstatus_code(500);  // Internal Server Error
     //         _response.setBody("Error handling upload");
     //     } 
     //     else 
     //     {
-    //         _response.setStatusCode(200);  // OK
+    //         _response.setstatus_code(200);  // OK
     //         _response.setBody("Upload successful");
     //     }
     //     _response.addHeader("Content-Type", "text/plain");
@@ -173,7 +173,7 @@ bool ClientHandler::sendResponse(void)
     // else 
     // {
     //     // Method not supported
-    //     _response.setStatusCode(405);  // Method Not Allowed
+    //     _response.setstatus_code(405);  // Method Not Allowed
     //     _response.setBody("Method not allowed");
     // }
 
@@ -212,9 +212,9 @@ std::string ClientHandler::parseHeaderValue(const std::string &headerName)
 {
 	size_t	pos;
 
-	std::istringstream requestStream(_request_buffer);
+	std::istringstream request_stream(_request_buffer);
 	std::string line;
-	while (std::getline(requestStream, line))
+	while (std::getline(request_stream, line))
 	{
 		if (line.find(headerName) != std::string::npos)
 		{
@@ -228,17 +228,17 @@ std::string ClientHandler::parseHeaderValue(const std::string &headerName)
 	return ("");
 }
 
-bool ClientHandler::sendBasicResponse(const std::string& body, int statusCode, const std::string& contentType) 
+bool ClientHandler::sendBasicResponse(const std::string& body, int status_code, const std::string& content_type) 
 {
     std::ostringstream response;
-    response << "HTTP/1.1 " << statusCode << " OK\r\n"
-             << "Content-Type: " << contentType << "\r\n"
+    response << "HTTP/1.1 " << status_code << " OK\r\n"
+             << "Content-Type: " << content_type << "\r\n"
              << "Content-Length: " << body.size() << "\r\n"
              << "Connection: close\r\n\r\n"
              << body;
 
-    std::string responseStr = response.str();
-    ssize_t bytes_sent = send(this->fd, responseStr.c_str(), responseStr.size(), 0);
+    std::string response_str = response.str();
+    ssize_t bytes_sent = send(this->fd, response_str.c_str(), response_str.size(), 0);
 
     if (bytes_sent == -1) 
 	{
@@ -246,6 +246,6 @@ bool ClientHandler::sendBasicResponse(const std::string& body, int statusCode, c
         return false;
     }
 
-    std::cout << "Sent response: " << responseStr << "\n";
+    std::cout << "Sent response: " << response_str << "\n";
     return true;
 }

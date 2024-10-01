@@ -56,7 +56,7 @@ This project is about writing your own HTTP server. The following C++ classes ar
 - Handling status codes and error pages.
 
 ### Methods:
-- `setStatusCode(int code)`: Sets the response status code.
+- `setstatus_code(int code)`: Sets the response status code.
 - `addHeader(const std::string& name, const std::string& value)`: Adds HTTP headers.
 - `setBody(const std::string& body)`: Sets the response body.
 
