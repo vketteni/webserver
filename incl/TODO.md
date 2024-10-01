@@ -2,7 +2,7 @@
 
 This project is about writing your own HTTP server. The following C++ classes are designed to meet the project’s requirements.
 
-## 1. Server Class
+## 1. Server Class (Vincent)
 **Purpose**: Manages the main logic for accepting connections, reading requests, and sending responses.
 
 ### Key Responsibilities:
@@ -18,7 +18,7 @@ This project is about writing your own HTTP server. The following C++ classes ar
 
 ---
 
-## 2. ClientHandler Class
+## 2. ClientHandler Class (Vincent)
 **Purpose**: Manages individual client connections.
 
 ### Key Responsibilities:
@@ -34,7 +34,7 @@ This project is about writing your own HTTP server. The following C++ classes ar
 
 ---
 
-## 3. HTTPRequest Class
+## 3. HTTPRequest Class (Vincent)
 **Purpose**: Parses and represents an incoming HTTP request.
 
 ### Key Responsibilities:
@@ -48,7 +48,7 @@ This project is about writing your own HTTP server. The following C++ classes ar
 
 ---
 
-## 4. HTTPResponse Class
+## 4. HTTPResponse Class (Vincent)
 **Purpose**: Constructs and formats the HTTP response.
 
 ### Key Responsibilities:
