@@ -35,61 +35,9 @@ Server::~Server()
     stop();
 }
 
-/* 
-	Method: 		Server::parseConfig
-	Description: 	Parses the configuration file to extract ports
-*/
-bool Server::parseConfig()
-{
-    std::ifstream configFile(configPath.c_str());
-    if (!configFile.is_open())
-	{
-        std::cerr << "Failed to open configuration file: " << configPath << "\n";
-        return false;
-    }
 
-    std::string line;
-    while (getline(configFile, line))
-	{
-        // Remove whitespace
-        line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
-        if (line.find("ports=") == 0)
-		{
-            std::string portsStr = line.substr(6); // Remove 'ports='
-            std::stringstream ss(portsStr);
-            std::string port;
-            while (getline(ss, port, ','))
-			{
-                int portNum = std::atoi(port.c_str());
-                if (portNum > 0 && portNum < 65536)
-				{
-                    serverPorts.push_back(portNum);
-                }
-				else
-				{
-                    std::cerr << "Invalid port number: " << portNum << "\n";
-                }
-            }
-        }
-    }
 
-    if (serverPorts.empty())
-	{
-        std::cerr << "No valid ports found in configuration.\n";
-        return false;
-    }
-
-    std::cout << "Configured to listen on ports: ";
-    for (std::vector<int>::iterator portIt = serverPorts.begin(); portIt != serverPorts.end(); ++portIt)
-	{
-        std::cout << *portIt << " ";
-    }
-    std::cout << "\n";
-
-    return true;
-}
-
-/* 
+/*
 	Method: 		Server::setupServerSockets
 	Description: 	Sets up listening sockets for each server port
 */
@@ -158,7 +106,7 @@ bool Server::setupServerSockets()
     return true;
 }
 
-/* 
+/*
 	Method: 		Server::start
 	Description: 	Starts the server
 */
@@ -179,7 +127,7 @@ bool Server::start()
     return true;
 }
 
-/* 
+/*
 	Method: 		Server::stop
 	Description: 	Stops the server
 */
@@ -193,7 +141,7 @@ void Server::stop()
     }
 }
 
-/* 
+/*
 	Method: 		Server::closeAllSockets
 	Description: 	Closes all listening and client sockets
 */
@@ -288,7 +236,7 @@ void Server::eventLoop()
     }
 }
 
-/* 
+/*
 	Method: 		Server::closeAllSockets
 	Description: 	Handles a new incoming connection
 */
@@ -326,28 +274,28 @@ bool Server::handleNewConnection(int server_fd)
 struct MatchClientFd
 {
     int client_fd;
-    
+
     MatchClientFd(int fd) : client_fd(fd) {}
-    
+
     bool operator()(const pollfd& pfd) const
 	{
         return pfd.fd == client_fd;
     }
 };
 
-/* 
+/*
 	Method: 		Server::closeAllSockets
 	Description: 	Handles client communication
 */
 bool Server::handleClient(ClientHandler & client)
 {
-    if (!client.readRequest()) 
+    if (!client.readRequest())
 	{
         std::cout << "Failed to read client request.\n";
         return false;
     }
 
-    if (!client.sendResponse()) 
+    if (!client.sendResponse())
 	{
         std::cout << "Failed to send response to client.\n";
         return false;

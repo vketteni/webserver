@@ -15,6 +15,7 @@
 #include <arpa/inet.h>
 #include <csignal>
 #include "ClientHandler.hpp"
+#include "ConfigParser.hpp"
 
 
 // Constants
@@ -35,7 +36,7 @@ class Server {
 		std::vector<struct pollfd> pollFds;
 		bool running;
 
-		bool parseConfig();
+		//bool parseConfig();
 		bool setupServerSockets();
 		void eventLoop();
 		bool handleNewConnection(int listen_fd);
