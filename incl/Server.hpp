@@ -12,39 +12,36 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <poll.h>
-#include <sys/socket.h>
-#include <sys/types.h>
 #include <arpa/inet.h>
 #include <csignal>
+#include "ClientHandler.hpp"
+
 
 // Constants
-const int BUFFER_SIZE = 4096;
 const int BACKLOG = 10;
 
-
-
 class Server {
-public:
-    Server(const std::string& configPath);
-    ~Server();
+	public:
+		Server(const std::string& configPath);
+		~Server();
+		bool start();
+		void stop();
 
-    bool start();
+	private:
+		std::string configPath;
+		std::vector<int> serverPorts;
+		std::vector<int> serverFds;
+		std::vector<ClientHandler> clientHandlers;
+		std::vector<struct pollfd> pollFds;
+		bool running;
 
-    void stop();
-
-private:
-    std::string configPath;
-    std::vector<int> serverPorts;
-    std::vector<int> serverFds;
-    std::vector<struct pollfd> pollFds;
-    bool running;
-
-    bool parseConfig();
-    bool setupServerSockets();
-    void eventLoop();
-    bool handleNewConnection(int listen_fd);
-    void handleClient(int client_fd);
-    void closeAllSockets();
+		bool parseConfig();
+		bool setupServerSockets();
+		void eventLoop();
+		bool handleNewConnection(int listen_fd);
+		bool handleClient(ClientHandler & client);
+		void closeAllSockets();
+		void checkTimeouts(void);
 };
 
 void signalHandler(int signum);
