@@ -244,7 +244,7 @@ bool Server::isHostSocket(int fd)
 bool Server::isClientSocket(int fd)
 {
 	int i = 0;
-	while (i < client_handlers.size())
+	while (i < (int)client_handlers.size())
 	{
 		if (client_handlers[i].fd != fd)
 			return false;
