@@ -30,19 +30,28 @@ class Server {
 
 	private:
 		std::string config_path;
-		std::vector<int> serverPorts;
-		std::vector<int> server_fds;
+		std::vector<int> host_ports;
+		std::vector<int> host_fds;
 		std::vector<ClientHandler> client_handlers;
 		std::vector<struct pollfd> poll_fds;
 		bool running;
 
+		// Server Setup 
 		bool parseConfig();
 		bool setupServerSockets();
+
+		// Event Loop
 		void eventLoop();
+		void handlePollEvents();
 		bool handleNewConnection(int server_fd);
+		void handleClientSocket(int fd, int & poll_index);
 		bool handleClient(int client_fd);
-		void closeAllSockets();
 		void checkTimeouts(void);
+		void disconnectClient(int fd, int & poll_index, int client_index);
+
+		// Helper Functions
+		void closeAllSockets();
+		bool isHostSocket(int fd);
 };
 
 void signalHandler(int signum);

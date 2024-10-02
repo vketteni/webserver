@@ -54,7 +54,6 @@ bool ClientHandler::readRequest()
         else if (bytes_read == 0) 
         {
             // Client has closed the connection
-            std::cout << "Client disconnected.\n";
             return false;
         }
 
@@ -83,88 +82,59 @@ bool ClientHandler::sendResponse(void)
 	if (!_request.isComplete())
 		return true;
 
-	// const std::string method = _request.getMethod();
-    // if (method == "GET") 
-    // {
-    //     // Handle GET request logic
-    //     _response.setstatus_code(200);  // OK
-    //     _response.setBody("Hello, World!");  // Simple response body
-    //     _response.addHeader("Content-Type", "text/plain");
-    // } 
-    // else if (method == "POST") 
-    // {
-    //     // Handle POST request (e.g., file upload)
-    //     if (!handleUpload()) 
-    //     {
-    //         _response.setstatus_code(500);  // Internal Server Error
-    //         _response.setBody("Error handling upload");
-    //     } 
-    //     else 
-    //     {
-    //         _response.setstatus_code(200);  // OK
-    //         _response.setBody("Upload successful");
-    //     }
-    //     _response.addHeader("Content-Type", "text/plain");
-    // }
-    // else 
-    // {
-    //     // Method not supported
-    //     _response.setstatus_code(405);  // Method Not Allowed
-    //     _response.setBody("Method not allowed");
-    // }
-
-	// Use FileManager here (not implemented)
-	std::string filePath = "res/example.html";
-    std::ifstream file(filePath.c_str());  // Open the file
-    if (!file) {
-        throw std::runtime_error("Could not open file: " + filePath);
-    }
-    
-    std::ostringstream contents;
-    contents << file.rdbuf();  // Read the file buffer into the stream
-
-    // Simple response example
-    std::string body = contents.str();
-    return sendBasicResponse(body, 200, "text/html; charset=UTF-8");
-}
-
-std::map<std::string, std::string> ClientHandler::parseHeaders(const std::string &request)
-{
-	(void)request;
-    std::map<std::string, std::string> headers;
-    // Header parsing logic here (not implemented yet)
-    return headers;
-}
-
-std::string ClientHandler::parseRequestMethod(const std::string &request)
-{
-    std::istringstream iss(request);
-    std::string method;
-    iss >> method;
-    return method;
-}
-
-std::string ClientHandler::parseHeaderValue(const std::string &headerName)
-{
-	size_t	pos;
-
-	std::istringstream request_stream(_request_buffer);
-	std::string line;
-	while (std::getline(request_stream, line))
-	{
-		if (line.find(headerName) != std::string::npos)
-		{
-			pos = line.find(": ");
-			if (pos != std::string::npos)
-			{
-				return (line.substr(pos + 2)); // Skip ": " and get the value
-			}
+	const std::string method = _request.getMethod();
+    if (method == "GET") 
+    {
+		// Use FileManager (not implemented)
+		std::string filePath = "/home/vketteni/42berlin/github/webserver/res/example.html";
+		std::ifstream file(filePath.c_str());  // Open the file
+		if (!file) {
+			throw std::runtime_error("Could not open file: " + filePath);
 		}
-	}
-	return ("");
+		
+		std::ostringstream contents;
+		contents << file.rdbuf();  // Read the file buffer into the stream
+	
+		// Simple response example
+		std::string body = contents.str();
+		return sendBasicResponse(body, 200, "text/html; charset=UTF-8");
+
+        // // Handle GET request logic
+        // _response.setStatusCode(200);
+        // _response.setBody(body);
+        // _response.addHeader("Content-Type", "text/plain");
+    } 
+    else if (method == "POST") 
+    {
+        // Handle POST request (e.g., file upload)
+        if (!handleUpload()) 
+        {
+            _response.setStatusCode(500);  // Internal Server Error
+            _response.setBody("Error handling upload");
+        } 
+        else 
+        {
+            _response.setStatusCode(200);  // OK
+            _response.setBody("Upload successful");
+        }
+        _response.addHeader("Content-Type", "text/plain");
+    }
+    else 
+    {
+        // Method not supported
+        _response.setStatusCode(405);  // Method Not Allowed
+        _response.setBody("Method not allowed");
+    }
+
+	return true;
 }
 
-bool ClientHandler::sendBasicResponse(const std::string& body, int status_code, const std::string& content_type) 
+bool ClientHandler::handleUpload(void)
+{
+	return false;
+}
+
+bool ClientHandler::sendBasicResponse(const std::string &body, int status_code, const std::string &content_type)
 {
     std::ostringstream response;
     response << "HTTP/1.1 " << status_code << " OK\r\n"
