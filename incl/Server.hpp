@@ -52,6 +52,7 @@ class Server {
 		// Helper Functions
 		void closeAllSockets();
 		bool isHostSocket(int fd);
+		bool Server::isClientSocket(int fd);
 };
 
 void signalHandler(int signum);
