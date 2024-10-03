@@ -19,12 +19,12 @@ static int setNonBlocking(int fd)
 }
 
 // Global
-volatile bool keepRunning = true;
+volatile bool keep_running = true;
 
 void signalHandler(int signum)
 {
     std::cout << "\nInterrupt signal (" << signum << ") received. Shutting down server.\n";
-    keepRunning = false;
+    keep_running = false;
 }
 
 // Constructor
@@ -43,7 +43,6 @@ Server::~Server()
 {
     stop();
 }
-
 
 
 /*
@@ -148,6 +147,7 @@ void Server::stop()
 	{
         running = false;
         closeAllSockets();
+
         std::cout << "Server stopped.\n";
     }
 }
@@ -158,30 +158,53 @@ void Server::stop()
 */
 void Server::closeAllSockets()
 {
-    for (std::vector<int>::iterator it = serverFds.begin(); it != serverFds.end(); ++it)
+    for (std::vector<struct pollfd>::iterator it = poll_fds.begin(); it != poll_fds.end(); ++it)
 	{
-        close(*it);
+        close((*it).fd);
     }
-    serverFds.clear();
-    pollFds.clear();
+    poll_fds.clear();
 }
 
 void Server::checkTimeouts(void)
 {
     time_t currentTime = std::time(NULL);
 
-    for (size_t i = 0; i < clientHandlers.size(); ++i)
+	header("Server::checkTimeouts");
+	debug(currentTime);
+
+    for (std::vector<ClientHandler>::iterator it = client_handlers.begin(); it != client_handlers.end(); ++it)
     {
-		time_t last_activity = clientHandlers[i].getLastActivity();
-        if (difftime(currentTime, last_activity) > clientHandlers[i].timeout)
+		ClientHandler client = *it;
+		time_t last_activity = client.getLastActivity();
+        if (difftime(currentTime, last_activity) > client.timeout)
         {
-            std::cout << "Client on fd " << clientHandlers[i].fd << " timed out. Disconnecting...\n";
-            close(clientHandlers[i].fd);
-            pollFds.erase(pollFds.begin() + i);
-            clientHandlers.erase(clientHandlers.begin() + i);
-            --i;
+            std::cout << "Client on fd " << client.fd << " timed out. Disconnecting...\n";
+
+			close(client.fd);
+			int i = host_ports.size() + std::distance(client_handlers.begin(), it);
+            poll_fds.erase(poll_fds.begin() + i);
+			--it;
+            client_handlers.erase(it + 1);
+
         }
     }
+}
+
+bool Server::isHostSocket(int fd)
+{
+    return std::find(host_fds.begin(), host_fds.end(), fd) != host_fds.end();
+}
+
+bool Server::isClientSocket(int fd)
+{
+	int i = 0;
+	while (i < (int)client_handlers.size())
+	{
+		if (client_handlers[i].fd != fd)
+			return false;
+		i++;
+	}
+	return true;
 }
 
 /*
@@ -191,10 +214,10 @@ void Server::checkTimeouts(void)
 void Server::eventLoop()
 {
     std::cout << "Server is running. Press Ctrl+C to stop.\n";
-    while (running && keepRunning)
+    while (running && keep_running)
 	{
-        int ret = poll(pollFds.data(), pollFds.size(), 1000); // 1-second timeout
-        if (ret == -1)
+        int poll_result = poll(poll_fds.data(), poll_fds.size(), 1000); // 1-second timeout
+        if (poll_result == -1)
 		{
             if (errno == EINTR)
 			{
@@ -204,47 +227,67 @@ void Server::eventLoop()
             break;
         }
 
-        if (ret == 0)
+        if (poll_result == 0)
 		{
 			checkTimeouts();
             continue;
         }
 
-        for (size_t i = 0; i < pollFds.size(); ++i)
+		handlePollEvents();
+		checkTimeouts();
+	}
+}
+
+void Server::handlePollEvents()
+{
+        for (int i = 0; i < (int)poll_fds.size(); ++i)
 		{
-            if (pollFds[i].revents & POLLIN)
+			int fd = poll_fds[i].fd;
+            if (poll_fds[i].revents & POLLIN)
 			{
-                if (std::find(serverFds.begin(), serverFds.end(), pollFds[i].fd) != serverFds.end())
+                if (isHostSocket(fd))
 				{
-                    // Event on listening socket, accept new connection
-                    if (!handleNewConnection(pollFds[i].fd))
+                    // Event on host socket, accept new connection
+                    if (!handleNewConnection(fd))
 					{
-                        std::cerr << "Failed to handle new connection on fd " << pollFds[i].fd << "\n";
+                        std::cerr << "Failed to handle new connection on fd " << fd << "\n";
                     }
                 }
 				else
 				{
-					ClientHandler client = clientHandlers[i];
-                    // Event on client socket, handle client request
-                    if (!handleClient(client))
-                    {
-                        std::cout << "Disconnecting client on fd " << pollFds[i].fd << "\n";
-                        close(client.fd);
-                        pollFds.erase(pollFds.begin() + i);
-                        clientHandlers.erase(clientHandlers.begin() + i);
-                        --i;
-                    }
-                    else
-                    {
-                        client.setLastActivity(std::time(NULL));
-                    }
-                }
-            }
-        }
+					handleClientSocket(fd, i);
+				}
+			}
+		}
+}
 
-        // Check for idle clients and disconnect if necessary
-        checkTimeouts();
+void Server::handleClientSocket(int fd, int & poll_index)
+{
+    int client_index = poll_index - host_fds.size();
+    if (client_index < 0 || client_index >= (int)client_handlers.size())
+    {
+        std::cerr << "Client index out of bounds (fd: " << fd << ")\n";
+        running = false;
+        return;
     }
+
+    if (!handleClient(fd))
+    {
+        std::cout << "Disconnecting client on fd " << fd << "\n";
+        disconnectClient(fd, poll_index, client_index);
+    }
+    else
+    {
+        client_handlers[client_index].setLastActivity(std::time(NULL));
+    }
+}
+
+void Server::disconnectClient(int fd, int & poll_index, int client_index)
+{
+    close(fd);
+    client_handlers.erase(client_handlers.begin() + client_index);
+    poll_fds.erase(poll_fds.begin() + poll_index);
+	--poll_index;
 }
 
 /*
@@ -265,14 +308,14 @@ bool Server::handleNewConnection(int server_fd)
         }
         return true; // No pending connections
     }
-    this->clientHandlers.push_back(ClientHandler(client_fd));
+    this->client_handlers.push_back(ClientHandler(client_fd));
 
-    // Add client to pollFds
+    // Add client to poll_fds
     struct pollfd pfd;
     pfd.fd = client_fd;
     pfd.events = POLLIN;
     pfd.revents = 0;
-    this->pollFds.push_back(pfd);
+    this->poll_fds.push_back(pfd);
 
     char client_ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
@@ -290,7 +333,7 @@ struct MatchClientFd
 
     bool operator()(const pollfd& pfd) const
 	{
-        return pfd.fd == client_fd;
+        return client.fd == fd;
     }
 };
 
@@ -298,7 +341,7 @@ struct MatchClientFd
 	Method: 		Server::closeAllSockets
 	Description: 	Handles client communication
 */
-bool Server::handleClient(ClientHandler& client)
+bool Server::handleClient(ClientHandler & client)
 {
     if (!client.readRequest())
 	{
@@ -306,7 +349,7 @@ bool Server::handleClient(ClientHandler& client)
         return false;
     }
 
-	std::string requestPath = client.
+//	std::string requestPath = client.
 
     if (!client.sendResponse())
 	{

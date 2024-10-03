@@ -45,7 +45,7 @@ class ClientHandler
 		std::string parseRequestMethod(const std::string& request);
 		std::string parseHeaderValue(const std::string & headerName);
 
-		bool sendBasicResponse(const std::string& body, int statusCode, const std::string& contentType);
+		bool sendBasicResponse(const std::string& body, int status_code, const std::string& content_type);
 };
 
 #endif

@@ -16,6 +16,7 @@
 #include <csignal>
 #include "ClientHandler.hpp"
 #include "ConfigParser.hpp"
+#include "Debug.hpp"
 
 
 // Constants
@@ -23,27 +24,36 @@ const int BACKLOG = 10;
 
 class Server {
 	public:
-		Server(const std::string& configPath);
+		Server(const std::string& config_path);
 		~Server();
 		bool start();
 		void stop();
 
 	private:
-		std::string configPath;
-//		std::vector<int> serverPorts;
-		std::vector<int> serverFds;
+		std::string config_path;
+//		std::vector<int> host_ports;
+		std::vector<int> host_fds;
 		std::vector<ServerConfig> servers;
-		std::vector<ClientHandler> clientHandlers;
-		std::vector<struct pollfd> pollFds;
+		std::vector<ClientHandler> client_handlers;
+		std::vector<struct pollfd> poll_fds;
 		bool running;
 
 		//bool parseConfig();
 		bool setupServerSockets();
+
+		// Event Loop
 		void eventLoop();
-		bool handleNewConnection(int listen_fd);
-		bool handleClient(ClientHandler & client);
-		void closeAllSockets();
+		void handlePollEvents();
+		bool handleNewConnection(int server_fd);
+		void handleClientSocket(int fd, int & poll_index);
+		bool handleClient(int client_fd);
 		void checkTimeouts(void);
+		void disconnectClient(int fd, int & poll_index, int client_index);
+
+		// Helper Functions
+		void closeAllSockets();
+		bool isHostSocket(int fd);
+		bool isClientSocket(int fd);
 };
 
 void signalHandler(int signum);

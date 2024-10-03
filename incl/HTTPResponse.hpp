@@ -2,11 +2,17 @@
 #define HTTPRESPONSE_HPP
 
 #include <string>
+#include <map>
 
 class HTTPResponse
 {
 	private:
+		int									_status_code;
+		std::map<std::string, std::string>	_headers;
+		std::string							_body;
+
 	public:
+
 		HTTPResponse();
 		~HTTPResponse();
 
