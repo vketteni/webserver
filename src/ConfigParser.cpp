@@ -13,26 +13,6 @@ ConfigParser::~ConfigParser()
 }
 
 /*
-	Method: ConfigParser::getPort
-	Description: Returns the configured port number.
-*/
-
-int	ConfigParser::getPort() const
-{
-	return _port;
-}
-
-/*
-	Method: ConfigParser::getHost
-	Description: Returns the configured host address.
-*/
-
-std::string	ConfigParser::getHost() const
-{
-	return _host;
-}
-
-/*
 	Method: 		Server::parseConfig
 	Description: 	Parses the configuration file to extract ports
 */
@@ -65,8 +45,12 @@ bool ConfigParser::parseConfig(const std::string& filepath)
 	return true;
 }
 
+const std::vector<ServerConfig> &ConfigParser::getServer() const
+{
+	return servers;
+}
 
-bool	ConfigParser::parseServer(std::ifstrean& configFile, ServerConfig& server) {
+bool	ConfigParser::parseServer(std::ifstream& configFile, ServerConfig& server) {
 
 	std::string	line;
 
@@ -76,15 +60,72 @@ bool	ConfigParser::parseServer(std::ifstrean& configFile, ServerConfig& server) 
 		if(line.empty() || line[0] == '#') {
 			continue ;
 		}
-		if (line == ("server{")) {
-	if (_port == 0)
-	{
-		std::cerr << "No valid port found in config\n";
-		return false;
+		if (line == ("}")) {\
+			break;
+		}
+
+		if (line.find("listen=") == 0) {
+			server.port = std::atoi(line.substr(7).c_str());
+		}
+		else if (line.find("host=") == 0) {
+			server.host = line.substr(5);
+		}
+		else if (line.find("server_name=") == 0) {
+			server.server_name = line.substr(12);
+		}
+		else if (line.find("client_max_body_size=") == 0) {
+			server.host = std::atoi(line.substr(21).c_str());
+		}
+		else if (line.find("error_page=") == 0) {
+			int code = std::atoi(line.substr(11, 3).c_str());
+			server.error_pages[code] = line.substr(15);
+		}
+		else if (line.find("location") == 0) {
+			RouteConfig route;
+			if (!parseLocation(configFile, route)) {
+				return false;
+			}
+			server.routes[line.substr(8)] = route;
+		}
 	}
+	return true;
+}
 
-	std::cout << "Configured to listen on port: " << _port << "\n";
-	std::cout << "Configured server name: " << _host << "\n";
+bool ConfigParser::parseLocation(std::ifstream &configFile, RouteConfig &route)
+{
+	std::string line;
 
+	while (std::getline(configFile, line)) {
+		line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
+		if (line.empty() || line[0] == '#'){
+			continue;
+		}
+		if (line == "}") {
+			break;
+		}
 
+		if (line.find("root=") == 0) {
+			route.root = line.substr(5);
+		}
+		else if (line.find("index=") == 0) {
+			route.root = line.substr(6);
+		}
+		else if (line.find("methods=") == 0) {
+			std::stringstream ss(line.substr(8));
+			std::string method;
+			while (getline(ss, method, ',')) {
+				route.methods.push_back(method);
+			}
+		}
+		else if (line.find("autoindex=") == 0) {
+			route.autoindex = (line.substr(10) == "on");
+		}
+		else if (line.find("upload_dir=") == 0) {
+			route.upload_dir = line.substr(11);
+		}
+		else if (line.find("cgi_extension=") == 0) {
+			route.cgi_extension = line.substr(14);
+		}
+	}
+	return true;
 }

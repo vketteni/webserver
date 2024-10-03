@@ -30,8 +30,9 @@ class Server {
 
 	private:
 		std::string configPath;
-		std::vector<int> serverPorts;
+//		std::vector<int> serverPorts;
 		std::vector<int> serverFds;
+		std::vector<ServerConfig> servers;
 		std::vector<ClientHandler> clientHandlers;
 		std::vector<struct pollfd> pollFds;
 		bool running;

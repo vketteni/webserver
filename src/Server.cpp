@@ -1,4 +1,6 @@
 #include "../incl/Server.hpp"
+#include "../incl/ConfigParser.hpp"
+
 
 static int setNonBlocking(int fd)
 {
@@ -27,7 +29,14 @@ void signalHandler(int signum)
 
 // Constructor
 Server::Server(const std::string& configPath) : configPath(configPath), running(false)
-{}
+{
+	ConfigParser ConfigParser;
+	if (!ConfigParser.parseConfig(configPath)) {
+		std::cerr << "Failed to parse config file\n";
+		exit(1);
+	}
+	this->servers = ConfigParser.getServer();
+}
 
 // Destructor
 Server::~Server()
@@ -43,67 +52,69 @@ Server::~Server()
 */
 bool Server::setupServerSockets()
 {
-    for (std::vector<int>::iterator portIt = serverPorts.begin(); portIt != serverPorts.end(); ++portIt)
+    for (std::vector<int>::iterator serverIt = servers.begin(); serverIt != servers.end(); ++serverIt)
 	{
-        int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-        if (server_fd == -1)
+		int server_port = serverIT->port;
+		int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+		if (server_fd == -1)
 		{
-            perror("socket");
-            return false;
-        }
+			perror("socket");
+			return false;
+		}
 
-        // Allow address reuse
-        int opt = 1;
-        if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
+		// Allow address reuse
+		int opt = 1;
+		if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
 		{
-            perror("setsockopt SO_REUSEADDR");
-            close(server_fd);
-            return false;
-        }
+			perror("setsockopt SO_REUSEADDR");
+			close(server_fd);
+			return false;
+		}
 
         // Bind to the specified port on all interfaces
-		int server_port = *portIt;
-        struct sockaddr_in addr;
-        std::memset(&addr, 0, sizeof(addr));
-        addr.sin_family = AF_INET;
-        addr.sin_addr.s_addr = INADDR_ANY; // 0.0.0.0
-        addr.sin_port = htons(server_port);
+	//	int server_port = *portIt;
+		struct sockaddr_in addr;
+		std::memset(&addr, 0, sizeof(addr));
+		addr.sin_family = AF_INET;
+  //   addr.sin_addr.s_addr = INADDR_ANY; // 0.0.0.0
+		addr.sin_addr.s_addr = inet_addr(serverIt->host.c_str());
+		addr.sin_port = htons(server_port);
 
-        if (bind(server_fd, (struct sockaddr*)&addr, sizeof(addr)) == -1)
+		if (bind(server_fd, (struct sockaddr*)&addr, sizeof(addr)) == -1)
 		{
-            perror("bind");
-            close(server_fd);
-            return false;
-        }
+			perror("bind");
+			close(server_fd);
+			return false;
+		}
 
         // Set the socket to non-blocking mode
-        if (setNonBlocking(server_fd) == -1)
+		if (setNonBlocking(server_fd) == -1)
 		{
-            close(server_fd);
-            return false;
-        }
+			close(server_fd);
+			return false;
+		}
 
         // Start listening
-        if (listen(server_fd, BACKLOG) == -1)
+		if (listen(server_fd, BACKLOG) == -1)
 		{
-            perror("listen");
-            close(server_fd);
-            return false;
-        }
+			perror("listen");
+			close(server_fd);
+			return false;
+		}
 
-        serverFds.push_back(server_fd);
+		serverFds.push_back(server_fd);
 
         // Add to pollFds
-        struct pollfd pfd;
-        pfd.fd = server_fd;
-        pfd.events = POLLIN;
-        pfd.revents = 0;
-        pollFds.push_back(pfd);
+		struct pollfd pfd;
+		pfd.fd = server_fd;
+		pfd.events = POLLIN;
+		pfd.revents = 0;
+		pollFds.push_back(pfd);
 
-        std::cout << "Listening on port " << server_port << " with fd " << server_fd << "\n";
-    }
+		std::cout << "Listening on " << serverIt->host << ":" << server_port << " with fd " << server_fd << "\n";
+	}
 
-    return true;
+	return true;
 }
 
 /*
@@ -287,13 +298,15 @@ struct MatchClientFd
 	Method: 		Server::closeAllSockets
 	Description: 	Handles client communication
 */
-bool Server::handleClient(ClientHandler & client)
+bool Server::handleClient(ClientHandler& client)
 {
     if (!client.readRequest())
 	{
         std::cout << "Failed to read client request.\n";
         return false;
     }
+
+	std::string requestPath = client.
 
     if (!client.sendResponse())
 	{
