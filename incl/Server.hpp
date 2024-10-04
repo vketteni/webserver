@@ -17,7 +17,6 @@
 #include "ClientHandler.hpp"
 #include "Debug.hpp"
 
-
 // Constants
 const int BACKLOG = 10;
 
@@ -43,11 +42,10 @@ class Server {
 		// Event Loop
 		void eventLoop();
 		void handlePollEvents();
-		bool handleNewConnection(int server_fd);
-		void handleClientSocket(int fd, int & poll_index);
-		bool handleClient(int client_fd);
+		bool handleNewConnection(std::vector<struct pollfd>::iterator poll_iterator);
+		bool handleClientSocket(std::vector<struct pollfd>::iterator poll_iterator);
 		void checkTimeouts(void);
-		void disconnectClient(int fd, int & poll_index, int client_index);
+		void disconnectClient(std::vector<struct pollfd >::iterator poll_iterator);
 
 		// Helper Functions
 		void closeAllSockets();
@@ -57,10 +55,34 @@ class Server {
 
 void signalHandler(int signum);
 
+struct MatchClientFd
+{
+    int fd;
+    
+    MatchClientFd(int fd) : fd(fd) {}
+    
+    bool operator()(const ClientHandler& client) const
+	{
+        return client.fd == fd;
+    }
+};
+
+struct MatchHostFd
+{
+    int fd;
+    
+    MatchHostFd(int fd) : fd(fd) {}
+    
+    bool operator()(const int & host_fd) const
+	{
+        return host_fd == fd;
+    }
+};
+
 #endif
 
 
-// ** function not used :
+// ** function noClientHandlert used :
 
 /*
 std::string ClientHandler::parseHeaderValue(const std::string &headerName)
