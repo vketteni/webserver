@@ -58,3 +58,28 @@ class Server {
 void signalHandler(int signum);
 
 #endif
+
+
+// ** function not used :
+
+/*
+std::string ClientHandler::parseHeaderValue(const std::string &headerName)
+{
+	size_t	pos;
+
+	std::istringstream request_stream(_buffer);
+	std::string line;
+	while (std::getline(request_stream, line))
+	{
+		if (line.find(headerName) != std::string::npos)
+		{
+			pos = line.find(": ");
+			if (pos != std::string::npos)
+			{
+				return (line.substr(pos + 2)); // Skip ": " and get the value
+			}
+		}
+	}
+	return ("");
+}
+*/

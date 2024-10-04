@@ -198,6 +198,37 @@ void Server::stop()
     }
 }
 
+/*
+	 Method: 		Server::eventLoop
+	 Description: 	Main event loop using poll()
+ */
+void Server::eventLoop()
+{
+    std::cout << "Server is running. Press Ctrl+C to stop.\n";
+    while (running && keep_running)
+	{
+        int poll_result = poll(poll_fds.data(), poll_fds.size(), 1000); // 1-second timeout
+        if (poll_result == -1)
+		{
+            if (errno == EINTR)
+			{
+                continue; // Interrupted by signal
+            }
+            perror("poll");
+            break;
+        }
+
+        if (poll_result == 0)
+		{
+			checkTimeouts();
+            continue;
+        }
+
+		handlePollEvents();
+		checkTimeouts();
+	}
+}
+
 /* 
 	Method: 		Server::closeAllSockets
 	Description: 	Closes all listening and client sockets
@@ -215,8 +246,8 @@ void Server::checkTimeouts(void)
 {
     time_t currentTime = std::time(NULL);
 
-	header("Server::checkTimeouts");
-	debug(currentTime);
+	// header("Server::checkTimeouts");
+	// debug(currentTime);
 
     for (std::vector<ClientHandler>::iterator it = client_handlers.begin(); it != client_handlers.end(); ++it)
     {
@@ -251,37 +282,6 @@ bool Server::isClientSocket(int fd)
 		i++;
 	}
 	return true;
-}
-
-/*
-	 Method: 		Server::eventLoop
-	 Description: 	Main event loop using poll()
- */
-void Server::eventLoop()
-{
-    std::cout << "Server is running. Press Ctrl+C to stop.\n";
-    while (running && keep_running)
-	{
-        int poll_result = poll(poll_fds.data(), poll_fds.size(), 1000); // 1-second timeout
-        if (poll_result == -1)
-		{
-            if (errno == EINTR)
-			{
-                continue; // Interrupted by signal
-            }
-            perror("poll");
-            break;
-        }
-
-        if (poll_result == 0)
-		{
-			checkTimeouts();
-            continue;
-        }
-
-		handlePollEvents();
-		checkTimeouts();
-	}
 }
 
 void Server::handlePollEvents()
@@ -393,11 +393,11 @@ bool Server::handleClient(int client_fd)
 	if (client == client_handlers.end())
 		return false;
 
-    if (!client->readRequest()) 
+	if (!client->readRequest())
 	{
-        std::cout << "Failed to read client request.\n";
+        std::cout << "Failed to read request from client.\n";
         return false;
-    }
+	}
 
     if (!client->sendResponse()) 
 	{

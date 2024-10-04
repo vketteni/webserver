@@ -42,7 +42,7 @@ This project is about writing your own HTTP server. The following C++ classes ar
 - Storing request data (e.g., method, URL, headers, and body).
 
 ### Methods:
-- `parseRequest()`: Parses raw data into the HTTP components.
+- `parse()`: Parses raw data into the HTTP components.
 - `getMethod()`: Returns the HTTP method (GET, POST, DELETE).
 - `getURL()`: Extracts the requested URL.
 
