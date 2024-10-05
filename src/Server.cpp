@@ -28,7 +28,7 @@ void signalHandler(int signum)
 }
 
 // Constructor
-Server::Server(const std::string& configPath) : configPath(configPath), running(false)
+Server::Server(const std::string& configPath) : config_path(configPath), running(false)
 {
 	ConfigParser ConfigParser;
 	if (!ConfigParser.parseConfig(configPath)) {
@@ -51,9 +51,9 @@ Server::~Server()
 */
 bool Server::setupServerSockets()
 {
-    for (std::vector<int>::iterator serverIt = servers.begin(); serverIt != servers.end(); ++serverIt)
+    for (std::vector<ServerConfig>::iterator serverIt = servers.begin(); serverIt != servers.end(); ++serverIt)
 	{
-		int server_port = serverIT->port;
+		int server_port = serverIt->port;
 		int server_fd = socket(AF_INET, SOCK_STREAM, 0);
 		if (server_fd == -1)
 		{
@@ -75,8 +75,11 @@ bool Server::setupServerSockets()
 		struct sockaddr_in addr;
 		std::memset(&addr, 0, sizeof(addr));
 		addr.sin_family = AF_INET;
-  //   addr.sin_addr.s_addr = INADDR_ANY; // 0.0.0.0
-		addr.sin_addr.s_addr = inet_addr(serverIt->host.c_str());
+		if (serverIt->host == "0.0.0.0")
+			addr.sin_addr.s_addr = INADDR_ANY; // 0.0.0.0
+		else
+			addr.sin_addr.s_addr = inet_addr(serverIt->host.c_str());
+
 		addr.sin_port = htons(server_port);
 
 		if (bind(server_fd, (struct sockaddr*)&addr, sizeof(addr)) == -1)
@@ -89,6 +92,7 @@ bool Server::setupServerSockets()
         // Set the socket to non-blocking mode
 		if (setNonBlocking(server_fd) == -1)
 		{
+			perror("setNonBlocking");
 			close(server_fd);
 			return false;
 		}
@@ -101,14 +105,14 @@ bool Server::setupServerSockets()
 			return false;
 		}
 
-		serverFds.push_back(server_fd);
+		host_fds.push_back(server_fd);
 
         // Add to pollFds
 		struct pollfd pfd;
 		pfd.fd = server_fd;
 		pfd.events = POLLIN;
 		pfd.revents = 0;
-		pollFds.push_back(pfd);
+		poll_fds.push_back(pfd);
 
 		std::cout << "Listening on " << serverIt->host << ":" << server_port << " with fd " << server_fd << "\n";
 	}
@@ -122,19 +126,17 @@ bool Server::setupServerSockets()
 */
 bool Server::start()
 {
-    if (!parseConfig())
-	{
-        return false;
-    }
+	signal(SIGINT, signalHandler);
 
-    if (!setupServerSockets())
+	if (!setupServerSockets())
 	{
-        return false;
-    }
+		std::cerr << "Error: Failed to set up server sockets.\n";
+		return false;
+	}
 
-    running = true;
-    eventLoop();
-    return true;
+	running = true;
+	eventLoop();
+	return true;
 }
 
 /*
@@ -200,8 +202,8 @@ bool Server::isClientSocket(int fd)
 	int i = 0;
 	while (i < (int)client_handlers.size())
 	{
-		if (client_handlers[i].fd != fd)
-			return false;
+		if (client_handlers[i].fd == fd)
+			return true;
 		i++;
 	}
 	return true;

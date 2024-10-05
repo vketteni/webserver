@@ -46,7 +46,7 @@ class Server {
 		void handlePollEvents();
 		bool handleNewConnection(int server_fd);
 		void handleClientSocket(int fd, int & poll_index);
-		bool handleClient(int client_fd);
+		bool handleClient(ClientHandler & client);
 		void checkTimeouts(void);
 		void disconnectClient(int fd, int & poll_index, int client_index);
 

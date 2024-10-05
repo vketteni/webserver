@@ -74,7 +74,7 @@ bool	ConfigParser::parseServer(std::ifstream& configFile, ServerConfig& server) 
 			server.server_name = line.substr(12);
 		}
 		else if (line.find("client_max_body_size=") == 0) {
-			server.host = std::atoi(line.substr(21).c_str());
+			server.client_max_body_size = std::atoi(line.substr(21).c_str());
 		}
 		else if (line.find("error_page=") == 0) {
 			int code = std::atoi(line.substr(11, 3).c_str());
@@ -108,7 +108,7 @@ bool ConfigParser::parseLocation(std::ifstream &configFile, RouteConfig &route)
 			route.root = line.substr(5);
 		}
 		else if (line.find("index=") == 0) {
-			route.root = line.substr(6);
+			route.index = line.substr(6);
 		}
 		else if (line.find("methods=") == 0) {
 			std::stringstream ss(line.substr(8));
