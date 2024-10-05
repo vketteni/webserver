@@ -8,7 +8,7 @@
 #include <sstream>
 #include <unistd.h>
 #include <fstream>
-
+#include "Debug.hpp"
 
 #include "HTTPResponse.hpp"
 #include "HTTPRequest.hpp"
@@ -20,7 +20,7 @@ const int TIMEOUT_DURATION = 10;
 class ClientHandler
 {
 	private:
-		std::string		_request_buffer;
+		std::string		_buffer;
 		time_t			_lastActivity;
 		HTTPRequest		_request;
 		HTTPResponse	_response;
@@ -42,7 +42,7 @@ class ClientHandler
 		bool handleUpload(void);
 
 		std::map<std::string, std::string> parseHeaders(const std::string& request);
-		std::string parseRequestMethod(const std::string& request);
+		std::string parseMethod(const std::string& request);
 		std::string parseHeaderValue(const std::string & headerName);
 
 		bool sendBasicResponse(const std::string& body, int status_code, const std::string& content_type);

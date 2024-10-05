@@ -18,7 +18,6 @@
 #include "ConfigParser.hpp"
 #include "Debug.hpp"
 
-
 // Constants
 const int BACKLOG = 10;
 
@@ -44,11 +43,10 @@ class Server {
 		// Event Loop
 		void eventLoop();
 		void handlePollEvents();
-		bool handleNewConnection(int server_fd);
-		void handleClientSocket(int fd, int & poll_index);
-		bool handleClient(ClientHandler & client);
+		bool handleNewConnection(std::vector<struct pollfd>::iterator poll_iterator);
+		bool handleClientSocket(std::vector<struct pollfd>::iterator poll_iterator);
 		void checkTimeouts(void);
-		void disconnectClient(int fd, int & poll_index, int client_index);
+		void disconnectClient(std::vector<struct pollfd >::iterator poll_iterator);
 
 		// Helper Functions
 		void closeAllSockets();
@@ -58,4 +56,53 @@ class Server {
 
 void signalHandler(int signum);
 
+struct MatchClientFd
+{
+    int fd;
+
+    MatchClientFd(int fd) : fd(fd) {}
+
+    bool operator()(const ClientHandler& client) const
+	{
+        return client.fd == fd;
+    }
+};
+
+struct MatchHostFd
+{
+    int fd;
+
+    MatchHostFd(int fd) : fd(fd) {}
+
+    bool operator()(const int & host_fd) const
+	{
+        return host_fd == fd;
+    }
+};
+
 #endif
+
+
+// ** function noClientHandlert used :
+
+/*
+std::string ClientHandler::parseHeaderValue(const std::string &headerName)
+{
+	size_t	pos;
+
+	std::istringstream request_stream(_buffer);
+	std::string line;
+	while (std::getline(request_stream, line))
+	{
+		if (line.find(headerName) != std::string::npos)
+		{
+			pos = line.find(": ");
+			if (pos != std::string::npos)
+			{
+				return (line.substr(pos + 2)); // Skip ": " and get the value
+			}
+		}
+	}
+	return ("");
+}
+*/

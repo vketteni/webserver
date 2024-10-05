@@ -154,10 +154,14 @@ void Server::stop()
     }
 }
 
+
+
 /*
 	Method: 		Server::closeAllSockets
 	Description: 	Closes all listening and client sockets
 */
+
+/* - in vincent code nicht mehr da
 void Server::closeAllSockets()
 {
     for (std::vector<struct pollfd>::iterator it = poll_fds.begin(); it != poll_fds.end(); ++it)
@@ -174,17 +178,17 @@ void Server::checkTimeouts(void)
 	header("Server::checkTimeouts");
 	debug(currentTime);
 
-	for (std::vector<ClientHandler>::iterator it = client_handlers.begin(); it != client_handlers.end(); ++it)
-	{
+    for (std::vector<ClientHandler>::iterator it = client_handlers.begin(); it != client_handlers.end(); ++it)
+    {
 		ClientHandler client = *it;
 		time_t last_activity = client.getLastActivity();
-		if (difftime(currentTime, last_activity) > client.timeout)
-		{
-		    std::cout << "Client on fd " << client.fd << " timed out. Disconnecting...\n";
+        if (difftime(currentTime, last_activity) > client.timeout)
+        {
+            std::cout << "Client on fd " << client.fd << " timed out. Disconnecting...\n";
 
 			close(client.fd);
-			int i = host_fds.size() + std::distance(client_handlers.begin(), it);
-		poll_fds.erase(poll_fds.begin() + i);
+			int i = host_ports.size() + std::distance(client_handlers.begin(), it);
+            poll_fds.erase(poll_fds.begin() + i);
 			--it;
             client_handlers.erase(it + 1);
 
@@ -202,12 +206,12 @@ bool Server::isClientSocket(int fd)
 	int i = 0;
 	while (i < (int)client_handlers.size())
 	{
-		if (client_handlers[i].fd == fd)
-			return true;
+		if (client_handlers[i].fd != fd)
+			return false;
 		i++;
 	}
 	return true;
-}
+} */
 
 /*
 	 Method: 		Server::eventLoop
@@ -240,94 +244,110 @@ void Server::eventLoop()
 	}
 }
 
-void Server::handlePollEvents()
+/*
+	Method: 		Server::closeAllSockets
+	Description: 	Closes all listening and client sockets
+*/
+void Server::closeAllSockets()
 {
-	for (int i = 0; i < (int)poll_fds.size(); ++i)
+    for (std::vector<struct pollfd>::iterator it = poll_fds.begin(); it != poll_fds.end(); ++it)
 	{
-		int fd = poll_fds[i].fd;
-		if (poll_fds[i].revents & POLLIN)
+        close((*it).fd);
+    }
+    poll_fds.clear();
+}
+
+void Server::checkTimeouts(void)
+{
+    time_t currentTime = std::time(NULL);
+
+    for (std::vector<struct pollfd>::iterator poll_iterator = poll_fds.begin(); poll_iterator != poll_fds.end(); ++poll_iterator)
+    {
+
+		std::vector<ClientHandler>::iterator client_iterator = std::find_if(client_handlers.begin(), client_handlers.end(), MatchClientFd(poll_iterator->fd));
+		if (client_iterator != client_handlers.end())
 		{
-			if (isHostSocket(fd))
+			time_t last_activity = client_iterator->getLastActivity();
+			if (difftime(currentTime, last_activity) > client_iterator->timeout)
 			{
-	// Event on host socket, accept new connection
-				if (!handleNewConnection(fd))
-				{
-					std::cerr << "Failed to handle new connection on fd " << fd << "\n";
-				}
-			}
-			else
-			{
-				handleClientSocket(fd, i);
+				std::cout << "Client on fd " << client_iterator->fd << " timed out. Disconnecting...\n";
+
+				close(client_iterator->fd);
+				client_handlers.erase(client_iterator);
+				poll_iterator = poll_fds.erase(poll_iterator);
 			}
 		}
-	}
+    }
 }
 
-void Server::handleClientSocket(int fd, int &poll_index)
+bool Server::isHostSocket(int fd)
 {
-	// Suche den Client-Handler anhand des fd (File Descriptor)
-	int client_index = -1;
-	for (size_t i = 0; i < client_handlers.size(); ++i) {
-	    if (client_handlers[i].fd == fd) {
-	        client_index = i;
-	        break;
-	    }
-	}
-
-	// Überprüfe, ob der Client gefunden wurde
-	if (client_index == -1) {
-	    std::cerr << "Client not found for fd: " << fd << "\n";
-	    return;
-	}
-
-	// Rufe die handleClient-Methode mit dem gefundenen ClientHandler auf
-	if (!handleClient(client_handlers[client_index])) {
-	    std::cout << "Disconnecting client on fd " << fd << "\n";
-	    disconnectClient(fd, poll_index, client_index);
-	}
-	else {
-	    // Aktualisiere die letzte Aktivität des Clients
-	    client_handlers[client_index].setLastActivity(std::time(NULL));
-	}
+    return std::find(host_fds.begin(), host_fds.end(), fd) != host_fds.end();
 }
-// void Server::handleClientSocket(int fd, int & poll_index)
-// {
-//     int client_index = poll_index - host_fds.size();
-//     if (client_index < 0 || client_index >= (int)client_handlers.size())
-//     {
-//         std::cerr << "Client index out of bounds (fd: " << fd << ")\n";
-//         running = false;
-//         return;
-//     }
 
-//     if (!handleClient(fd))
-//     {
-//         std::cout << "Disconnecting client on fd " << fd << "\n";
-//         disconnectClient(fd, poll_index, client_index);
-//     }
-//     else
-//     {
-//         client_handlers[client_index].setLastActivity(std::time(NULL));
-//     }
-// }
-
-void Server::disconnectClient(int fd, int & poll_index, int client_index)
+bool Server::isClientSocket(int fd)
 {
-    close(fd);
-    client_handlers.erase(client_handlers.begin() + client_index);
-    poll_fds.erase(poll_fds.begin() + poll_index);
-	--poll_index;
+	int i = 0;
+	while (i < (int)client_handlers.size())
+	{
+		if (client_handlers[i].fd != fd)
+			return false;
+		i++;
+	}
+	return true;
+}
+
+void Server::handlePollEvents()
+{
+        for (int i = 0; i < (int)poll_fds.size(); ++i)
+		{
+			int fd = poll_fds[i].fd;
+            if (poll_fds[i].revents & POLLIN)
+			{
+                if (isHostSocket(fd))
+				{
+                    // Event on host socket, accept new connection
+                    if (!handleNewConnection(poll_fds.begin() + i))
+					{
+                        std::cerr << "Failed to handle new connection on fd " << fd << "\n";
+                    }
+                }
+				else if (!handleClientSocket(poll_fds.begin() + i))
+				{
+					std::cout << "Disconnecting client on fd " << fd << "\n";
+					disconnectClient(poll_fds.begin() + i);
+					--i;
+				}
+			}
+		}
+}
+
+void Server::disconnectClient(std::vector<struct pollfd >::iterator poll_iterator)
+{
+    close(poll_iterator->fd);
+	std::vector<ClientHandler>::iterator client_iterator = std::find_if(client_handlers.begin(), client_handlers.end(), MatchClientFd(poll_iterator->fd));
+	if (client_iterator != client_handlers.end())
+		client_handlers.erase(client_iterator);
+    poll_fds.erase(poll_iterator);
 }
 
 /*
 	Method: 		Server::closeAllSockets
 	Description: 	Handles a new incoming connection
 */
-bool Server::handleNewConnection(int server_fd)
+bool Server::handleNewConnection(std::vector<struct pollfd>::iterator poll_iterator)
 {
+
+	std::vector<int>::iterator host_fd_iterator = std::find_if(host_fds.begin(), host_fds.end(), MatchHostFd(poll_iterator->fd));
+	if (host_fd_iterator == host_fds.end())
+	{
+		std::cerr << "Error: Host doesn't exist." << std::endl;
+		return false;
+	}
+
     struct sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
-    int client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &client_len);
+    int client_fd = accept(*host_fd_iterator, (struct sockaddr*)&client_addr, &client_len);
     if (client_fd == -1)
 	{
         if (errno != EWOULDBLOCK && errno != EAGAIN)
@@ -354,51 +374,44 @@ bool Server::handleNewConnection(int server_fd)
     return true;
 }
 
-// struct MatchClientFd
-// {
-//     int client_fd;
-
-//     MatchClientFd(int fd) : client_fd(fd) {}
-
-//     bool operator()(const pollfd& pfd) const
-// 	{
-//         return client.fd == fd;
-//     }
-// };
-
 struct MatchClientFd
 {
-    int client_fd;
+    int fd;
 
-    MatchClientFd(int fd) : client_fd(fd) {}
+    MatchClientFd(int fd) : fd(fd) {}
 
-    bool operator()(const pollfd& pfd) const
-    {
-        return pfd.fd == client_fd;  // Korrektur hier: Vergleich mit pfd.fd
+    bool operator()(const ClientHandler& client) const
+	{
+        return client.fd == fd;
     }
 };
-
-
 
 /*
 	Method: 		Server::closeAllSockets
 	Description: 	Handles client communication
 */
-bool Server::handleClient(ClientHandler & client)
+bool Server::handleClient(int client_fd)
 {
-    if (!client.readRequest())
+	std::vector<ClientHandler>::iterator client = std::find_if(client_handlers.begin(), client_handlers.end(), MatchClientFd(client_fd));
+	if (client == client_handlers.end())
+		return false;
+
+    if (!client->readRequest())
 	{
-        std::cout << "Failed to read client request.\n";
+		client->setLastActivity(std::time(NULL));
+        std::cout << "Failed to read request from client.\n";
         return false;
-    }
+	}
 
 //	std::string requestPath = client.
 
     if (!client.sendResponse())
 	{
+		client->setLastActivity(std::time(NULL));
         std::cout << "Failed to send response to client.\n";
         return false;
     }
 
+	client->setLastActivity(std::time(NULL));
     return true;
 }

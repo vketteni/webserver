@@ -32,46 +32,43 @@ void ClientHandler::setLastActivity(time_t last_activity)
 
 bool ClientHandler::readRequest() 
 {
-    const size_t chunk_size = 1024;
+	const size_t chunk_size = 1024;
     char buffer[chunk_size];
-    ssize_t bytes_read = recv(this->fd, buffer, chunk_size, 0);
+	ssize_t bytes_read = recv(this->fd, buffer, chunk_size - 1, 0);
+	if (bytes_read == -1) 
+	{
+		if (errno == EWOULDBLOCK || errno == EAGAIN) 
+		{
+			// No data available for now, wait for the next poll() event
+			return true;
+		}
+		else 
+		{
+			perror("recv");
+			return false;
+		}
+	}
+	else if (bytes_read == 0) 
+	{
+		// Client has closed the connection
+		return false;
+	}
+	buffer[chunk_size] = '\0';
+	debug(buffer);
     
 	while (true)
 	{
-        if (bytes_read == -1) 
-        {
-            if (errno == EWOULDBLOCK || errno == EAGAIN) 
-            {
-                // No data available for now, wait for the next poll() event
-                break;
-            }
-            else 
-            {
-                perror("recv");
-                return false;
-            }
-        }
-        else if (bytes_read == 0) 
-        {
-            // Client has closed the connection
+        if (!_request.parse(std::string(buffer))) {
+            // Handle parsing error, possibly send a response
             return false;
         }
 
-		_request_buffer.append(buffer, bytes_read);
-		
-		if (_request_buffer.find("\r\n\r\n") != std::string::npos) 
-		{
-			HTTPRequest http_request;
-			if (!http_request.parseRequest(_request_buffer)) 
-			{
-				// If parsing fails, return an error
-				std::cerr << "Failed to parse HTTP request.\n";
-				return false;
-			}
-
-			this->_request = http_request; // Store the parsed request in a class member
-			return true;  // Successfully parsed the request
-		}
+        // Check if the request is complete
+        if (_request.isComplete()) {
+            // Process the complete request
+            // Reset parser for the next request
+			return true;
+        }
 	}
     // If the request is incomplete, return true to wait for more data
     return true;
@@ -79,19 +76,21 @@ bool ClientHandler::readRequest()
 
 bool ClientHandler::sendResponse(void)
 {
+    // If the request is incomplete, return true to wait for more data
 	if (!_request.isComplete())
 		return true;
 
 	const std::string method = _request.getMethod();
     if (method == "GET") 
     {
+		header("GET");
+
 		// Use FileManager (not implemented)
 		std::string filePath = "/home/vketteni/42berlin/github/webserver/res/example.html";
 		std::ifstream file(filePath.c_str());  // Open the file
 		if (!file) {
 			throw std::runtime_error("Could not open file: " + filePath);
 		}
-		
 		std::ostringstream contents;
 		contents << file.rdbuf();  // Read the file buffer into the stream
 	
@@ -106,6 +105,7 @@ bool ClientHandler::sendResponse(void)
     } 
     else if (method == "POST") 
     {
+		header("POST");
         // Handle POST request (e.g., file upload)
         if (!handleUpload()) 
         {
@@ -121,6 +121,7 @@ bool ClientHandler::sendResponse(void)
     }
     else 
     {
+		header("NOT SUPPORTED");
         // Method not supported
         _response.setStatusCode(405);  // Method Not Allowed
         _response.setBody("Method not allowed");
