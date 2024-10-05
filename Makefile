@@ -1,12 +1,12 @@
 NAME=webserv
 CC=c++
 
-MAIN = main Server ClientHandler HTTPRequest HTTPResponse
+MAIN = main Server ClientHandler HTTPRequest HTTPResponse ConfigParser
 
 OBJ_DIR= obj/
 SRC_DIR= src/
 
-SRCS = $(addprefix $(SRC_DIR), $(addsuffix .cpp, $(MAIN))) 
+SRCS = $(addprefix $(SRC_DIR), $(addsuffix .cpp, $(MAIN)))
 
 OBJS = $(SRCS:src/%.cpp=$(OBJ_DIR)%.o)
 
