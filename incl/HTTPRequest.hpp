@@ -13,7 +13,7 @@
 #define POST 1
 #define DELETE 2
 
-enum ParseState {
+enum RequestState {
     READ_REQUEST_LINE,
     READ_HEADERS,
     READ_BODY,
@@ -24,7 +24,7 @@ enum ParseState {
 class HTTPRequest
 {
 	private:
-		ParseState							_state;
+		RequestState							_state;
 		std::string							_buffer;
 
 		std::string							_method;
@@ -48,7 +48,7 @@ class HTTPRequest
 		const std::string & getUri() const;
 		const std::string & getVersion() const;
 		const std::map<std::string, std::string> & getHeaders() const;
-		ParseState getState(void) const;
+		RequestState getState(void) const;
 		bool isComplete() const;
 		void reset(void);
 };

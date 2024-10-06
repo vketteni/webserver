@@ -37,8 +37,8 @@ class ClientHandler
 		time_t getLastActivity(void);
 		void setLastActivity(time_t last_activity);
 
-		bool readRequest(void);
-		bool sendResponse(void);
+		bool handleRequest(void);
+		bool handleResponse(void);
 		bool handleUpload(void);
 
 		std::map<std::string, std::string> parseHeaders(const std::string& request);

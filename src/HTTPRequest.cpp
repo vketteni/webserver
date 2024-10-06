@@ -28,14 +28,14 @@ bool HTTPRequest::parseHeaders(const std::string &header_block)
 
 	while (std::getline(request_stream, line))
 	{
-		pos = line.find(": ");
+		pos = line.find(":");
+		//	** possible place for key validation function **
 		if (pos != std::string::npos)
 		{
 			std::string key = line.substr(0, pos);
-			std::string val = line.substr(pos + 2, line.size() - 2);
+			std::string val = line.substr(pos + 1, line.size() - 2);
+			//	** possible place for white space removal function for value **
 			_headers[key] = val;
-			header(key);
-			debug(val);
 		}
 		else
 		{
@@ -55,6 +55,7 @@ bool HTTPRequest::parse(const std::string & data)
 			std::string::size_type pos = _buffer.find("\r\n");
 			if (pos != std::string::npos) {
 				std::string request_line = _buffer.substr(0, pos);
+				//	** possible place for validation function **
 				if (!parseRequestLine(request_line))
 				{
 					std::cerr << "Failed to parse request line." << "\n Input:\n" << "[" << request_line << "]" << std::endl;
@@ -73,6 +74,7 @@ bool HTTPRequest::parse(const std::string & data)
 			std::string::size_type pos = _buffer.find("\r\n\r\n");
 			if (pos != std::string::npos) {
 				std::string header_block = _buffer.substr(0, pos);
+				//	** possible place for validation function **
 				if (!parseHeaders(header_block))
 				{
 					std::cerr << "Failed to parse headers." << "\n Input:\n" << "[" << header_block << "]" << std::endl;
@@ -124,7 +126,7 @@ bool HTTPRequest::parseRequestLine(const std::string &line)
 	return true;
 }
 
-ParseState HTTPRequest::getState(void) const
+RequestState HTTPRequest::getState(void) const
 {
 	return _state;
 }

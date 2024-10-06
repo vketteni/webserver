@@ -8,18 +8,17 @@ HTTPResponse::~HTTPResponse()
 {
 }
 
-void HTTPResponse::setStatusCode(int code)
+bool HTTPResponse::isComplete(void) const
 {
-	_status_code = code;
+	return _state == COMPLETE_RES;
 }
 
-void HTTPResponse::addHeader(const std::string &name, const std::string &value)
+bool HTTPResponse::hasRequiredHeaders(void) const
 {
-	(void)name;
-	(void)value;
+	return false;
 }
 
-void HTTPResponse::setBody(const std::string &body)
+bool HTTPResponse::isValidStatusCode(void) const
 {
-	(void)body;
+	return false;
 }

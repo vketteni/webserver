@@ -372,14 +372,14 @@ bool Server::handleClientSocket(std::vector<struct pollfd>::iterator poll_iterat
 		return false;
 	}
 
-	if (!client->readRequest())
+	if (!client->handleRequest())
 	{
 		client->setLastActivity(std::time(NULL));
         std::cout << "Failed to read request from client.\n";
         return false;
 	}
 
-    if (!client->sendResponse()) 
+    if (!client->handleResponse()) 
 	{
 		client->setLastActivity(std::time(NULL));
         std::cout << "Failed to send response to client.\n";
