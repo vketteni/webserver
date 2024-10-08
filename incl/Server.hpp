@@ -30,14 +30,14 @@ class Server {
 
 	private:
 		std::string config_path;
-//		std::vector<int> host_ports;
+		std::vector<int> host_ports;
 		std::vector<int> host_fds;
-		std::vector<ServerConfig> servers;
 		std::vector<ClientHandler> client_handlers;
 		std::vector<struct pollfd> poll_fds;
 		bool running;
 
-		//bool parseConfig();
+		// Server Setup
+		bool parseConfig();
 		bool setupServerSockets();
 
 		// Event Loop

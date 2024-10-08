@@ -64,19 +64,19 @@ bool	ConfigParser::parseServer(std::ifstream& configFile, ServerConfig& server) 
 			break;
 		}
 
-		if (line.find("listen=") == 0) {
+		if (line.find("listen ") == 0) {
 			server.port = std::atoi(line.substr(7).c_str());
 		}
-		else if (line.find("host=") == 0) {
+		else if (line.find("host ") == 0) {
 			server.host = line.substr(5);
 		}
-		else if (line.find("server_name=") == 0) {
+		else if (line.find("server_name ") == 0) {
 			server.server_name = line.substr(12);
 		}
-		else if (line.find("client_max_body_size=") == 0) {
+		else if (line.find("client_max_body_size ") == 0) {
 			server.client_max_body_size = std::atoi(line.substr(21).c_str());
 		}
-		else if (line.find("error_page=") == 0) {
+		else if (line.find("error_page ") == 0) {
 			int code = std::atoi(line.substr(11, 3).c_str());
 			server.error_pages[code] = line.substr(15);
 		}
