@@ -513,8 +513,10 @@ bool Server::parseConfig()
 */
 bool Server::setupServerSockets()
 {
-    for (std::vector<int>::iterator port_it = host_ports.begin(); port_it != host_ports.end(); ++port_it)
-	{
+    //for (std::vector<int>::iterator port_it = host_ports.begin(); port_it != host_ports.end(); ++port_it)
+    for (std::vector<ServerConfig>::const_iterator it = servers.begin(); it != servers.end(); ++it)
+    {
+        const ServerConfig& serverConfig = *it;
         int server_fd = socket(AF_INET, SOCK_STREAM, 0);
         if (server_fd == -1)
 		{
@@ -533,7 +535,7 @@ bool Server::setupServerSockets()
 
         // Bind to the specified port on the configured host
         struct sockaddr_in addr;
-        struct ServerConfig serverConfig;
+      //  struct ServerConfig serverConfig;
      //   serverConfig.host = "";
         std::memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
@@ -541,7 +543,12 @@ bool Server::setupServerSockets()
         // Hier sollte der spezifische Host verwendet werden
         if (!serverConfig.host.empty())
 		{
-            inet_pton(AF_INET, serverConfig.host.c_str(), &addr.sin_addr);
+            if (inet_pton(AF_INET, serverConfig.host.c_str(), &addr.sin_addr) <= 0)
+            {
+                perror("Invalid address");
+                close(server_fd);
+                return false;
+            }
         }
 		else
 		{

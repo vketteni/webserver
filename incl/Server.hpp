@@ -34,6 +34,7 @@ class Server {
 		std::vector<int> host_fds;
 		std::vector<ClientHandler> client_handlers;
 		std::vector<struct pollfd> poll_fds;
+		std::vector<ServerConfig> servers;
 		bool running;
 
 		// Server Setup
