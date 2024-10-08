@@ -15,6 +15,7 @@
 #include <arpa/inet.h>
 #include <csignal>
 #include "ClientHandler.hpp"
+#include "ConfigParser.hpp"
 #include "Debug.hpp"
 
 // Constants
@@ -33,9 +34,10 @@ class Server {
 		std::vector<int> host_fds;
 		std::vector<ClientHandler> client_handlers;
 		std::vector<struct pollfd> poll_fds;
+		std::vector<ServerConfig> servers;
 		bool running;
 
-		// Server Setup 
+		// Server Setup
 		bool parseConfig();
 		bool setupServerSockets();
 
@@ -58,9 +60,9 @@ void signalHandler(int signum);
 struct MatchClientFd
 {
     int fd;
-    
+
     MatchClientFd(int fd) : fd(fd) {}
-    
+
     bool operator()(const ClientHandler& client) const
 	{
         return client.fd == fd;
@@ -70,9 +72,9 @@ struct MatchClientFd
 struct MatchHostFd
 {
     int fd;
-    
+
     MatchHostFd(int fd) : fd(fd) {}
-    
+
     bool operator()(const int & host_fd) const
 	{
         return host_fd == fd;
