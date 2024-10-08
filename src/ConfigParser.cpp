@@ -37,7 +37,6 @@ bool ConfigParser::parseConfig(const std::string& filepath)
 			if(!parseServer(configFile, server)) {
 				return false;
 			}
-			std::cout << "1port is: " << server.port << "\n";
 			servers.push_back(server);
 		}
 	}
@@ -70,16 +69,24 @@ bool	ConfigParser::parseServer(std::ifstream& configFile, ServerConfig& server) 
 				line.erase(line.size() - 1);
 			}
 			server.port = std::atoi(line.substr(6).c_str());
-			std::cout << "2port is: " << server.port << "\n";
 		}
 		else if (line.find("host") == 0) {
-			server.host = line.substr(5);
+			if (line[line.size() - 1] == ';') {
+				line.erase(line.size() - 1);
+			}
+			server.host = line.substr(4);
 		}
 		else if (line.find("server_name") == 0) {
-			server.server_name = line.substr(12);
+			if (line[line.size() - 1] == ';') {
+				line.erase(line.size() - 1);
+			}
+			server.server_name = line.substr(11);
 		}
 		else if (line.find("client_max_body_size") == 0) {
-			server.client_max_body_size = std::atoi(line.substr(21).c_str());
+			if (line[line.size() - 1] == ';') {
+				line.erase(line.size() - 1);
+			}
+			server.client_max_body_size = std::atoi(line.substr(20).c_str());
 		}
 		else if (line.find("error_page") == 0) {
 			int code = std::atoi(line.substr(11, 3).c_str());

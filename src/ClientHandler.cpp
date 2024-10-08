@@ -91,7 +91,7 @@ bool ClientHandler::handleResponse(void)
 		header("GET");
 
 		// Use FileManager (not implemented)
-		std::string filePath = "/home/vketteni/42berlin/github/webserver/res/example.html";
+		std::string filePath = "/home/hwiemann/Core/webserv/webserv/res/example.html";
 		std::ifstream file(filePath.c_str());  // Open the file
 		if (!file) {
 			throw std::runtime_error("Could not open file: " + filePath);
