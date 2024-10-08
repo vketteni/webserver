@@ -37,6 +37,7 @@ bool ConfigParser::parseConfig(const std::string& filepath)
 			if(!parseServer(configFile, server)) {
 				return false;
 			}
+			std::cout << "1port is: " << server.port << "\n";
 			servers.push_back(server);
 		}
 	}
@@ -60,23 +61,27 @@ bool	ConfigParser::parseServer(std::ifstream& configFile, ServerConfig& server) 
 		if(line.empty() || line[0] == '#') {
 			continue ;
 		}
-		if (line == ("}")) {\
+		if (line == ("}")) {
 			break;
 		}
 
-		if (line.find("listen ") == 0) {
-			server.port = std::atoi(line.substr(7).c_str());
+		if (line.find("listen") == 0) {
+			if (line[line.size() - 1] == ';') {
+				line.erase(line.size() - 1);
+			}
+			server.port = std::atoi(line.substr(6).c_str());
+			std::cout << "2port is: " << server.port << "\n";
 		}
-		else if (line.find("host ") == 0) {
+		else if (line.find("host") == 0) {
 			server.host = line.substr(5);
 		}
-		else if (line.find("server_name ") == 0) {
+		else if (line.find("server_name") == 0) {
 			server.server_name = line.substr(12);
 		}
-		else if (line.find("client_max_body_size ") == 0) {
+		else if (line.find("client_max_body_size") == 0) {
 			server.client_max_body_size = std::atoi(line.substr(21).c_str());
 		}
-		else if (line.find("error_page ") == 0) {
+		else if (line.find("error_page") == 0) {
 			int code = std::atoi(line.substr(11, 3).c_str());
 			server.error_pages[code] = line.substr(15);
 		}
@@ -107,23 +112,23 @@ bool ConfigParser::parseLocation(std::ifstream &configFile, RouteConfig &route)
 		if (line.find("root=") == 0) {
 			route.root = line.substr(5);
 		}
-		else if (line.find("index=") == 0) {
+		else if (line.find("index") == 0) {
 			route.index = line.substr(6);
 		}
-		else if (line.find("methods=") == 0) {
+		else if (line.find("methods") == 0) {
 			std::stringstream ss(line.substr(8));
 			std::string method;
 			while (getline(ss, method, ',')) {
 				route.methods.push_back(method);
 			}
 		}
-		else if (line.find("autoindex=") == 0) {
+		else if (line.find("autoindex") == 0) {
 			route.autoindex = (line.substr(10) == "on");
 		}
-		else if (line.find("upload_dir=") == 0) {
+		else if (line.find("upload_dir") == 0) {
 			route.upload_dir = line.substr(11);
 		}
-		else if (line.find("cgi_extension=") == 0) {
+		else if (line.find("cgi_extension") == 0) {
 			route.cgi_extension = line.substr(14);
 		}
 	}

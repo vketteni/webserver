@@ -474,11 +474,11 @@ bool Server::parseConfig()
         std::cerr << "No valid server configurations found.\n";
         return false;
     }
-
     // Verarbeite alle Server-Konfigurationen und füge die Ports hinzu
     for (std::vector<ServerConfig>::const_iterator server_it = servers.begin(); server_it != servers.end(); ++server_it)
 	{
         const ServerConfig& serverConfig = *server_it;
+         std::cout << "port is: " << serverConfig.port << "\n";
         if (serverConfig.port > 0 && serverConfig.port < 65536)
 		{
             host_ports.push_back(serverConfig.port);
@@ -533,6 +533,8 @@ bool Server::setupServerSockets()
 
         // Bind to the specified port on the configured host
         struct sockaddr_in addr;
+        struct ServerConfig serverConfig;
+     //   serverConfig.host = "";
         std::memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
 
