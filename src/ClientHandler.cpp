@@ -32,7 +32,7 @@ void ClientHandler::setLastActivity(time_t last_activity)
 	_lastActivity = last_activity;
 }
 
-bool ClientHandler::readRequest()
+bool ClientHandler::handleRequest()
 {
 	const size_t chunk_size = 1024;
     char buffer[chunk_size];
@@ -85,7 +85,6 @@ bool ClientHandler::readRequest()
 }
 
 bool ClientHandler::handleResponse(void)
-bool ClientHandler::handleResponse(void)
 {
     // If the request is incomplete, return true to wait for more data
 	if (!_request.isComplete())
@@ -120,8 +119,8 @@ bool ClientHandler::handleResponse(void)
         // Handle POST request (e.g., file upload)
         if (!handleUpload())
         {
-            _response.setStatusCode(500);  // Internal Server Error
-            _response.setBody("Error handling upload");
+            _response.generateStatusLine(500);  // Internal Server Error
+            _response.generateBody("Error handling upload");
         }
         else
         {
