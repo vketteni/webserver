@@ -1,7 +1,5 @@
-
 #ifndef CONFIGPARSER_HPP_
 #define CONFIGPARSER_HPP_
-
 #include <string>
 #include <map>
 #include <iostream>
@@ -10,7 +8,6 @@
 #include <sstream>
 #include <vector>
 #include <fstream>
-
 struct RouteConfig
 {
 	std::string					root;
@@ -24,7 +21,6 @@ struct RouteConfig
 
 	RouteConfig() : autoindex(false) {}
 };
-
 struct ServerConfig {
 	std::string							server_name;
 	std::string							host;
@@ -36,21 +32,15 @@ struct ServerConfig {
 
 	ServerConfig() : port(0), client_max_body_size(0) {}
 };
-
-
 class ConfigParser {
  public:
-	ConfigParser();
-	~ConfigParser();
-
-	bool	parseConfig(const std::string& filepath);
-	const	std::vector<ServerConfig>& getServer() const;
-
+    ConfigParser();
+    ~ConfigParser();
+    bool    parseConfig(const std::string& filepath);
+    const   std::vector<ServerConfig>& getServer() const;
  private:
-	std::vector<ServerConfig> servers;
-	bool	parseServer(std::ifstream& configFile, ServerConfig& server); //to parse one server
-	bool	parseLocation(std::ifstream& configFile, RouteConfig& route);
+    std::vector<ServerConfig> servers;
+    bool    parseServer(std::ifstream& configFile, ServerConfig& server); //to parse one server
+    bool    parseLocation(std::ifstream& configFile, RouteConfig& route);
 };
-
-#endif // CONFIGPARSER_HPP_
-
+#endif // CONFIGPARSER_HPP

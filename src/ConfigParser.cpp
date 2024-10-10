@@ -1,53 +1,48 @@
 #include "../incl/ConfigParser.hpp"
-#include "ConfigParser.hpp"
 
 // Default constructor
 ConfigParser::ConfigParser() {
-	return ;
+    return ;
 }
-
 // Default destructor
 ConfigParser::~ConfigParser()
 {
-	return ;
+    return ;
 }
-
 /*
-	Method: 		Server::parseConfig
-	Description: 	Parses the configuration file to extract ports
+    Method:         Server::parseConfig
+    Description:    Parses the configuration file to extract ports
 */
 bool ConfigParser::parseConfig(const std::string& filepath)
 {
-	std::ifstream configFile(filepath.c_str());
-	if (!configFile.is_open())
-	{
-		std::cerr << "Failed to open configuration file: " << filepath << "\n";
-		return false;
-	}
-	std::string line;
-	while (std::getline(configFile, line))
-	{
-		// Remove whitespace
-		line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
-		if(line.empty() || line[0] == '#') {
-			continue ;
-		}
-		if (line == ("server{")) {
-			ServerConfig server;
-			if(!parseServer(configFile, server)) {
-				return false;
-			}
-			servers.push_back(server);
-		}
-	}
-
-	configFile.close();
-	return true;
+    std::ifstream configFile(filepath.c_str());
+    if (!configFile.is_open())
+    {
+        std::cerr << "Failed to open configuration file: " << filepath << "\n";
+        return false;
+    }
+    std::string line;
+    while (std::getline(configFile, line))
+    {
+        // Remove whitespace
+        line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
+        if(line.empty() || line[0] == '#') {
+            continue ;
+        }
+        if (line == ("server{")) {
+            ServerConfig server;
+            if(!parseServer(configFile, server)) {
+                return false;
+            }
+            servers.push_back(server);
+        }
+    }
+    configFile.close();
+    return true;
 }
-
 const std::vector<ServerConfig> &ConfigParser::getServer() const
 {
-	return servers;
+    return servers;
 }
 
 bool	ConfigParser::parseServer(std::ifstream& configFile, ServerConfig& server) {
@@ -76,7 +71,7 @@ bool	ConfigParser::parseServer(std::ifstream& configFile, ServerConfig& server) 
 			}
 			server.host = line.substr(4);
 		}
-		else if (line.find("server_name") == 0) { //auf dafault localhost setzen 
+		else if (line.find("server_name") == 0) { //auf dafault localhost setzen
 			if (line[line.size() - 1] == ';') {
 				line.erase(line.size() - 1);
 			}
@@ -102,7 +97,6 @@ bool	ConfigParser::parseServer(std::ifstream& configFile, ServerConfig& server) 
 	}
 	return true;
 }
-
 bool ConfigParser::parseLocation(std::ifstream &configFile, RouteConfig &route)
 {
 	std::string line;

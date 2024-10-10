@@ -17,12 +17,12 @@ static int setNonBlocking(int fd)
 }
 
 // Global
-volatile bool keep_running = true;
+volatile bool g_keep_running = true;
 
 void signalHandler(int signum)
 {
     std::cout << "\nInterrupt signal (" << signum << ") received. Shutting down server.\n";
-    keep_running = false;
+    g_keep_running = false;
 }
 
 // Constructor
@@ -39,69 +39,57 @@ Server::~Server()
 	Method: 		Server::parseConfig
 	Description: 	Parses the configuration file to extract ports
 */
-bool Server::parseConfig()
+bool Server::parseConfig(std::vector<int> & host_ports)
 {
     ConfigParser parser;
     if (!parser.parseConfig(config_path))
-	{
+    {
         std::cerr << "Failed to parse configuration file: " << config_path << "\n";
         return false;
     }
-
     servers = parser.getServer();
     if (servers.empty())
-	{
+    {
         std::cerr << "No valid server configurations found.\n";
         return false;
     }
     // Verarbeite alle Server-Konfigurationen und füge die Ports hinzu
     for (std::vector<ServerConfig>::const_iterator server_it = servers.begin(); server_it != servers.end(); ++server_it)
-	{
+    {
         const ServerConfig& serverConfig = *server_it;
          std::cout << "port is: " << serverConfig.port << "\n";
         if (serverConfig.port > 0 && serverConfig.port < 65536)
-		{
+        {
             host_ports.push_back(serverConfig.port);
         }
-		else
-		{
+        else
+        {
             std::cerr << "Invalid port number in configuration: " << serverConfig.port << "\n";
             return false;
         }
     }
-
     if (host_ports.empty())
-	{
+    {
         std::cerr << "No valid ports found in configuration.\n";
         return false;
     }
-
     std::cout << "Configured to listen on ports: ";
     for (std::vector<int>::iterator port_it = host_ports.begin(); port_it != host_ports.end(); ++port_it)
-	{
+    {
         std::cout << *port_it << " ";
     }
     std::cout << "\n";
-
     return true;
 }
-
 
 /*
 	Method: 		Server::setupServerSockets
 	Description: 	Sets up listening sockets for each server port
 */
-bool Server::setupServerSockets()
+bool Server::setupServerSockets(std::vector<int> & host_ports)
 {
-    std::cout << "in funktion\n";
-    std::cout << "Number of server configurations: " << servers.size() << "\n";
-
-    for (std::vector<ServerConfig>::const_iterator it = servers.begin(); it != servers.end(); ++it)
-    {
-         std::cout << "in loop\n";
-        const ServerConfig& serverConfig = *it;
-
-        std::cout << "Host: " << serverConfig.host << ", Port: " << serverConfig.port << "\n";
+    for (std::vector<int>::iterator port_it = host_ports.begin(); port_it != host_ports.end(); ++port_it)
+	{
         int server_fd = socket(AF_INET, SOCK_STREAM, 0);
         if (server_fd == -1)
 		{
@@ -118,28 +106,13 @@ bool Server::setupServerSockets()
             return false;
         }
 
-        // Bind to the specified port on the configured host
+        // Bind to the specified port on all interfaces
+		int server_port = *port_it;
         struct sockaddr_in addr;
-
         std::memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
-
-        // Hier sollte der spezifische Host verwendet werden
-        if (!serverConfig.host.empty())
-		{
-            if (inet_pton(AF_INET, serverConfig.host.c_str(), &addr.sin_addr) <= 0)
-            {
-                perror("Invalid address");
-                close(server_fd);
-                return false;
-            }
-        }
-		else
-		{
-            addr.sin_addr.s_addr = INADDR_ANY; // 0.0.0.0
-        }
-
-        addr.sin_port = htons(serverConfig.port);
+        addr.sin_addr.s_addr = INADDR_ANY; // 0.0.0.0
+        addr.sin_port = htons(server_port);
 
         if (bind(server_fd, (struct sockaddr*)&addr, sizeof(addr)) == -1)
 		{
@@ -172,12 +145,11 @@ bool Server::setupServerSockets()
         pfd.revents = 0;
         poll_fds.push_back(pfd);
 
-        std::cout << "Listening on port " << serverConfig.port << " with fd " << server_fd << "\n";
+        std::cout << "Listening on port " << server_port << " with fd " << server_fd << "\n";
     }
 
     return true;
 }
-
 
 /*
 	Method: 		Server::start
@@ -185,17 +157,17 @@ bool Server::setupServerSockets()
 */
 bool Server::start()
 {
-    if (!parseConfig())
+	std::vector<int> host_ports;
+
+    if (!parseConfig(host_ports))
 	{
         return false;
     }
-
-    if (!setupServerSockets())
+    if (!setupServerSockets(host_ports))
 	{
         return false;
     }
-
-    running = true;
+    this->running = true;
     eventLoop();
     return true;
 }
@@ -222,7 +194,7 @@ void Server::stop()
 void Server::eventLoop()
 {
     std::cout << "Server is running. Press Ctrl+C to stop.\n";
-    while (running && keep_running)
+    while (this->running && g_keep_running)
 	{
         int poll_result = poll(poll_fds.data(), poll_fds.size(), 1000); // 1-second timeout
         if (poll_result == -1)
@@ -241,7 +213,7 @@ void Server::eventLoop()
             continue;
         }
 
-		handlePollEvents();
+		processIOEvents();
 		checkTimeouts();
 	}
 }
@@ -266,8 +238,8 @@ void Server::checkTimeouts(void)
     for (std::vector<struct pollfd>::iterator poll_iterator = poll_fds.begin(); poll_iterator != poll_fds.end(); ++poll_iterator)
     {
 
-		std::vector<ClientHandler>::iterator client_iterator = std::find_if(client_handlers.begin(), client_handlers.end(), MatchClientFd(poll_iterator->fd));
-		if (client_iterator != client_handlers.end())
+		std::vector<ClientConnection>::iterator client_iterator = std::find_if(client_connections.begin(), client_connections.end(), MatchClientFd(poll_iterator->fd));
+		if (client_iterator != client_connections.end())
 		{
 			time_t last_activity = client_iterator->getLastActivity();
 			if (difftime(currentTime, last_activity) > client_iterator->timeout)
@@ -275,7 +247,7 @@ void Server::checkTimeouts(void)
 				std::cout << "Client on fd " << client_iterator->fd << " timed out. Disconnecting...\n";
 
 				close(client_iterator->fd);
-				client_handlers.erase(client_iterator);
+				client_connections.erase(client_iterator);
 				poll_iterator = poll_fds.erase(poll_iterator);
 			}
 		}
@@ -290,16 +262,16 @@ bool Server::isHostSocket(int fd)
 bool Server::isClientSocket(int fd)
 {
 	int i = 0;
-	while (i < (int)client_handlers.size())
+	while (i < (int)client_connections.size())
 	{
-		if (client_handlers[i].fd != fd)
+		if (client_connections[i].fd != fd)
 			return false;
 		i++;
 	}
 	return true;
 }
 
-void Server::handlePollEvents()
+void Server::processIOEvents()
 {
         for (int i = 0; i < (int)poll_fds.size(); ++i)
 		{
@@ -309,12 +281,12 @@ void Server::handlePollEvents()
                 if (isHostSocket(fd))
 				{
                     // Event on host socket, accept new connection
-                    if (!handleNewConnection(poll_fds.begin() + i))
+                    if (!acceptNewClient(poll_fds.begin() + i))
 					{
                         std::cerr << "Failed to handle new connection on fd " << fd << "\n";
                     }
                 }
-				else if (!handleClientSocket(poll_fds.begin() + i))
+				else if (!processClientRequest(poll_fds.begin() + i))
 				{
 					std::cout << "Disconnecting client on fd " << fd << "\n";
 					disconnectClient(poll_fds.begin() + i);
@@ -327,9 +299,9 @@ void Server::handlePollEvents()
 void Server::disconnectClient(std::vector<struct pollfd >::iterator poll_iterator)
 {
     close(poll_iterator->fd);
-	std::vector<ClientHandler>::iterator client_iterator = std::find_if(client_handlers.begin(), client_handlers.end(), MatchClientFd(poll_iterator->fd));
-	if (client_iterator != client_handlers.end())
-		client_handlers.erase(client_iterator);
+	std::vector<ClientConnection>::iterator client_iterator = std::find_if(client_connections.begin(), client_connections.end(), MatchClientFd(poll_iterator->fd));
+	if (client_iterator != client_connections.end())
+		client_connections.erase(client_iterator);
     poll_fds.erase(poll_iterator);
 }
 
@@ -337,7 +309,7 @@ void Server::disconnectClient(std::vector<struct pollfd >::iterator poll_iterato
 	Method: 		Server::closeAllSockets
 	Description: 	Handles a new incoming connection
 */
-bool Server::handleNewConnection(std::vector<struct pollfd>::iterator poll_iterator)
+bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
 {
 
 	std::vector<int>::iterator host_fd_iterator = std::find_if(host_fds.begin(), host_fds.end(), MatchHostFd(poll_iterator->fd));
@@ -359,7 +331,7 @@ bool Server::handleNewConnection(std::vector<struct pollfd>::iterator poll_itera
         }
         return true; // No pending connections
     }
-    this->client_handlers.push_back(ClientHandler(client_fd));
+    this->client_connections.push_back(ClientConnection(client_fd));
 
     // Add client to poll_fds
     struct pollfd pfd;
@@ -377,31 +349,25 @@ bool Server::handleNewConnection(std::vector<struct pollfd>::iterator poll_itera
 }
 
 /*
-	Method: 		Server::closeAllSockets
-	Description: 	Handles client communication
+	Method: 		Server::processClientRequest
+	Description: 	Handles client request reading and response sending
 */
-bool Server::handleClientSocket(std::vector<struct pollfd>::iterator poll_iterator)
+bool Server::processClientRequest(std::vector<struct pollfd>::iterator poll_iterator)
 {
-	std::vector<ClientHandler>::iterator client = std::find_if(client_handlers.begin(), client_handlers.end(), MatchClientFd(poll_iterator->fd));
-	if (client == client_handlers.end())
+	//	this check is unnessessary compute intensive -> std::vector allows random lookup via index O(1) which we should use instead
+	std::vector<ClientConnection>::iterator client = std::find_if(client_connections.begin(), client_connections.end(), MatchClientFd(poll_iterator->fd));
+	if (client == client_connections.end())
 	{
-        std::cout << "Error, client doesn't exist.\n";
+        std::cerr << "Error, client doesn't exist.\n";
 		return false;
 	}
 
-	if (!client->handleRequest())
+	if (!client->processRequest())
 	{
 		client->setLastActivity(std::time(NULL));
-        std::cout << "Failed to read request from client.\n";
+        std::cerr << "Failed to process request from client.\n";
         return false;
 	}
-
-    if (!client->handleResponse())
-	{
-		client->setLastActivity(std::time(NULL));
-        std::cout << "Failed to send response to client.\n";
-        return false;
-    }
 
 	client->setLastActivity(std::time(NULL));
     return true;
