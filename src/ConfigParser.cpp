@@ -1,5 +1,4 @@
 #include "../incl/ConfigParser.hpp"
-#include "ConfigParser.hpp"
 
 // Default constructor
 ConfigParser::ConfigParser() {

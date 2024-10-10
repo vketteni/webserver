@@ -53,6 +53,12 @@
 		"stdexcept": "cpp",
 		"streambuf": "cpp",
 		"cinttypes": "cpp",
-		"typeinfo": "cpp"
-	}
+		"typeinfo": "cpp",
+		"chrono": "cpp",
+		"ratio": "cpp",
+		"stop_token": "cpp",
+		"thread": "cpp",
+		"semaphore": "cpp"
+	},
+	"C_Cpp.errorSquiggles": "enabled"
 }

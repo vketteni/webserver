@@ -11,7 +11,7 @@ int main(int argc, char **argv)
     // Register signal handler for graceful shutdown
     signal(SIGINT, signalHandler);
 
-	std::string config_file("/home/hwiemann/Core/webserv/webserv/index_test.conf");
+	std::string config_file("index_test_debug.conf");
 	if (argc != 1)
 		config_file = argv[1];
 
