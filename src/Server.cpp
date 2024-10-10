@@ -233,7 +233,7 @@ void Server::closeAllSockets()
 
 void Server::checkTimeouts(void)
 {
-    time_t currentTime = std::time(NULL);
+    /* time_t currentTime = std::time(NULL);
 
     for (std::vector<struct pollfd>::iterator poll_iterator = poll_fds.begin(); poll_iterator != poll_fds.end(); ++poll_iterator)
     {
@@ -251,7 +251,7 @@ void Server::checkTimeouts(void)
 				poll_iterator = poll_fds.erase(poll_iterator);
 			}
 		}
-    }
+    } */
 }
 
 bool Server::isHostSocket(int fd)
@@ -371,4 +371,9 @@ bool Server::processClientRequest(std::vector<struct pollfd>::iterator poll_iter
 
 	client->setLastActivity(std::time(NULL));
     return true;
+}
+
+bool Server::routeExists(std::string route)
+{
+    return routing_table.find(route) != routing_table.end();
 }

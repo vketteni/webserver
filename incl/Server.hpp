@@ -19,7 +19,7 @@
 #include "ConfigParser.hpp"
 
 // Constants
-const int BACKLOG = 10;
+const int BACKLOG = 10000;
 
 class Server {
 	public:
@@ -52,6 +52,11 @@ class Server {
 		void closeAllSockets();
 		bool isHostSocket(int fd);
 		bool isClientSocket(int fd);
+
+		// routing table functions
+		// lookup route bool doesRouteExist(std::string route);
+		bool routeExists(std::string route);
+		
 };
 
 void signalHandler(int signum);
