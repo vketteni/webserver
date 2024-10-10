@@ -55,7 +55,7 @@ bool ClientHandler::handleRequest()
 		// Client has closed the connection
 		return false;
 	}
-	buffer[chunk_size] = '\0';
+	buffer[chunk_size - 1] = '\0';
 	debug(buffer);
 
 	while (true)
@@ -119,8 +119,8 @@ bool ClientHandler::handleResponse(void)
         // Handle POST request (e.g., file upload)
         if (!handleUpload())
         {
-            _response.generateStatusLine(500);  // Internal Server Error
-            _response.generateBody("Error handling upload");
+            // _response.setStatusCode(500);  // Internal Server Error
+            // _response.setBody("Error handling upload");
         }
         else
         {

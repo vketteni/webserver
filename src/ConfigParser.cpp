@@ -76,7 +76,7 @@ bool	ConfigParser::parseServer(std::ifstream& configFile, ServerConfig& server) 
 			}
 			server.host = line.substr(4);
 		}
-		else if (line.find("server_name") == 0) {
+		else if (line.find("server_name") == 0) { //auf dafault localhost setzen 
 			if (line[line.size() - 1] == ';') {
 				line.erase(line.size() - 1);
 			}
@@ -116,27 +116,39 @@ bool ConfigParser::parseLocation(std::ifstream &configFile, RouteConfig &route)
 			break;
 		}
 
-		if (line.find("root=") == 0) {
-			route.root = line.substr(5);
+		if (line.find("root") == 0) {
+			route.root = line.substr(4);
 		}
 		else if (line.find("index") == 0) {
-			route.index = line.substr(6);
+			route.index = line.substr(5);
 		}
 		else if (line.find("methods") == 0) {
-			std::stringstream ss(line.substr(8));
+			std::stringstream ss(line.substr(7));
 			std::string method;
 			while (getline(ss, method, ',')) {
 				route.methods.push_back(method);
 			}
 		}
+		else if (line.find("redirect") == 0) {
+			std::stringstream ss(line.substr(9));  // '9' to remove 'redirect '
+			std::string status_code_str, new_path;
+			ss >> status_code_str >> new_path;
+
+			route.redirect_status = std::atoi(status_code_str.c_str());
+			route.redirect_path = new_path;
+		}
 		else if (line.find("autoindex") == 0) {
-			route.autoindex = (line.substr(10) == "on");
+			route.autoindex = (line.substr(9) == "on"); // eventuell auf off stellen - nicht gebraucht fuer webserv
 		}
 		else if (line.find("upload_dir") == 0) {
-			route.upload_dir = line.substr(11);
+			route.upload_dir = line.substr(10);
 		}
 		else if (line.find("cgi_extension") == 0) {
-			route.cgi_extension = line.substr(14);
+			std::stringstream ss(line.substr(13));
+			std::string ext;
+			while (getline(ss, ext, ',')) {
+				route.cgi_extension = ext;
+			}
 		}
 	}
 	return true;

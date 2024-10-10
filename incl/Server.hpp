@@ -48,6 +48,8 @@ class Server {
 		bool handleClientSocket(std::vector<struct pollfd>::iterator poll_iterator);
 		void checkTimeouts(void);
 		void disconnectClient(std::vector<struct pollfd >::iterator poll_iterator);
+		std::string checkRedirect(const std::string& requested_path);
+
 
 		// Helper Functions
 		void closeAllSockets();
