@@ -331,7 +331,7 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
         }
         return true; // No pending connections
     }
-    this->client_connections.push_back(ClientConnection(client_fd));
+    this->client_connections.push_back(ClientConnection(client_fd, servers[0]));
 
     // Add client to poll_fds
     struct pollfd pfd;
@@ -373,7 +373,7 @@ bool Server::processClientRequest(std::vector<struct pollfd>::iterator poll_iter
     return true;
 }
 
-bool Server::routeExists(std::string route)
-{
-    return routing_table.find(route) != routing_table.end();
-}
+// bool Server::routeExists(std::string route)
+// {
+//     return routing_table.find(route) != routing_table.end();
+// }

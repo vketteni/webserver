@@ -9,6 +9,11 @@ class HeaderProcessor
 	public:
 		void processHeaders(Request& request)
 		{
+
+			// _content_type = content_type;
+			// _content_length = body.size();
+			// response.setConnection("close");
+
 			const std::map<std::string, std::string> & headers = request.getHeaders();
 			for (std::map<std::string, std::string>::const_iterator headerIterator = headers.begin(); headerIterator != headers.end(); ++headerIterator)
 			{
