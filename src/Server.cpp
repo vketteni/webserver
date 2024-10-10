@@ -41,55 +41,44 @@ Server::~Server()
 */
 bool Server::parseConfig(std::vector<int> & host_ports)
 {
-	// ** Placeholder ** 
-
-    std::ifstream config_file(config_path.c_str());
-    if (!config_file.is_open())
-	{
-		perror("ifstream");
-        std::cerr << "Failed to open configuration file: " << config_path << "\n";
+    ConfigParser parser;
+    if (!parser.parseConfig(config_path))
+    {
+        std::cerr << "Failed to parse configuration file: " << config_path << "\n";
         return false;
     }
-
-    std::string line;
-    while (getline(config_file, line))
-	{
-        // Remove whitespace
-        line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
-        if (line.find("ports=") == 0)
-		{
-            std::string portsStr = line.substr(6); // Remove 'ports='
-            std::stringstream ss(portsStr);
-            std::string port;
-            while (getline(ss, port, ','))
-			{
-                int port_num = std::atoi(port.c_str());
-                if (port_num > 0 && port_num < 65536)
-				{
-                    host_ports.push_back(port_num);
-                }
-				else
-				{
-                    std::cerr << "Invalid port number: " << port_num << "\n";
-                }
-            }
+    servers = parser.getServer();
+    if (servers.empty())
+    {
+        std::cerr << "No valid server configurations found.\n";
+        return false;
+    }
+    // Verarbeite alle Server-Konfigurationen und füge die Ports hinzu
+    for (std::vector<ServerConfig>::const_iterator server_it = servers.begin(); server_it != servers.end(); ++server_it)
+    {
+        const ServerConfig& serverConfig = *server_it;
+         std::cout << "port is: " << serverConfig.port << "\n";
+        if (serverConfig.port > 0 && serverConfig.port < 65536)
+        {
+            host_ports.push_back(serverConfig.port);
+        }
+        else
+        {
+            std::cerr << "Invalid port number in configuration: " << serverConfig.port << "\n";
+            return false;
         }
     }
-	config_file.close();
-
     if (host_ports.empty())
-	{
+    {
         std::cerr << "No valid ports found in configuration.\n";
         return false;
     }
-
     std::cout << "Configured to listen on ports: ";
     for (std::vector<int>::iterator port_it = host_ports.begin(); port_it != host_ports.end(); ++port_it)
-	{
+    {
         std::cout << *port_it << " ";
     }
     std::cout << "\n";
-
     return true;
 }
 

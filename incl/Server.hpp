@@ -16,6 +16,7 @@
 #include <csignal>
 #include "ClientConnection.hpp"
 #include "Debug.hpp"
+#include "ConfigParser.hpp"
 
 // Constants
 const int BACKLOG = 10;
@@ -32,6 +33,7 @@ class Server {
 		std::vector<int> host_fds;
 		std::vector<ClientConnection> client_connections;
 		std::vector<struct pollfd> poll_fds;
+		std::vector<ServerConfig> servers;
 		bool running;
 
 		// Server Setup 
