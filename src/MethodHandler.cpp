@@ -37,7 +37,8 @@ void GetRequestHandler::invoke(Request& request, Response& response)
     contents << file.rdbuf();  // Read the file buffer into the stream
     file.close();
 
-    response.setStatusMessage(contents.str());
+    response.setBody(contents.str());
+    response.setStatusMessage("Ok");
     response.setStatusCode(200);
     response.setHeader("Connection", "keep-alive");
 }

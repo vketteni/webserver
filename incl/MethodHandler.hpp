@@ -4,7 +4,7 @@
 #include "Request.hpp"
 #include "Response.hpp"
 #include "FileManager.hpp"
-
+#include "Debug.hpp"
 
 class AbstractMethodHandler
 {

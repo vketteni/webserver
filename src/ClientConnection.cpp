@@ -48,8 +48,10 @@ bool ClientConnection::processRequest()
 	{
 		Request request = parser.getRequest();
 		Response response;
-
-        std::string root = _server_config.routes[0].root;
+        // CHANGEME: This is a hack to get the root path from the first route
+        std::string root = "/home/ohoro/webserver/res";
+    
+        //  std::string root = _server_config.routes[0].root;
         request.setUri(root + request.getUri());
         
         HeaderProcessor headerProcessor;
@@ -81,14 +83,19 @@ bool ClientConnection::sendResponse(Response & response) {
 	debug(response.getStatusCode());
     std::ostringstream oss;
     oss << "HTTP/1.1 " << response.getStatusCode() << " " << response.getStatusMessage() << "\r\n";
+    oss << "Content-Type: " << "text/html; charset=utf-8" << "\r\n";
+    oss << "Content-Length: " << response.getBody().size() << "\r\n";
 	const std::map<std::string, std::string> & headers = response.getHeaders();
 	for (std::map<std::string, std::string>::const_iterator headerIterator = headers.begin(); headerIterator != headers.end(); ++headerIterator)
 	{
+        
         oss << headerIterator->first << ": " << headerIterator->second << "\r\n";
+        debug(oss.str());
     }
     oss << "\r\n";
     oss << response.getBody();
     std::string responseStr = oss.str();
+    // debug(responseStr);
     ssize_t bytesSent = send(fd, responseStr.c_str(), responseStr.size(), 0);
     return bytesSent == static_cast<ssize_t>(responseStr.size());
 }
