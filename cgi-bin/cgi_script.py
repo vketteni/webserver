@@ -9,3 +9,4 @@ print("<html><body>")
 print("<h2>Hello from Python CGI!</h2>")
 print("<p>This is a CGI script response.</p>")
 print("</body></html>")
+
