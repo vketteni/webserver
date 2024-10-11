@@ -15,8 +15,8 @@ AbstractMethodHandler* getHandlerForMethod(const std::string& method)
 	{
         return new DeleteRequestHandler();
     }
-    
-    return NULL; 
+
+    return NULL;
 }
 
 void GetRequestHandler::invoke(Request& request, Response& response)
@@ -25,7 +25,7 @@ void GetRequestHandler::invoke(Request& request, Response& response)
 
     const std::string method = request.getMethod();
     std::ifstream file(request.getUri().c_str());
-    if (!file) 
+    if (!file)
     {
         response.setStatusMessage("File not found");
         response.setStatusCode(404);
@@ -33,8 +33,13 @@ void GetRequestHandler::invoke(Request& request, Response& response)
         return ;
     }
 
+    //hier auf mime typ checken
+    // iscgi
+    
+
     std::ostringstream contents;
     contents << file.rdbuf();  // Read the file buffer into the stream
+
     file.close();
 
     response.setBody(contents.str());

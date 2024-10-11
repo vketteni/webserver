@@ -11,25 +11,27 @@
 
 struct RouteConfig
 {
-    std::string                 root;
-    std::string                 index;
-    std::vector<std::string>    methods;
-    bool                        autoindex;
-    std::string                 upload_dir;
-    std::string                 cgi_extension;
-    std::string                 redirect_path;
-    int                         redirect_status;
-    RouteConfig() : autoindex(false) {}
+	std::string					root;
+	std::string					index;
+	std::vector<std::string>	methods;
+	bool						autoindex;
+	std::string					upload_dir;
+	std::string					cgi_extension;
+	std::string					redirect_path;
+	int							redirect_status;
+
+	RouteConfig() : autoindex(false) {}
 };
 struct ServerConfig {
-    std::string                         server_name;
-    std::string                         host;
-    int                                 port;
-    std::map<int, std::string>          error_pages;
-    size_t                              client_max_body_size;
-    std::map<std::string, RouteConfig>  routes;
-    std::map<std::string, std::string>  redirects;
-    ServerConfig() : port(0), client_max_body_size(0) {}
+	std::string							server_name;
+	std::string							host;
+	int									port;
+	std::map<int, std::string>			error_pages;
+	size_t								client_max_body_size;
+	std::map<std::string, RouteConfig>	routes;
+	std::map<std::string, std::string>	redirects;
+
+	ServerConfig() : port(0), client_max_body_size(0) {}
 };
 class ConfigParser {
  public:

@@ -29,7 +29,7 @@ void ClientConnection::setLastActivity(time_t last_activity)
 	_lastActivity = last_activity;
 }
 
-bool ClientConnection::processRequest() 
+bool ClientConnection::processRequest()
 {
     ssize_t bytes_read = recv(this->fd, _buffer, BUFFER_SIZE - 1, 0);
     if (bytes_read <= 0)
@@ -52,10 +52,10 @@ bool ClientConnection::processRequest()
         std::string root = "/home/ohoro/webserver/res";
         //  std::string root = _server_config.routes[0].root;
         request.setUri(root + request.getUri());
-        
+
         HeaderProcessor headerProcessor;
         headerProcessor.processHeaders(request);
-		
+
         AbstractMethodHandler* method_handler = getHandlerForMethod(request.getMethod());
         if (method_handler)
 		{
@@ -111,7 +111,7 @@ bool ClientConnection::sendBasicResponse(const std::string &body, int status_cod
     std::string response_str = response.str();
     ssize_t bytes_sent = send(this->fd, response_str.c_str(), response_str.size(), 0);
 
-    if (bytes_sent == -1) 
+    if (bytes_sent == -1)
 	{
         perror("send");
         return false;

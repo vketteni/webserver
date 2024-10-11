@@ -37,7 +37,8 @@ class Request
 		void setUri(const std::string & uri);
 		void setContentLength(size_t content_length);
 		void setHeaders(const std::map<std::string, std::string> & headers);
-		
+
+		void setCgiEnvVariables(const std::string& path);
 };
 
 #endif

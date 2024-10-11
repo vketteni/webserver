@@ -1,4 +1,5 @@
 #include "../incl/Server.hpp"
+#include "Server.hpp"
 
 static int setNonBlocking(int fd)
 {
@@ -35,7 +36,7 @@ Server::~Server()
     stop();
 }
 
-/* 
+/*
 	Method: 		Server::parseConfig
 	Description: 	Parses the configuration file to extract ports
 */
@@ -82,7 +83,7 @@ bool Server::parseConfig(std::vector<int> & host_ports)
     return true;
 }
 
-/* 
+/*
 	Method: 		Server::setupServerSockets
 	Description: 	Sets up listening sockets for each server port
 */
@@ -151,7 +152,7 @@ bool Server::setupServerSockets(std::vector<int> & host_ports)
     return true;
 }
 
-/* 
+/*
 	Method: 		Server::start
 	Description: 	Starts the server
 */
@@ -172,7 +173,7 @@ bool Server::start()
     return true;
 }
 
-/* 
+/*
 	Method: 		Server::stop
 	Description: 	Stops the server
 */
@@ -218,7 +219,7 @@ void Server::eventLoop()
 	}
 }
 
-/* 
+/*
 	Method: 		Server::closeAllSockets
 	Description: 	Closes all listening and client sockets
 */
@@ -245,7 +246,7 @@ void Server::checkTimeouts(void)
 			if (difftime(currentTime, last_activity) > client_iterator->timeout)
 			{
 				std::cout << "Client on fd " << client_iterator->fd << " timed out. Disconnecting...\n";
-				
+
 				close(client_iterator->fd);
 				client_connections.erase(client_iterator);
 				poll_iterator = poll_fds.erase(poll_iterator);
@@ -305,7 +306,7 @@ void Server::disconnectClient(std::vector<struct pollfd >::iterator poll_iterato
     poll_fds.erase(poll_iterator);
 }
 
-/* 
+/*
 	Method: 		Server::closeAllSockets
 	Description: 	Handles a new incoming connection
 */
@@ -348,13 +349,13 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
     return true;
 }
 
-/* 
+/*
 	Method: 		Server::processClientRequest
 	Description: 	Handles client request reading and response sending
 */
 bool Server::processClientRequest(std::vector<struct pollfd>::iterator poll_iterator)
 {
-	//	this check is unnessessary compute intensive -> std::vector allows random lookup via index O(1) which we should use instead 
+	//	this check is unnessessary compute intensive -> std::vector allows random lookup via index O(1) which we should use instead
 	std::vector<ClientConnection>::iterator client = std::find_if(client_connections.begin(), client_connections.end(), MatchClientFd(poll_iterator->fd));
 	if (client == client_connections.end())
 	{
@@ -372,8 +373,38 @@ bool Server::processClientRequest(std::vector<struct pollfd>::iterator poll_iter
 	client->setLastActivity(std::time(NULL));
     return true;
 }
+std::string Server::checkRedirect(const std::string& requested_path)
+{
+	for (std::vector<ServerConfig>::iterator it = servers.begin(); it != servers.end(); ++it)
+	{
+		const ServerConfig& config = *it;
+		std::map<std::string, std::string>::const_iterator redirect_it = config.redirects.find(requested_path);
+		if (redirect_it != config.redirects.end())
+		{
+			return redirect_it->second; // Gibt den neuen Pfad zurück
+		}
+	}
+	return ""; // Kein Redirect gefunden
+}
 
-// bool Server::routeExists(std::string route)
-// {
-//     return routing_table.find(route) != routing_table.end();
-// }
+bool Server::isCGI(const std::string& path)
+{
+    return path.find("/cgi-bin/") == 0 || path.find(".cgi") != std::string::npos || path.find(".py") != std::string::npos;
+}
+
+std::string Server::translateUriToCgiPath(const std::string& path) {
+    std::string cgi_root = "/var/www/cgi-bin";
+    std::string cgi_path = cgi_root + path.substr(path.find("/cgi-bin/") + 8);
+    return cgi_path;
+}
+
+void Server::CGIRequest(const Request& request, int client_fd)
+{
+    std::string path = request.getUri();
+    if(isCGI(path)) {
+        std::string cgi_path = translateUriToCgiPath(path);
+        CGIExecutor cgiExe;
+        cgiExe.executeCGI(cgi_path, client_fd);
+    }
+    // CHANGEME: zum normalen Request handler
+}
