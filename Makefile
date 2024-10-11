@@ -34,7 +34,7 @@ fclean: clean
 re: fclean all
 
 # Neue Regel, um nach "// CHANGEME:" zu suchen
-check-changeme:
-	@git grep -C 2 "// CHANGEME:"  -- '*.cpp' '*.h' || echo "Keine 'CHANGEME'-Kommentare gefunden."
+check:
+	@git grep -C 1 "// CHANGEME:"  -- '*.cpp' '*.h' || echo "Keine 'CHANGEME'-Kommentare gefunden."
 
-.PHONY: all clean re check-changeme
+.PHONY: all clean re check

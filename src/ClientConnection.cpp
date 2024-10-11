@@ -46,11 +46,10 @@ bool ClientConnection::processRequest()
     }
     if (parser.isComplete())
 	{
-		Request request = parser.getRequest();
+	    Request request = parser.getRequest();
 		Response response;
-        // CHANGEME: This is a hack to get the root path from the first route
+// CHANGEME: This is a hack to get the root path from the first route
         std::string root = "/home/ohoro/webserver/res";
-    
         //  std::string root = _server_config.routes[0].root;
         request.setUri(root + request.getUri());
         
