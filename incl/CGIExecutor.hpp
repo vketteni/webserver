@@ -5,10 +5,10 @@
 #include <sstream>
 #include <unistd.h>
 #include <fstream>
-#include <Request.hpp>
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <cstring>
+#include "Request.hpp"
 
 
 #ifndef CGIEXECUTOR_HPP_
@@ -20,7 +20,7 @@ class CGIExecutor {
   CGIExecutor();
   ~CGIExecutor();
 
-  void executeCGI(const std::string script_path, int client_fd);
+  bool executeCGI(const std::string script_path, int client_fd);
 
  private:
 

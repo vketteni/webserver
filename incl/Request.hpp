@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <iostream>
 #include <sstream>
+#include <cstdlib>
 #include "Debug.hpp"
 
 class Request
@@ -38,7 +39,7 @@ class Request
 		void setContentLength(size_t content_length);
 		void setHeaders(const std::map<std::string, std::string> & headers);
 
-		void setCgiEnvVariables(const std::string& path);
+		void setCgiEnvVariables();
 };
 
 #endif

@@ -19,6 +19,7 @@
 #include "ConfigParser.hpp"
 #include "Request.hpp"
 #include "CGIExecutor.hpp"
+#include "StatusCode.hpp"
 
 // Constants
 const int BACKLOG = 10000;
@@ -57,9 +58,12 @@ class Server {
 		bool isHostSocket(int fd);
 		bool isClientSocket(int fd);
 
+		void sendErrorResponse(int client_fd, int status_code);
+
 		bool isCGI(const std::string& path);
 		void CGIRequest(const Request& request, int client_fd);
 		std::string translateUriToCgiPath(const std::string& path);
+
 
 		// routing table functions
 		// lookup route bool doesRouteExist(std::string route);

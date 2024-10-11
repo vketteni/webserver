@@ -85,12 +85,14 @@ void Request::setHeaders(const std::map<std::string, std::string> &headers)
 	_headers = headers;
 }
 
-void Request::setCgiEnvVariables(const std::string& path)
+void Request::setCgiEnvVariables()
 {
-	std::string content_length = std::to_string(_content_length);
-	
-    setenv("REQUEST_METHOD", _method.c_str(), 1);
-    setenv("SCRIPT_NAME", _uri.c_str(), 1);
-    setenv("CONTENT_LENGTH", content_length.c_str(), 1);
-    setenv("SERVER_PROTOCOL", "HTTP/1.1", 1);
+	std::stringstream ss;
+	ss << _content_length;
+	std::string content_length = ss.str();
+
+	setenv("REQUEST_METHOD", _method.c_str(), 1);
+	setenv("SCRIPT_NAME", _uri.c_str(), 1);
+	setenv("CONTENT_LENGTH", content_length.c_str(), 1);
+	setenv("SERVER_PROTOCOL", "HTTP/1.1", 1);
 }

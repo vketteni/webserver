@@ -9,20 +9,19 @@ CGIExecutor::~CGIExecutor() { return; }
 
 
 
-void CGIExecutor::executeCGI(const std::string script_path, int client_fd)
+bool CGIExecutor::executeCGI(const std::string script_path, int client_fd)
 {
 	Request request;
-
-	request.setCgiEnvVariables(script_path);
 
 	pid_t	pid = fork();
 
 	if (pid < 0) {
 		perror("Fork failed");
-		return;
+		return false;
 	}
 
 	if (pid == 0) {
+		request.setCgiEnvVariables();
 		dup2(client_fd, STDOUT_FILENO);
 		dup2(client_fd, STDERR_FILENO);
 
@@ -32,6 +31,10 @@ void CGIExecutor::executeCGI(const std::string script_path, int client_fd)
 		}
 	}
 	else {
-		waitpid(pid, NULL, 0);
+		if (waitpid(pid, NULL, 0) == -1) {
+			perror("Waitpid failed");
+			return false;
+		}
 	}
+	return true;
 }
