@@ -1,4 +1,5 @@
 #include "../incl/Server.hpp"
+#include "Server.hpp"
 
 static int setNonBlocking(int fd)
 {
@@ -233,7 +234,7 @@ void Server::closeAllSockets()
 
 void Server::checkTimeouts(void)
 {
-    time_t currentTime = std::time(NULL);
+    /* time_t currentTime = std::time(NULL);
 
     for (std::vector<struct pollfd>::iterator poll_iterator = poll_fds.begin(); poll_iterator != poll_fds.end(); ++poll_iterator)
     {
@@ -251,7 +252,7 @@ void Server::checkTimeouts(void)
 				poll_iterator = poll_fds.erase(poll_iterator);
 			}
 		}
-    }
+    } */
 }
 
 bool Server::isHostSocket(int fd)
@@ -331,7 +332,7 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
         }
         return true; // No pending connections
     }
-    this->client_connections.push_back(ClientConnection(client_fd));
+    this->client_connections.push_back(ClientConnection(client_fd, servers[0]));
 
     // Add client to poll_fds
     struct pollfd pfd;
@@ -372,7 +373,6 @@ bool Server::processClientRequest(std::vector<struct pollfd>::iterator poll_iter
 	client->setLastActivity(std::time(NULL));
     return true;
 }
-
 std::string Server::checkRedirect(const std::string& requested_path)
 {
 	for (std::vector<ServerConfig>::iterator it = servers.begin(); it != servers.end(); ++it)
@@ -386,14 +386,25 @@ std::string Server::checkRedirect(const std::string& requested_path)
 	}
 	return ""; // Kein Redirect gefunden
 }
-/*
-redirect implementieren
-Server-Logik: Implementiere die Logik, um bei Anfragen an Redirect-Routen den entsprechenden HTTP-Redirect (301 oder 302) zu senden.
 
-if (route.redirect_status != 0) {
-    response.status_code = route.redirect_status;
-    response.headers["Location"] = route.redirect_path;
-    return response;
+bool Server::isCGI(const std::string& path)
+{
+    return path.find("/cgi-bin/") == 0 || path.find(".cgi") != std::string::npos || path.find(".py") != std::string::npos;
 }
 
-*/
+std::string Server::translateUriToCgiPath(const std::string& path) {
+    std::string cgi_root = "/var/www/cgi-bin";
+    std::string cgi_path = cgi_root + path.substr(path.find("/cgi-bin/") + 8);
+    return cgi_path;
+}
+
+void Server::CGIRequest(const Request& request, int client_fd)
+{
+    std::string path = request.getUri();
+    if(isCGI(path)) {
+        std::string cgi_path = translateUriToCgiPath(path);
+        CGIExecutor cgiExe;
+        cgiExe.executeCGI(cgi_path, client_fd);
+    }
+    // CHANGEME: zum normalen Request handler
+}

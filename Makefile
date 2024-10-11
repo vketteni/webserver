@@ -1,7 +1,7 @@
 NAME=webserv
 CC=c++
 
-MAIN =    Response Request ConfigParser RequestParser MethodHandler ClientConnection Server main
+MAIN =    Response Request ConfigParser RequestParser MethodHandler ClientConnection Server main FileManager StatusCode
 
 OBJ_DIR= obj/
 SRC_DIR= src/
@@ -10,7 +10,7 @@ SRCS = $(addprefix $(SRC_DIR), $(addsuffix .cpp, $(MAIN)))
 
 OBJS = $(SRCS:src/%.cpp=$(OBJ_DIR)%.o)
 
-FLAGS=-Wall -Wextra -Werror -std=c++11 -g
+FLAGS=-Wall -Wextra -Werror -std=c++98 -g
 # FLAGS+= -DNDEBUG
 INC= -I incl/
 

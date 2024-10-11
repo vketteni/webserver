@@ -17,9 +17,11 @@
 #include "ClientConnection.hpp"
 #include "Debug.hpp"
 #include "ConfigParser.hpp"
+#include "Request.hpp"
+#include "CGIExecutor.hpp"
 
 // Constants
-const int BACKLOG = 10;
+const int BACKLOG = 10000;
 
 class Server {
 	public:
@@ -36,7 +38,7 @@ class Server {
 		std::vector<ServerConfig> servers;
 		bool running;
 
-		// Server Setup 
+		// Server Setup
 		bool parseConfig(std::vector<int> & host_ports);
 		bool setupServerSockets(std::vector<int> & host_ports);
 
@@ -54,6 +56,15 @@ class Server {
 		void closeAllSockets();
 		bool isHostSocket(int fd);
 		bool isClientSocket(int fd);
+
+		bool isCGI(const std::string& path);
+		void CGIRequest(const Request& request, int client_fd);
+		std::string translateUriToCgiPath(const std::string& path);
+
+		// routing table functions
+		// lookup route bool doesRouteExist(std::string route);
+		bool routeExists(std::string route);
+
 };
 
 void signalHandler(int signum);
@@ -63,7 +74,7 @@ struct MatchClientFd
     int fd;
 
     MatchClientFd(int fd) : fd(fd) {}
-    
+
     bool operator()(const ClientConnection& client) const
 	{
         return client.fd == fd;

@@ -33,6 +33,8 @@ class Response
 		const std::string & getStatusMessage(void);
 		const std::map<std::string, std::string> & getHeaders(void);
 		const std::string & getBody(void);
+		void setBody(const std::string & body);
+		void setHeader(const std::string & key, const std::string & value);
 		void setStatusCode(int code);
 		void setStatusMessage(const std::string & message);
 		

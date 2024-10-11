@@ -3,6 +3,7 @@
 
 #include "Request.hpp"
 #include "Response.hpp"
+#include "FileManager.hpp"
 
 
 class AbstractMethodHandler
@@ -21,34 +22,20 @@ AbstractMethodHandler* getHandlerForMethod(const std::string& method);
 class GetRequestHandler : public AbstractMethodHandler
 {
 	public:
-		void invoke(Request& request, Response& response)
-		{
-			// Handle GET request
-			(void)request;
-			(void)response;
-		}
+		void invoke(Request& request, Response& response);
 };
 
 class PostRequestHandler : public AbstractMethodHandler
 {
 	public:
-		void invoke(Request& request, Response& response)
-		{
-			// Handle POST request
-			(void)request;
-			(void)response;
-		}
+		void invoke(Request& request, Response& response);
+		
 };
 
 class DeleteRequestHandler : public AbstractMethodHandler
 {
 	public:
-		void invoke(Request& request, Response& response)
-		{
-			// Handle POST request
-			(void)request;
-			(void)response;
-		}
+		void invoke(Request& request, Response& response);
 };
 
 #endif

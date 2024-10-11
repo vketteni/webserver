@@ -1,4 +1,5 @@
 #include "../incl/Response.hpp"
+#include "Response.hpp"
 
 Response::Response()
 {
@@ -26,6 +27,16 @@ const std::map<std::string, std::string> &Response::getHeaders(void)
 const std::string &Response::getBody(void)
 {
 	return _body;
+}
+
+void Response::setBody(const std::string &body)
+{
+	_body = body;
+}
+
+void Response::setHeader(const std::string &key, const std::string &value)
+{
+	_headers[key] = value;
 }
 
 void Response::setStatusCode(int code)
