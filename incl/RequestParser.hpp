@@ -2,7 +2,7 @@
 #define REQUESTPARSER_HPP
 
 #include "Request.hpp"
-#include <stdio.h>
+#include "Utils.hpp"
 
 enum RequestState {
     READ_REQUEST_LINE,
@@ -37,7 +37,5 @@ class RequestParser
 		bool extractHeaders(void);
 		bool processParsingHeaders(void);
 };
-
-void trim(std::string& s);
 
 #endif

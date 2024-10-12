@@ -90,8 +90,8 @@ bool RequestParser::extractHeaders()
 		}
 		std::string name = header_line.substr(0, colon_pos);
 		std::string value = header_line.substr(colon_pos + 1);
-		trim(name);
-		trim(value);
+		Utils::trim(name, WSPACE);
+		Utils::trim(value, WSPACE);
 		headers[name] = value;
 	}
 	_buffer.erase(0, 2);
@@ -142,9 +142,3 @@ bool RequestParser::isComplete() const
 	return _state == COMPLETE;
 }
 
-void trim(std::string& s)
-{
-	const char* whitespace = " \t\n\r\f\v";
-	s.erase(0, s.find_first_not_of(whitespace));
-	s.erase(s.find_last_not_of(whitespace) + 1);
-}
