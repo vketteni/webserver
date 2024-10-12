@@ -46,6 +46,7 @@ bool RequestParser::parse() {
 	return true;
 }
 
+#include <cstdio>
 bool RequestParser::extractRequestLine(void)
 {
 	size_t pos = _buffer.find("\r\n");
@@ -64,9 +65,9 @@ bool RequestParser::extractRequestLine(void)
 	_request.setMethod(method);
 	_request.setUri(uri);
 	_request.setVersion(http_version);
-	 printf ("Method: %s\n", method.c_str());
-	 printf ("URI: %s\n", uri.c_str());
-	 printf ("HTTP Version: %s\n", http_version.c_str());
+	printf ("Method: %s\n", method.c_str());
+	printf ("URI: %s\n", uri.c_str());
+	printf ("HTTP Version: %s\n", http_version.c_str());
 	return true;
 }
 

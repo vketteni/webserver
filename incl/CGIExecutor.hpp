@@ -1,3 +1,6 @@
+#ifndef CGIEXECUTOR_HPP
+#define CGIEXECUTOR_HPP
+
 #include <ctime>
 #include <string>
 #include <map>
@@ -10,21 +13,22 @@
 #include <cstring>
 #include "Request.hpp"
 
+#include "Request.hpp"
+#include "Response.hpp"
 
-#ifndef CGIEXECUTOR_HPP_
-#define CGIEXECUTOR_HPP_
 
-// Class declaration
+
 class CGIExecutor {
- public:
-  CGIExecutor();
-  ~CGIExecutor();
+public:
+    CGIExecutor() {}
+    ~CGIExecutor() {}
 
-  bool executeCGI(const std::string script_path, int client_fd);
+    bool executeCGI(int client_fd, const std::string& scriptPath, const Request& request, Response& response);
 
- private:
-
+private:
+    char** createCGIEnvironment(const Request& request);
 };
 
-#endif // CGIEXECUTOR_HPP_
+
+#endif
 

@@ -36,7 +36,7 @@ class Server {
 		std::vector<int> host_fds;
 		std::vector<ClientConnection> client_connections;
 		std::vector<struct pollfd> poll_fds;
-		std::vector<ServerConfig> servers;
+		std::vector<HostConfig> servers;
 		bool running;
 
 		// Server Setup
@@ -61,7 +61,6 @@ class Server {
 		void sendErrorResponse(int client_fd, int status_code);
 
 		bool isCGI(const std::string& path);
-		void CGIRequest(const Request& request, int client_fd);
 		std::string translateUriToCgiPath(const std::string& path);
 
 

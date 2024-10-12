@@ -45,6 +45,11 @@ const std::string &Request::getVersion() const
 	return (_http_version);
 }
 
+const std::string &Request::getHeader(const std::string &key) const
+{
+	return (_headers.at(key));
+}
+
 const std::map<std::string, std::string> &Request::getHeaders() const
 {
 	return (_headers);
@@ -80,19 +85,12 @@ void Request::setContentLength(size_t content_length)
 	_content_length = content_length;
 }
 
+void Request::setHeader(const std::string &key, const std::string &value)
+{
+	_headers[key] = value;
+}
+
 void Request::setHeaders(const std::map<std::string, std::string> &headers)
 {
 	_headers = headers;
-}
-
-void Request::setCgiEnvVariables()
-{
-	std::stringstream ss;
-	ss << _content_length;
-	std::string content_length = ss.str();
-
-	setenv("REQUEST_METHOD", _method.c_str(), 1);
-	setenv("SCRIPT_NAME", _uri.c_str(), 1);
-	setenv("CONTENT_LENGTH", content_length.c_str(), 1);
-	setenv("SERVER_PROTOCOL", "HTTP/1.1", 1);
 }

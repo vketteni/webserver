@@ -661,7 +661,7 @@ ___
 
 **TODO**  
 - **Implement Resource Owner Restrictions**  
-  Ensure resource owners disable or disallow unsafe actions (such as 'delete' via query parameters) when accessed using safe request methods like GET, to prevent unintended side effects during automated tasks like web crawling or indexing.
+  Ensure resource owners disable or disallow unsafe actions (such as 'delete' via query parameters) when accessed using safe request methods like GET, to prevent unintended side effects during automated tasks like web crawling or indexing. 
 
 **Guideline Reference**  
 - [RFC 7231 Section 4.2.1 - Safe Methods](https://www.rfc-editor.org/rfc/rfc7231#section-4.2.1)

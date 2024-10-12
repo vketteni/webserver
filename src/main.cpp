@@ -11,7 +11,7 @@ int main(int argc, char **argv)
     // Register signal handler for graceful shutdown
     signal(SIGINT, signalHandler);
 
-	std::string config_file("/home/hwiemann/Core/webserv/webserv/index_test.conf");
+	std::string config_file("/home/vketteni/42berlin/github/webserver/index_test.conf");
 	if (argc != 1)
 		config_file = argv[1];
 
@@ -23,16 +23,6 @@ int main(int argc, char **argv)
     }
 
     return 0;
-	/*
-		// Create a sample configuration file
-		std::ofstream ofs(config_file.c_str());
-		if (!ofs.is_open()) {
-			std::cerr << "Failed to create configuration file.\n";
-			return 1;
-		}
-		ofs << "ports=8080,9090\n";
-		ofs.close();
-	*/
 }
 
 

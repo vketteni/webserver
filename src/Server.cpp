@@ -45,46 +45,45 @@ Server::~Server()
 */
 bool Server::parseConfig(std::vector<int> &host_ports)
 {
-	ConfigParser	parser;
-
-	if (!parser.parseConfig(config_path))
-	{
-		std::cerr << "Failed to parse configuration file: " << config_path << "\n";
-		return (false);
-	}
-	servers = parser.getServer();
-	if (servers.empty())
-	{
-		std::cerr << "No valid server configurations found.\n";
-		return (false);
-	}
-	// Verarbeite alle Server-Konfigurationen und füge die Ports hinzu
-	for (std::vector<ServerConfig>::const_iterator server_it = servers.begin(); server_it != servers.end(); ++server_it)
-	{
-		const ServerConfig &serverConfig = *server_it;
-		std::cout << "port is: " << serverConfig.port << "\n";
-		if (serverConfig.port > 0 && serverConfig.port < 65536)
-		{
-			host_ports.push_back(serverConfig.port);
-		}
-		else
-		{
-			std::cerr << "Invalid port number in configuration: " << serverConfig.port << "\n";
-			return (false);
-		}
-	}
-	if (host_ports.empty())
-	{
-		std::cerr << "No valid ports found in configuration.\n";
-		return (false);
-	}
-	std::cout << "Configured to listen on ports: ";
-	for (std::vector<int>::iterator port_it = host_ports.begin(); port_it != host_ports.end(); ++port_it)
-	{
-		std::cout << *port_it << " ";
-	}
-	std::cout << "\n";
-	return (true);
+    ConfigParser parser;
+    if (!parser.parseConfig(config_path))
+    {
+        std::cerr << "Failed to parse configuration file: " << config_path << "\n";
+        return false;
+    }
+    servers = parser.getServer();
+    if (servers.empty())
+    {
+        std::cerr << "No valid server configurations found.\n";
+        return false;
+    }
+    // Verarbeite alle Server-Konfigurationen und füge die Ports hinzu
+    for (std::vector<HostConfig>::const_iterator server_it = servers.begin(); server_it != servers.end(); ++server_it)
+    {
+        const HostConfig& HostConfig = *server_it;
+         std::cout << "port is: " << HostConfig.port << "\n";
+        if (HostConfig.port > 0 && HostConfig.port < 65536)
+        {
+            host_ports.push_back(HostConfig.port);
+        }
+        else
+        {
+            std::cerr << "Invalid port number in configuration: " << HostConfig.port << "\n";
+            return false;
+        }
+    }
+    if (host_ports.empty())
+    {
+        std::cerr << "No valid ports found in configuration.\n";
+        return false;
+    }
+    std::cout << "Configured to listen on ports: ";
+    for (std::vector<int>::iterator port_it = host_ports.begin(); port_it != host_ports.end(); ++port_it)
+    {
+        std::cout << *port_it << " ";
+    }
+    std::cout << "\n";
+    return true;
 }
 
 /*
@@ -376,13 +375,13 @@ bool Server::processClientRequest(std::vector<struct pollfd>::iterator poll_iter
 	client->setLastActivity(std::time(NULL));
 	return true;
 }
-std::string Server::checkRedirect(const std::string &requested_path)
+
+std::string Server::checkRedirect(const std::string& requested_path)
 {
-	for (std::vector<ServerConfig>::iterator it = servers.begin(); it != servers.end(); ++it)
+	for (std::vector<HostConfig>::iterator it = servers.begin(); it != servers.end(); ++it)
 	{
-		const ServerConfig &config = *it;
-		std::map<std::string,
-			std::string>::const_iterator redirect_it = config.redirects.find(requested_path);
+		const HostConfig& config = *it;
+		std::map<std::string, std::string>::const_iterator redirect_it = config.redirects.find(requested_path);
 		if (redirect_it != config.redirects.end())
 		{
 		//	sendErrorResponse(redirect_it->second, 400);
@@ -405,37 +404,3 @@ std::string Server::translateUriToCgiPath(const std::string &path)
 	return cgi_path;
 }
 
-void Server::CGIRequest(const Request &request, int client_fd)
-{
-		CGIExecutor cgiExe;
-
-	std::string path = request.getUri();
-	if (isCGI(path))
-	{
-		std::string cgi_path = translateUriToCgiPath(path);
-		if (!cgiExe.executeCGI(cgi_path, client_fd))
-		{
-			sendErrorResponse(client_fd, 500);
-		}
-	}
-	else
-	{
-		sendErrorResponse(client_fd, 404);
-	}
-}
-
-void Server::sendErrorResponse(int client_fd, int status_code)
-{
-	std::string message = StatusCode::getStatusMessage(status_code);
-
-	std::stringstream ss;
-	ss << status_code;
-	std::string status_code_str = ss.str();
-
-	std::string response = "HTTP/1.1 " + status_code_str + " " + message + "\r\n";
-	response += "Content-Length: 0\r\n";
-	response += "Connection: close\n";
-
-	send(client_fd, response.c_str(), response.size(), 0);
-	std::cerr << "Error: " << status_code << " " << message << "\n";
-}

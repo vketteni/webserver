@@ -1,6 +1,6 @@
 #include "../incl/ClientConnection.hpp"
 
-ClientConnection::ClientConnection(int client_fd, ServerConfig & server_config) : _lastActivity(std::time(NULL)),
+ClientConnection::ClientConnection(int client_fd, HostConfig & server_config) : _lastActivity(std::time(NULL)),
 	_server_config(server_config), fd(client_fd), timeout(TIMEOUT_DURATION) {}
 
 ClientConnection::ClientConnection(const ClientConnection &other) : _server_config(other._server_config), fd(other.fd), timeout(other.timeout)
@@ -48,9 +48,8 @@ bool ClientConnection::processRequest()
 	{
 	    Request request = parser.getRequest();
 		Response response;
-// CHANGEME: This is a hack to get the root path from the first route
-        std::string root = "/home/ohoro/webserver/res";
-        //  std::string root = _server_config.routes[0].root;
+		
+        std::string root = _server_config.routes[0].root;
         request.setUri(root + request.getUri());
 
         HeaderProcessor headerProcessor;

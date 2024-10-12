@@ -22,7 +22,9 @@ struct RouteConfig
 
 	RouteConfig() : autoindex(false) {}
 };
-struct ServerConfig {
+
+struct HostConfig
+{
 	std::string							server_name;
 	std::string							host;
 	int									port;
@@ -31,17 +33,19 @@ struct ServerConfig {
 	std::map<std::string, RouteConfig>	routes;
 	std::map<std::string, std::string>	redirects;
 
-	ServerConfig() : port(0), client_max_body_size(0) {}
+	HostConfig() : port(0), client_max_body_size(0) {}
 };
-class ConfigParser {
+
+class ConfigParser
+{
  public:
     ConfigParser();
     ~ConfigParser();
     bool    parseConfig(const std::string& filepath);
-    const   std::vector<ServerConfig>& getServer() const;
+    const   std::vector<HostConfig>& getServer() const;
  private:
-    std::vector<ServerConfig> servers;
-    bool    parseServer(std::ifstream& configFile, ServerConfig& server); //to parse one server
+    std::vector<HostConfig> servers;
+    bool    parseServer(std::ifstream& configFile, HostConfig& server); //to parse one server
     bool    parseLocation(std::ifstream& configFile, RouteConfig& route);
 };
 #endif // CONFIGPARSER_HPP
