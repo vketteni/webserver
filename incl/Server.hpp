@@ -36,7 +36,7 @@ class Server {
 		std::vector<int> host_fds;
 		std::vector<ClientConnection> client_connections;
 		std::vector<struct pollfd> poll_fds;
-		std::vector<HostConfig> servers;
+		std::vector<HostConfig> host_configs;
 		bool running;
 
 		// Server Setup
@@ -50,7 +50,7 @@ class Server {
 		bool processClientRequest(std::vector<struct pollfd>::iterator poll_iterator);
 		void checkTimeouts(void);
 		void disconnectClient(std::vector<struct pollfd >::iterator poll_iterator);
-		std::string checkRedirect(const std::string& requested_path);
+		// std::string checkRedirect(const std::string& requested_path);
 
 
 		// Helper Functions

@@ -49,8 +49,10 @@ bool ClientConnection::processRequest()
 	    Request request = parser.getRequest();
 		Response response;
 		
-        std::string root = _server_config.routes[0].root;
-        request.setUri(root + request.getUri());
+        std::string root = _server_config.routes[request.getUri()].root;
+        // request.setUri(root + request.getUri());
+
+		debug(request.getUri());
 
         HeaderProcessor headerProcessor;
         headerProcessor.processHeaders(request);

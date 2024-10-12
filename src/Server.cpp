@@ -45,20 +45,21 @@ Server::~Server()
 */
 bool Server::parseConfig(std::vector<int> &host_ports)
 {
-    ConfigParser parser;
-    if (!parser.parseConfig(config_path))
+	
+    ConfigParser config_parser;
+    if (!config_parser.parseConfig(config_path))
     {
         std::cerr << "Failed to parse configuration file: " << config_path << "\n";
         return false;
     }
-    servers = parser.getServer();
-    if (servers.empty())
+    host_configs = config_parser.getHostConfigs();
+    if (host_configs.empty())
     {
         std::cerr << "No valid server configurations found.\n";
         return false;
     }
-    // Verarbeite alle Server-Konfigurationen und füge die Ports hinzu
-    for (std::vector<HostConfig>::const_iterator server_it = servers.begin(); server_it != servers.end(); ++server_it)
+
+    for (std::vector<HostConfig>::const_iterator server_it = host_configs.begin(); server_it != host_configs.end(); ++server_it)
     {
         const HostConfig& HostConfig = *server_it;
          std::cout << "port is: " << HostConfig.port << "\n";
@@ -334,20 +335,28 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
 	{
 		if (errno != EWOULDBLOCK && errno != EAGAIN)
 		{
-			sendErrorResponse(poll_iterator->fd, 500);
-			return false;
-		}
-		return true; // No pending connections
-	}
-	this->client_connections.push_back(ClientConnection(client_fd, servers[0]));
-	// Add client to poll_fds
-	pfd.fd = client_fd;
-	pfd.events = POLLIN;
-	pfd.revents = 0;
-	this->poll_fds.push_back(pfd);
-	inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
-	std::cout << "Accepted connection from " << client_ip << ":" << ntohs(client_addr.sin_port) << " with fd " << client_fd << "\n";
-	return true;
+            perror("accept");
+            return false;
+        }
+        return true; // No pending connections
+    }
+
+	// !! THIS LINE HARDCODES CONFIG ?? TODO REMOVE
+    this->client_connections.push_back(ClientConnection(client_fd, host_configs[0]));
+
+    // Add client to poll_fds
+    struct pollfd pfd;
+    pfd.fd = client_fd;
+    pfd.events = POLLIN;
+    pfd.revents = 0;
+    this->poll_fds.push_back(pfd);
+
+    char client_ip[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
+    std::cout << "Accepted connection from " << client_ip << ":" << ntohs(client_addr.sin_port)
+              << " with fd " << client_fd << "\n";
+
+    return true;
 }
 
 /*
@@ -376,20 +385,19 @@ bool Server::processClientRequest(std::vector<struct pollfd>::iterator poll_iter
 	return true;
 }
 
-std::string Server::checkRedirect(const std::string& requested_path)
-{
-	for (std::vector<HostConfig>::iterator it = servers.begin(); it != servers.end(); ++it)
-	{
-		const HostConfig& config = *it;
-		std::map<std::string, std::string>::const_iterator redirect_it = config.redirects.find(requested_path);
-		if (redirect_it != config.redirects.end())
-		{
-		//	sendErrorResponse(redirect_it->second, 400);
-			return redirect_it->second; // Gibt den neuen Pfad zurück
-		}
-	}
-	return ""; // Kein Redirect gefunden
-}
+// std::string Server::checkRedirect(const std::string& requested_path)
+// {
+// 	for (std::vector<HostConfig>::iterator it = servers.begin(); it != servers.end(); ++it)
+// 	{
+// 		const HostConfig& config = *it;
+// 		std::map<std::string, std::string>::const_iterator redirect_it = config.redirects.find(requested_path);
+// 		if (redirect_it != config.redirects.end())
+// 		{
+// 			return redirect_it->second; // Gibt den neuen Pfad zurück
+// 		}
+// 	}
+// 	return ""; // Kein Redirect gefunden
+// }
 
 bool Server::isCGI(const std::string &path)
 {
