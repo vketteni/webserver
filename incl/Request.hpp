@@ -18,6 +18,7 @@ class Request
 		std::string							_uri;
 		std::map<std::string, std::string>	_headers;
 		std::string							_body;
+		std::string							_query_string;
 		size_t								_content_length;
 
 	public:
@@ -29,6 +30,7 @@ class Request
 		const std::string &getMethod() const;
 		const std::string &getUri() const;
 		const std::string &getVersion() const;
+		const std::string &getQueryString() const;
 		const std::string &getHeader(const std::string &key) const;
 		const std::map<std::string, std::string> &getHeaders() const;
 		size_t getContentLength(void);
@@ -37,6 +39,7 @@ class Request
 		void setBody(const std::string & body);
 		void setVersion(const std::string & version);
 		void setUri(const std::string & uri);
+		void setQueryString(const std::string & query_string);
 		void setContentLength(size_t content_length);
 		void setHeader(const std::string &key, const std::string &value);
 		void setHeaders(const std::map<std::string, std::string> & headers);

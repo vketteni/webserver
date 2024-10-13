@@ -54,6 +54,9 @@ bool RequestParser::extractRequestLine(void)
 		return false;
 	}
 
+	// TODO: extract query string
+	_request.setQueryString("");
+
 	std::string requestLine = _buffer.substr(0, pos);
 	_buffer.erase(0, pos + 2);
 

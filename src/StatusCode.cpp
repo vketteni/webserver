@@ -1,4 +1,4 @@
-#include "StatusCode.hpp"
+#include "../incl/StatusCode.hpp"
 
 // Definiere die statische Map
 std::map<int, std::string> StatusCode::statusMessages;

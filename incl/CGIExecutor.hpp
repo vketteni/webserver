@@ -20,10 +20,11 @@
 
 class CGIExecutor {
 public:
-    CGIExecutor() {}
-    ~CGIExecutor() {}
+    CGIExecutor();
+    ~CGIExecutor();
 
-    bool executeCGI(int client_fd, const std::string& scriptPath, const Request& request, Response& response);
+    bool executeCGI(const Request & request, Response & response);
+	bool isCGI(const std::string &path);
 
 private:
     char** createCGIEnvironment(const Request& request);

@@ -49,14 +49,17 @@ bool ClientConnection::processRequest()
 	    Request request = parser.getRequest();
 		Response response;
 		
-        std::string root = _server_config.routes[request.getUri()].root;
-        // request.setUri(root + request.getUri());
+        //std::string root = _server_config.routes[request.getUri()].root;
+		std::string root = "/home/vketteni/42berlin/github/webserver/www";
+        request.setUri(root + request.getUri());
 
 		debug(request.getUri());
 
         HeaderProcessor headerProcessor;
         headerProcessor.processHeaders(request);
 
+		// response.setUri (FileManager (uri) -> file_path);
+		// if else
         AbstractMethodHandler* method_handler = getHandlerForMethod(request.getMethod());
         if (method_handler)
 		{

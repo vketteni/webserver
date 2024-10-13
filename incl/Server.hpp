@@ -58,7 +58,7 @@ class Server {
 		bool isHostSocket(int fd);
 		bool isClientSocket(int fd);
 
-		void sendErrorResponse(int client_fd, int status_code);
+		// void sendErrorResponse(int client_fd, int status_code);
 
 		bool isCGI(const std::string& path);
 		std::string translateUriToCgiPath(const std::string& path);

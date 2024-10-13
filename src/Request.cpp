@@ -45,6 +45,11 @@ const std::string &Request::getVersion() const
 	return (_http_version);
 }
 
+const std::string &Request::getQueryString() const
+{
+	return (_query_string);
+}
+
 const std::string &Request::getHeader(const std::string &key) const
 {
 	return (_headers.at(key));
@@ -63,6 +68,11 @@ size_t Request::getContentLength(void)
 void Request::setMethod(const std::string &method)
 {
 	_method = method;
+}
+
+void Request::setQueryString(const std::string &query_string)
+{
+	_query_string = query_string;
 }
 
 void Request::setBody(const std::string &body)

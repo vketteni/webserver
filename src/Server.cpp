@@ -1,5 +1,4 @@
 #include "../incl/Server.hpp"
-#include "Server.hpp"
 
 static int	setNonBlocking(int fd)
 {
@@ -315,21 +314,16 @@ void Server::disconnectClient(std::vector<struct pollfd>::iterator poll_iterator
 bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
 {
 	struct sockaddr_in	client_addr;
-	socklen_t			client_len;
-	int					client_fd;
-	struct pollfd		pfd;
-	char				client_ip[INET_ADDRSTRLEN];
 
 	std::vector<int>::iterator host_fd_iterator = std::find_if(host_fds.begin(),
 			host_fds.end(), MatchHostFd(poll_iterator->fd));
 	if (host_fd_iterator == host_fds.end())
 	{
 		std::cerr << "Error: Host doesn't exist." << std::endl;
-		sendErrorResponse(poll_iterator->fd, 500);
 		return false;
 	}
-	client_len = sizeof(client_addr);
-	client_fd = accept(*host_fd_iterator, (struct sockaddr *)&client_addr,
+	socklen_t client_len = sizeof(client_addr);
+	int client_fd = accept(*host_fd_iterator, (struct sockaddr *)&client_addr,
 			&client_len);
 	if (client_fd == -1)
 	{
@@ -370,14 +364,14 @@ bool Server::processClientRequest(std::vector<struct pollfd>::iterator poll_iter
 			client_connections.end(), MatchClientFd(poll_iterator->fd));
 	if (client == client_connections.end())
 	{
-		sendErrorResponse(poll_iterator->fd, 400);
+		// sendErrorResponse(poll_iterator->fd, 400);
 		// std::cerr << "Error, client doesn't exist.\n";
 		return false;
 	}
 	if (!client->processRequest())
 	{
 		client->setLastActivity(std::time(NULL));
-		sendErrorResponse(poll_iterator->fd, 500);
+		// sendErrorResponse(poll_iterator->fd, 500);
 		//   std::cerr << "Failed to process request from client.\n";
 		return false;
 	}
@@ -399,11 +393,6 @@ bool Server::processClientRequest(std::vector<struct pollfd>::iterator poll_iter
 // 	return ""; // Kein Redirect gefunden
 // }
 
-bool Server::isCGI(const std::string &path)
-{
-	return path.find("/cgi-bin/") == 0 || path.find(".cgi") != std::string::npos
-		|| path.find(".py") != std::string::npos;
-}
 
 std::string Server::translateUriToCgiPath(const std::string &path)
 {
