@@ -31,55 +31,79 @@ void ClientConnection::setLastActivity(time_t last_activity)
 
 bool ClientConnection::processRequest()
 {
-    ssize_t bytes_read = recv(this->fd, _buffer, BUFFER_SIZE - 1, 0);
+	if (!processRequestReading())
+	{
+		return false;
+	}
+	if (!processRequestParsing())
+	{
+		return false;
+	}
+    if (this->_request_parser.isComplete())
+	{
+	    Request request = this->_request_parser.getRequest();
+		this->_request_parser.reset();
+
+        //std::string root = _server_config.routes[request.getUri()].root;
+		std::string root = "/home/vketteni/42berlin/github/webserver/www";
+        request.setUri(root + request.getUri());
+
+		debug(request.getUri());
+		if (!processResponse(request))
+		{
+			return false;
+		}
+    }
+    return true;
+}
+
+bool ClientConnection::processRequestReading()
+{
+    ssize_t bytes_read = recv(this->fd, this->_buffer, BUFFER_SIZE - 1, 0);
     if (bytes_read <= 0)
 	{
         // Handle disconnection or error
         return false;
     }
     _buffer[bytes_read] = '\0';
-	RequestParser parser = _request_parser;
-    parser.appendData(std::string(_buffer));
-    if (!parser.parse())
+	return true;
+}
+
+bool ClientConnection::processRequestParsing()
+{
+    _request_parser.appendData(std::string(_buffer));
+    if (!_request_parser.parse())
 	{
         return false;
     }
-    if (parser.isComplete())
+	return true;
+}
+
+bool ClientConnection::processResponse(Request & request)
+{
+	HeaderProcessor headerProcessor;
+	headerProcessor.processHeaders(request);
+
+	// response.setUri (FileManager (uri) -> file_path);
+	// if else
+
+	Response response;
+	AbstractMethodHandler* method_handler = getHandlerForMethod(request.getMethod());
+	if (method_handler)
 	{
-	    Request request = parser.getRequest();
-		Response response;
-		
-        //std::string root = _server_config.routes[request.getUri()].root;
-		std::string root = "/home/vketteni/42berlin/github/webserver/www";
-        request.setUri(root + request.getUri());
+		method_handler->invoke(request, response);
+		delete method_handler;
+	}
+	else
+	{
+		response.setStatusCode(405);
+		response.setStatusMessage("Method Not Allowed");
+	}
 
-		debug(request.getUri());
-
-        HeaderProcessor headerProcessor;
-        headerProcessor.processHeaders(request);
-
-		// response.setUri (FileManager (uri) -> file_path);
-		// if else
-        AbstractMethodHandler* method_handler = getHandlerForMethod(request.getMethod());
-        if (method_handler)
-		{
-            method_handler->invoke(request, response);
-            delete method_handler;
-        }
-		else
-		{
-            response.setStatusCode(405);
-            response.setStatusMessage("Method Not Allowed");
-        }
-
-        if (!sendResponse(response))
-		{
-            return false;
-        }
-        parser.reset();
-    }
-
-    return true;
+	if (!sendResponse(response))
+	{
+		return false;
+	}
 }
 
 bool ClientConnection::sendResponse(Response & response) {
