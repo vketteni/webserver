@@ -95,8 +95,8 @@ bool Server::setupServerSockets(std::vector<int> &host_ports)
 	int	server_fd;
 	int	opt;
 	int	server_port;
-		struct sockaddr_in addr;
-		struct pollfd pfd;
+	struct sockaddr_in addr;
+	struct pollfd pfd;
 
 	for (std::vector<int>::iterator port_it = host_ports.begin(); port_it != host_ports.end(); ++port_it)
 	{
@@ -140,7 +140,7 @@ bool Server::setupServerSockets(std::vector<int> &host_ports)
 			close(server_fd);
 			return (false);
 		}
-		host_fds.push_back(server_fd);
+		host_port_and_fds.push_back(std::make_pair(server_port, server_fd));
 		// Add to poll_fds
 		pfd.fd = server_fd;
 		pfd.events = POLLIN;
@@ -253,7 +253,12 @@ void Server::checkTimeouts(void)
 
 bool Server::isHostSocket(int fd)
 {
-	return std::find(host_fds.begin(), host_fds.end(), fd) != host_fds.end();
+	for (std::vector<std::pair<int, int>>::iterator it = host_port_and_fds.begin(); it != host_port_and_fds.end(); ++it)
+	{
+		if (it->second == fd)
+			return true;
+	}
+	return false;
 }
 
 bool Server::isClientSocket(int fd)
@@ -315,15 +320,14 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
 {
 	struct sockaddr_in	client_addr;
 
-	std::vector<int>::iterator host_fd_iterator = std::find_if(host_fds.begin(),
-			host_fds.end(), MatchHostFd(poll_iterator->fd));
-	if (host_fd_iterator == host_fds.end())
+	if (!isHostSocket(poll_iterator->fd))
 	{
 		std::cerr << "Error: Host doesn't exist." << std::endl;
 		return false;
 	}
+
 	socklen_t client_len = sizeof(client_addr);
-	int client_fd = accept(*host_fd_iterator, (struct sockaddr *)&client_addr,
+	int client_fd = accept(poll_iterator->fd, (struct sockaddr *)&client_addr,
 			&client_len);
 	if (client_fd == -1)
 	{

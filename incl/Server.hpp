@@ -33,7 +33,7 @@ class Server {
 
 	private:
 		std::string config_path;
-		std::vector<int> host_fds;
+		std::vector<std::pair<int, int> > host_port_and_fds;
 		std::vector<ClientConnection> client_connections;
 		std::vector<struct pollfd> poll_fds;
 		std::vector<HostConfig> host_configs;
