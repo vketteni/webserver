@@ -27,13 +27,13 @@ class ClientConnection
 		char			_buffer[BUFFER_SIZE];
 		time_t			_lastActivity;
 		RequestParser	_request_parser;
-		HostConfig &	_server_config;
+		HostConfig &	_host_config;
 
 	public:
 		const int		fd;
 		const int		timeout;
 
-		ClientConnection(int client_fd, HostConfig & server_config);
+		ClientConnection(int client_fd, HostConfig & host_config);
 		ClientConnection(const ClientConnection & other);
 		ClientConnection & operator=(const ClientConnection & other);
 		~ClientConnection();

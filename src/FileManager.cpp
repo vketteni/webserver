@@ -22,10 +22,11 @@ bool FileManager::constructSafePath(const std::string& file_path, std::string& o
     char real_path[PATH_MAX];
     std::string full_path = base_directory + file_path;
 
-    if (realpath(full_path.c_str(), real_path) == NULL)
-	{
-        return false;
-    }
+    // TODO: Find C++98 replacement for realpath
+    // if (realpath(full_path.c_str(), real_path) == NULL)
+	// {
+    //     return false;
+    // }
 
     std::string resolved_path(real_path);
 
@@ -57,10 +58,11 @@ bool FileManager::readFile(const std::string& file_path, std::string& out_data)
         return false;
     }
 
-    if (file_stat.st_size > max_file_size)
-	{
-        return false;
-    }
+    // TODO: compile error
+    // if (file_stat.st_size > max_file_size)
+	// {
+    //     return false;
+    // }
 
     std::ifstream file(safe_path.c_str(), std::ios::in | std::ios::binary);
     if (!file.is_open())

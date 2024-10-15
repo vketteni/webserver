@@ -1,9 +1,10 @@
 #include "../incl/ClientConnection.hpp"
 
-ClientConnection::ClientConnection(int client_fd, HostConfig & server_config) : _lastActivity(std::time(NULL)),
-	_server_config(server_config), fd(client_fd), timeout(TIMEOUT_DURATION) {}
+ClientConnection::ClientConnection(int client_fd, HostConfig & server_config)
+    : _lastActivity(std::time(NULL)), _host_config(server_config), fd(client_fd), timeout(TIMEOUT_DURATION) {}
 
-ClientConnection::ClientConnection(const ClientConnection &other) : _server_config(other._server_config), fd(other.fd), timeout(other.timeout)
+ClientConnection::ClientConnection(const ClientConnection &other)
+    : _host_config(other._host_config), fd(other.fd), timeout(other.timeout)
 {
 	 _lastActivity = other._lastActivity;
 }
@@ -44,8 +45,17 @@ bool ClientConnection::processRequest()
 	    Request request = this->_request_parser.getRequest();
 		this->_request_parser.reset();
 
-        //std::string root = _server_config.routes[request.getUri()].root;
-		std::string root = "/home/vketteni/42berlin/github/webserver/www";
+        HostConfig & host_config = _host_config;
+        std::string root = host_config.root;
+        debug(host_config.port);
+        debug(host_config.host);
+        debug(root);
+        //std::string root = _host_config.routes[request.getUri()].root;
+		//std::string root = "/home/vketteni/42berlin/github/webserver/www";
+
+        // TODO: Use host_config.route_table to check redirections
+        // TODO: Use host_config.route_table to check redirections
+
         request.setUri(root + request.getUri());
 
 		debug(request.getUri());
@@ -84,9 +94,6 @@ bool ClientConnection::processResponse(Request & request)
 	HeaderProcessor headerProcessor;
 	headerProcessor.processHeaders(request);
 
-	// response.setUri (FileManager (uri) -> file_path);
-	// if else
-
 	Response response;
 	AbstractMethodHandler* method_handler = getHandlerForMethod(request.getMethod());
 	if (method_handler)
@@ -104,6 +111,7 @@ bool ClientConnection::processResponse(Request & request)
 	{
 		return false;
 	}
+    return true;
 }
 
 bool ClientConnection::sendResponse(Response & response) {

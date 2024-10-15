@@ -31,14 +31,14 @@ bool ConfigParser::parseConfig(const std::string& filepath)
             HostConfig config;
             if(!parseConfig(configFile, config))
                 return false;
-            host_configs.push_back(config);
+            host_configs[config.port] = config;
         }
     }
     configFile.close();
     return true;
 }
 
-const std::vector<HostConfig> &ConfigParser::getHostConfigs() const
+const std::map<int, HostConfig> & ConfigParser::getHostConfigs() const
 {
     return host_configs;
 }
@@ -64,10 +64,18 @@ bool ConfigParser::parseConfig(std::ifstream& configFile, HostConfig& host_confi
             host_config.client_max_body_size = parseSize(directive.second);
 		else if (directive.first == "error_page")
             parseErrorPage(directive.second, host_config);
+		else if (directive.first == "root")
+        {
+            debug(directive.first);
+            debug(directive.second);
+            debug(host_config.port);
+            host_config.root = directive.second;
+        }
 		else if (directive.first == "location")
             parseLocation(configFile, directive.second, host_config);
 		else
             throw std::runtime_error("Unknown directive: " + directive.first);
+        
     }
     return true;
 }
@@ -150,8 +158,6 @@ bool ConfigParser::parseLocationBlock(std::ifstream& configFile, RouteConfig& ro
             route.methods = Utils::split(directive.second, ',');
 		else if (directive.first == "redirect")
             parseRedirect(directive.second, route);
-		else if (directive.first == "autoindex")
-            route.autoindex = (directive.second == "on");
 		else if (directive.first == "upload_dir")
             route.upload_dir = directive.second;
 		else if (directive.first == "cgi_extension")

@@ -58,10 +58,10 @@ bool Server::parseConfig(std::vector<int> &host_ports)
         return false;
     }
 
-    for (std::vector<HostConfig>::const_iterator server_it = host_configs.begin(); server_it != host_configs.end(); ++server_it)
+    for (std::map<int, HostConfig>::const_iterator server_it = host_configs.begin(); server_it != host_configs.end(); ++server_it)
     {
-        const HostConfig& HostConfig = *server_it;
-         std::cout << "port is: " << HostConfig.port << "\n";
+        const HostConfig& HostConfig = (*server_it).second;
+        std::cout << "port is: " << HostConfig.port << "\n";
         if (HostConfig.port > 0 && HostConfig.port < 65536)
         {
             host_ports.push_back(HostConfig.port);
@@ -140,6 +140,7 @@ bool Server::setupServerSockets(std::vector<int> &host_ports)
 			close(server_fd);
 			return (false);
 		}
+		debug(server_port);
 		host_port_and_fds.push_back(std::make_pair(server_port, server_fd));
 		// Add to poll_fds
 		pfd.fd = server_fd;
@@ -253,7 +254,7 @@ void Server::checkTimeouts(void)
 
 bool Server::isHostSocket(int fd)
 {
-	for (std::vector<std::pair<int, int>>::iterator it = host_port_and_fds.begin(); it != host_port_and_fds.end(); ++it)
+	for (std::vector<std::pair<int, int> >::iterator it = host_port_and_fds.begin(); it != host_port_and_fds.end(); ++it)
 	{
 		if (it->second == fd)
 			return true;
@@ -339,8 +340,17 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
         return true; // No pending connections
     }
 
-	// !! THIS LINE HARDCODES CONFIG ?? TODO REMOVE
-    this->client_connections.push_back(ClientConnection(client_fd, host_configs[0]));
+	// TODO: make descriptive smaller function
+	for (int i = 0; i < (int)host_port_and_fds.size(); ++i)
+	{
+		if (host_port_and_fds[i].second == poll_iterator->fd)
+		{
+			int port = host_port_and_fds[i].first;
+			
+			ClientConnection new_connection(client_fd, host_configs[port]);
+			this->client_connections.push_back(new_connection);
+		}
+	}
 
     // Add client to poll_fds
     struct pollfd pfd;
