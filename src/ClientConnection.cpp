@@ -32,14 +32,18 @@ void ClientConnection::setLastActivity(time_t last_activity)
 
 bool ClientConnection::processRequest()
 {
-	if (!processRequestReading())
+    ssize_t bytes_read = recv(this->fd, this->_buffer, BUFFER_SIZE - 1, 0);
+    if (bytes_read <= 0)
 	{
-		return false;
-	}
-	if (!processRequestParsing())
+        // Handle disconnection or error
+        return false;
+    }
+    _buffer[bytes_read] = '\0';
+    _request_parser.appendData(std::string(_buffer));
+    if (!_request_parser.parse())
 	{
-		return false;
-	}
+        return false;
+    }
     if (this->_request_parser.isComplete())
 	{
 	    Request request = this->_request_parser.getRequest();
@@ -47,11 +51,6 @@ bool ClientConnection::processRequest()
 
         HostConfig & host_config = _host_config;
         std::string root = host_config.root;
-        debug(host_config.port);
-        debug(host_config.host);
-        debug(root);
-        //std::string root = _host_config.routes[request.getUri()].root;
-		//std::string root = "/home/vketteni/42berlin/github/webserver/www";
 
         // TODO: Use host_config.route_table to check redirections
         // TODO: Use host_config.route_table to check redirections
@@ -65,28 +64,6 @@ bool ClientConnection::processRequest()
 		}
     }
     return true;
-}
-
-bool ClientConnection::processRequestReading()
-{
-    ssize_t bytes_read = recv(this->fd, this->_buffer, BUFFER_SIZE - 1, 0);
-    if (bytes_read <= 0)
-	{
-        // Handle disconnection or error
-        return false;
-    }
-    _buffer[bytes_read] = '\0';
-	return true;
-}
-
-bool ClientConnection::processRequestParsing()
-{
-    _request_parser.appendData(std::string(_buffer));
-    if (!_request_parser.parse())
-	{
-        return false;
-    }
-	return true;
 }
 
 bool ClientConnection::processResponse(Request & request)
