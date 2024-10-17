@@ -37,10 +37,6 @@ void GetRequestHandler::invoke(Request& request, Response& response)
         return ;
     }
 
-    //hier auf mime typ checken
-    // iscgi
-    
-
     std::ostringstream contents;
     contents << file.rdbuf();  // Read the file buffer into the stream
 
@@ -59,9 +55,6 @@ void PostRequestHandler::invoke(Request& request, Response& response)
 		processCGI(request, response);
         return ;  // CGI wurde erfolgreich behandelt
     }
-	
-    (void)request;
-    (void)response;
 }
 
 void DeleteRequestHandler::invoke(Request& request, Response& response)
