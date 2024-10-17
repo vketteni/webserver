@@ -9,19 +9,18 @@ ConfigParser::~ConfigParser() {}
     Method:         Server::parseConfig
     Description:    Parses the configuration file to extract ports
 */
-bool ConfigParser::parseConfig(const std::string& filepath)
+bool ConfigParser::parseConfig(const std::string& file_path)
 {
-	normalizeSpaces(filepath.c_str());
-
-    std::ifstream configFile(filepath.c_str());
-    if (!configFile.is_open())
+	normalizeSpaces(file_path.c_str());
+    std::ifstream config_file(file_path.c_str());
+    if (!config_file.is_open())
 	{
-        std::cerr << "Failed to open configuration file: " << filepath << "\n";
+        std::cerr << "Failed to open configuration file: " << file_path << "\n";
         return false;
     }
 
     std::string line;
-    while (std::getline(configFile, line))
+    while (std::getline(config_file, line))
 	{
 		Utils::trim(line, WSPACE);
         if(line.empty() || line[0] == '#')
@@ -29,12 +28,12 @@ bool ConfigParser::parseConfig(const std::string& filepath)
         if (line == ("server {"))
 		{
             HostConfig config;
-            if(!parseConfig(configFile, config))
+            if(!parseConfig(config_file, config))
                 return false;
             host_configs[config.port] = config;
         }
     }
-    configFile.close();
+    config_file.close();
     return true;
 }
 
@@ -43,10 +42,10 @@ const std::map<int, HostConfig> & ConfigParser::getHostConfigs() const
     return host_configs;
 }
 
-bool ConfigParser::parseConfig(std::ifstream& configFile, HostConfig& host_config)
+bool ConfigParser::parseConfig(std::ifstream& config_file, HostConfig& host_config)
 {
     std::string line;
-    while (std::getline(configFile, line))
+    while (std::getline(config_file, line))
 	{
         line = Utils::trim(line, WSPACE);
         if (line.empty() || line[0] == '#') continue;
@@ -72,7 +71,7 @@ bool ConfigParser::parseConfig(std::ifstream& configFile, HostConfig& host_confi
             host_config.root = directive.second;
         }
 		else if (directive.first == "location")
-            parseLocation(configFile, directive.second, host_config);
+            parseLocation(config_file, directive.second, host_config);
 		else
             throw std::runtime_error("Unknown directive: " + directive.first);
         
@@ -128,21 +127,21 @@ int ConfigParser::parseSize(const std::string& value)
 }
 
 
-void ConfigParser::parseLocation(std::ifstream& configFile, const std::string& directiveValue, HostConfig& host)
+void ConfigParser::parseLocation(std::ifstream& config_file, const std::string& directiveValue, HostConfig& host)
 {
     RouteConfig route;
 
-    if (!parseLocationBlock(configFile, route))
+    if (!parseLocationBlock(config_file, route))
 		throw std::runtime_error("Failed to parse location block");
 
 	std::string key =  Utils::trim(Utils::trim(directiveValue, "{"), WSPACE);
 	host.routes[key] = route;
 }
 
-bool ConfigParser::parseLocationBlock(std::ifstream& configFile, RouteConfig& route)
+bool ConfigParser::parseLocationBlock(std::ifstream& config_file, RouteConfig& route)
 {
     std::string line;
-    while (std::getline(configFile, line))
+    while (std::getline(config_file, line))
 	{
         line = Utils::trim(line, WSPACE);
         if (line.empty() || line[0] == '#') continue;
@@ -166,12 +165,12 @@ bool ConfigParser::parseLocationBlock(std::ifstream& configFile, RouteConfig& ro
     return true;
 }
 
-void ConfigParser::normalizeSpaces(const char* filePath) {
+void ConfigParser::normalizeSpaces(const char* file_path) {
     // File paths
     const char* tempFile = "temp.txt";
 
     // Open the input file for reading
-    std::ifstream ifs(filePath);
+    std::ifstream ifs(file_path);
     if (!ifs) {
         std::cerr << "Error: Cannot open the input file." << std::endl;
         return;
@@ -199,11 +198,11 @@ void ConfigParser::normalizeSpaces(const char* filePath) {
     ofs.close();
 
     // Remove the original file and rename the temp file to the original file name
-    if (std::remove(filePath) != 0) {
+    if (std::remove(file_path) != 0) {
         std::cerr << "Error: Cannot remove the original file." << std::endl;
         return;
     }
-    if (std::rename(tempFile, filePath) != 0) {
+    if (std::rename(tempFile, file_path) != 0) {
         std::cerr << "Error: Cannot rename the temp file." << std::endl;
         return;
     }

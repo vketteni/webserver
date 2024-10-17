@@ -3,6 +3,7 @@
 
 Request::Request()
 {
+	_content_length = 0;
 }
 
 // Request &Request::operator=(const Request &other)

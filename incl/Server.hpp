@@ -50,7 +50,7 @@ class Server {
 		bool processClientRequest(std::vector<struct pollfd>::iterator poll_iterator);
 		void checkTimeouts(void);
 		void disconnectClient(std::vector<struct pollfd >::iterator poll_iterator);
-		// std::string checkRedirect(const std::string& requested_path);
+		// std::string getRedirect(const std::string& requested_path);
 
 
 		// Helper Functions

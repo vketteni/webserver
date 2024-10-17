@@ -393,9 +393,9 @@ bool Server::processClientRequest(std::vector<struct pollfd>::iterator poll_iter
 	return true;
 }
 
-// std::string Server::checkRedirect(const std::string& requested_path)
+// std::string Server::getRedirect(const std::string& requested_path)
 // {
-// 	for (std::vector<HostConfig>::iterator it = servers.begin(); it != servers.end(); ++it)
+// 	for (std::vector<HostConfig>::iterator it = host_configs.begin(); it != host_configs.end(); ++it)
 // 	{
 // 		const HostConfig& config = *it;
 // 		std::map<std::string, std::string>::const_iterator redirect_it = config.redirects.find(requested_path);

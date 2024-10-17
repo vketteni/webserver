@@ -54,6 +54,12 @@ void GetRequestHandler::invoke(Request& request, Response& response)
 
 void PostRequestHandler::invoke(Request& request, Response& response)
 {
+    if (isCGI(request.getUri()))
+    {
+		processCGI(request, response);
+        return ;  // CGI wurde erfolgreich behandelt
+    }
+	
     (void)request;
     (void)response;
 }

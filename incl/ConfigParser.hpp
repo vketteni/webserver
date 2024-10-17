@@ -50,20 +50,20 @@ class ConfigParser
 	public:
 		ConfigParser();
 		~ConfigParser();
-		bool    parseConfig(const std::string& filepath);
+		bool    parseConfig(const std::string& file_path);
 		const   std::map<int, HostConfig> & getHostConfigs() const;
 	private:
 		std::map<int, HostConfig> host_configs;
 
-		bool    parseConfig(std::ifstream& configFile, HostConfig& host_config);
+		bool    parseConfig(std::ifstream& config_file, HostConfig& host_config);
 		std::pair<std::string, std::string> parseKeyValuePair(const std::string& line);
 		void parseErrorPage(const std::string& line, HostConfig& host_config);
-		void parseLocation(std::ifstream& configFile, const std::string& locationLine, HostConfig& host_config);
-		bool parseLocationBlock(std::ifstream& configFile, RouteConfig& route);
+		void parseLocation(std::ifstream& config_file, const std::string& locationLine, HostConfig& host_config);
+		bool parseLocationBlock(std::ifstream& config_file, RouteConfig& route);
 		void parseRedirect(const std::string& line, RouteConfig& route);
 		int parsePort(const std::string& value);
 		int parseSize(const std::string& value);
-		void normalizeSpaces(const char* filePath);
+		void normalizeSpaces(const char* file_path);
 };
 
 #endif

@@ -102,14 +102,16 @@ bool RequestParser::extractHeaders()
 }
 
 bool RequestParser::extractBody()
-{
-	size_t content_length = _request.getContentLength();
-	if (_buffer.size() >= content_length) {
-		_request.setBody(_buffer.substr(0, content_length));
-		_buffer.erase(0, content_length);
+{	// TODO: Content length is not set!! garbage value
+	// size_t content_length = _request.getContentLength();
+	// if (_buffer.size() >= content_length) {
+		// _request.setBody(_buffer.substr(0, content_length));
+		_request.setBody(_buffer);
+		_buffer.erase(0);
+		// _buffer.erase(0, content_length);
 		return true;
-	}
-	return false;
+	// }
+	// return false;
 }
 
 bool RequestParser::processParsingHeaders(void)

@@ -19,7 +19,7 @@ class AbstractMethodHandler
 		void processCGI(const Request& request, Response& response);
 };
 
-// ?? TODO ?? Implement as dependency injection (*)-(*)
+// TODO: Implement as dependency injection (*)-(*)
 AbstractMethodHandler* getHandlerForMethod(const std::string& method);
 
 /*
