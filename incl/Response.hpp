@@ -31,13 +31,14 @@ class Response
 		// Response Getters & Setter
 		int getStatusCode(void);
 		const std::string & getStatusMessage(void);
+		const std::string & getHeader(const std::string &key) const;
 		const std::map<std::string, std::string> & getHeaders(void);
 		const std::string & getBody(void);
 		void setBody(const std::string & body);
 		void setHeader(const std::string & key, const std::string & value);
+		void setHeaders(const std::map<std::string, std::string> & headers);
 		void setStatusCode(int code);
 		void setStatusMessage(const std::string & message);
-		
 		// Status checkers
 		bool isComplete() const;
 		bool isValidStatusCode() const;

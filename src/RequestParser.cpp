@@ -17,7 +17,7 @@ bool RequestParser::parse() {
 					break;
 
 				case PROCESS_HEADERS:
-					if (!processParsingHeaders()) return false;
+					if (!processHeadersBeforeBody()) return false;
 					if (_request.getContentLength() > 0) {
 						_state = READ_BODY;
 					} else {
@@ -103,20 +103,25 @@ bool RequestParser::extractHeaders()
 
 bool RequestParser::extractBody()
 {	// TODO: Content length is not set!! garbage value
-	// size_t content_length = _request.getContentLength();
-	// if (_buffer.size() >= content_length) {
-		// _request.setBody(_buffer.substr(0, content_length));
-		_request.setBody(_buffer);
-		_buffer.erase(0);
-		// _buffer.erase(0, content_length);
+	size_t content_length = _request.getContentLength();
+	if (_buffer.size() >= content_length) {
+		_request.setBody(_buffer.substr(0, content_length));
+		_buffer.erase(0, content_length);
 		return true;
-	// }
-	// return false;
+	}
+	return false;
 }
 
-bool RequestParser::processParsingHeaders(void)
+bool RequestParser::processHeadersBeforeBody(void)
 {
-	// TODO
+	std::map<std::string, HeaderHandler> handlers;
+	std::set<std::string> required;
+
+	HeaderProcessor hp(_request, _response);
+	setup_pre_body_handlers(handlers, required);
+	
+	if (!hp.processHeaders(handlers, required))
+		return false;
 	return true;
 }
 
@@ -135,6 +140,11 @@ void RequestParser::reset(void)
 const Request & RequestParser::getRequest(void) const
 {
 	return _request;
+}
+
+const Response & RequestParser::getResponse(void) const
+{
+	return _response;
 }
 
 RequestState RequestParser::getState(void) const

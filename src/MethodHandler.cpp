@@ -43,7 +43,7 @@ void GetRequestHandler::invoke(Request& request, Response& response)
     file.close();
 
     response.setBody(contents.str());
-    response.setStatusMessage("Ok");
+    response.setStatusMessage("OK");
     response.setStatusCode(200);
     response.setHeader("Connection", "keep-alive");
 }

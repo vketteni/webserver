@@ -18,6 +18,11 @@ const std::string &Response::getStatusMessage(void)
 	return _status_message;
 }
 
+const std::string &Response::getHeader(const std::string &key) const
+{
+	return (_headers.at(key));
+}
+
 const std::map<std::string, std::string> &Response::getHeaders(void)
 {
 	return _headers;
@@ -36,6 +41,11 @@ void Response::setBody(const std::string &body)
 void Response::setHeader(const std::string &key, const std::string &value)
 {
 	_headers[key] = value;
+}
+
+void Response::setHeaders(const std::map<std::string, std::string> & headers)
+{
+	_headers = headers;
 }
 
 void Response::setStatusCode(int code)
