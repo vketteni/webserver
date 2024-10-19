@@ -1,47 +1,61 @@
 #ifndef HEADERPROCESSOR_HPP
 #define HEADERPROCESSOR_HPP
 
+#include <iostream>
+#include <map>
+#include <set>
 #include <string>
+#include <sstream>
+
+#include "Debug.hpp"
 #include "Request.hpp"
+#include "Response.hpp"
+
+class HeaderProcessor;
+
+enum HeaderValidationStatus
+{
+    SUCCESS,
+    MISSING,
+    INVALID_VALUE
+};
+typedef HeaderValidationStatus (*HeaderHandler)(Request & request, Response & response);
 
 class HeaderProcessor
 {
 	public:
-		void processHeaders(Request& request)
-		{
-
-			// _content_type = content_type;
-			// _content_length = body.size();
-			// response.setConnection("close");
-
-			const std::map<std::string, std::string> & headers = request.getHeaders();
-			for (std::map<std::string, std::string>::const_iterator headerIterator = headers.begin(); headerIterator != headers.end(); ++headerIterator)
-			{
-				// Dispatch header to appropriate handlers
-				if (headerIterator->first == "Content-Type")
-				{
-					processContentType(headerIterator->second);
-				}
-				else if (headerIterator->first == "Authorization")
-				{
-					processAuthorization(headerIterator->second);
-				}
-				// Add more header-specific logic here
-			}
-		}
+		HeaderProcessor(Request & request, Response & response);
+		bool processHeaders(std::map<std::string, HeaderHandler> & handlers, std::set<std::string> & required);
 
 	private:
-		void processContentType(const std::string& value)
-		{
-			// Handle Content-Type header
-			(void)value;
-		}
+		Request	& _request;
+		Response & _response;
 
-		void processAuthorization(const std::string& value)
-		{
-			// Handle Authorization header
-			(void)value;
-		}
+		void initDefaultHeaders();
+		void handleInvalidValue(const std::string &header, HeaderValidationStatus status);
+		void handleMissingHeaders(const std::set<std::string> &missing_headers);
 };
+
+// Handlers 
+HeaderValidationStatus processHost(Request & request, Response & response);
+HeaderValidationStatus processConnection(Request & request, Response & response);
+HeaderValidationStatus processExpect(Request & request, Response & response);
+HeaderValidationStatus processContentLength(Request & request, Response & response);
+HeaderValidationStatus processTransferEncoding(Request & request, Response & response);
+HeaderValidationStatus processContentType(Request & request, Response & response);
+HeaderValidationStatus processAccept(Request & request, Response & response);
+HeaderValidationStatus processUserAgent(Request & request, Response & response);
+HeaderValidationStatus processAuthorization(Request & request, Response & response);
+HeaderValidationStatus processReferer(Request & request, Response & response);
+HeaderValidationStatus processCookie(Request & request, Response & response);
+HeaderValidationStatus processIfModifiedSince(Request & request, Response & response);
+HeaderValidationStatus processIfNoneMatch(Request & request, Response & response);
+
+// Handler Setup
+void setup_pre_body_handlers(std::map<std::string, HeaderHandler> & handlers, std::set<std::string> & required);
+void setup_post_body_handlers(std::map<std::string, HeaderHandler> & handlers, std::set<std::string> & required);
+
+// Util
+std::string getCurrentTime();
 
 #endif

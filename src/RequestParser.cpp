@@ -17,8 +17,8 @@ bool RequestParser::parse() {
 					break;
 
 				case PROCESS_HEADERS:
-					if (!processParsingHeaders()) return false;
-					if (_request.getContentLength() > 0) {
+					if (!processHeadersBeforeBody()) return false;
+					if (_request.getHeaderOrDefault("Content-Length", "0") != "0") {
 						_state = READ_BODY;
 					} else {
 						_state = COMPLETE;
@@ -53,9 +53,6 @@ bool RequestParser::extractRequestLine(void)
 	if (pos == std::string::npos) {
 		return false;
 	}
-
-	// TODO: extract query string
-	_request.setQueryString("");
 
 	std::string requestLine = _buffer.substr(0, pos);
 	_buffer.erase(0, pos + 2);
@@ -103,7 +100,10 @@ bool RequestParser::extractHeaders()
 
 bool RequestParser::extractBody()
 {
-	size_t content_length = _request.getContentLength();
+	std::stringstream ss;
+	ss << _request.getHeaderOrDefault("Content-Length", "0");
+	size_t content_length = ss.dec;
+
 	if (_buffer.size() >= content_length) {
 		_request.setBody(_buffer.substr(0, content_length));
 		_buffer.erase(0, content_length);
@@ -112,9 +112,16 @@ bool RequestParser::extractBody()
 	return false;
 }
 
-bool RequestParser::processParsingHeaders(void)
+bool RequestParser::processHeadersBeforeBody(void)
 {
-	// TODO
+	std::map<std::string, HeaderHandler> handlers;
+	std::set<std::string> required;
+
+	HeaderProcessor hp(_request, _response);
+	setup_pre_body_handlers(handlers, required);
+	
+	if (!hp.processHeaders(handlers, required))
+		return false;
 	return true;
 }
 
@@ -133,6 +140,11 @@ void RequestParser::reset(void)
 const Request & RequestParser::getRequest(void) const
 {
 	return _request;
+}
+
+const Response & RequestParser::getResponse(void) const
+{
+	return _response;
 }
 
 RequestState RequestParser::getState(void) const

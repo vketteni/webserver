@@ -69,7 +69,7 @@ This project is about writing your own HTTP server. The following C++ classes ar
 - Reading configuration details (e.g., ports, error pages, body size limits).
 
 ### Methods:
-- `parse(const std::string& filepath)`: Reads and parses the configuration file.
+- `parse(const std::string& file_path)`: Reads and parses the configuration file.
 - `getPort()`: Retrieves the configured port number.
 - `getHost()`: Retrieves the host address.
 
@@ -95,8 +95,8 @@ This project is about writing your own HTTP server. The following C++ classes ar
 - Managing file uploads for POST requests.
 
 ### Methods:
-- `readFile(const std::string& filepath)`: Reads the contents of a file.
-- `writeFile(const std::string& filepath, const std::string& data)`: Writes data to a file.
+- `readFile(const std::string& file_path)`: Reads the contents of a file.
+- `writeFile(const std::string& file_path, const std::string& data)`: Writes data to a file.
 
 ---
 

@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <list>
 #include <string>
 #include <cstring>
 #include <algorithm>
@@ -33,10 +34,10 @@ class Server {
 
 	private:
 		std::string config_path;
-		std::vector<int> host_fds;
-		std::vector<ClientConnection> client_connections;
+		std::vector<std::pair<int, int> > host_port_and_fds;
+		std::list<ClientConnection> client_connections;
 		std::vector<struct pollfd> poll_fds;
-		std::vector<HostConfig> host_configs;
+		std::map<int, HostConfig> host_configs;
 		bool running;
 
 		// Server Setup
@@ -50,7 +51,7 @@ class Server {
 		bool processClientRequest(std::vector<struct pollfd>::iterator poll_iterator);
 		void checkTimeouts(void);
 		void disconnectClient(std::vector<struct pollfd >::iterator poll_iterator);
-		// std::string checkRedirect(const std::string& requested_path);
+		// std::string getRedirect(const std::string& requested_path);
 
 
 		// Helper Functions

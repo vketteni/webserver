@@ -58,10 +58,10 @@ bool Server::parseConfig(std::vector<int> &host_ports)
         return false;
     }
 
-    for (std::vector<HostConfig>::const_iterator server_it = host_configs.begin(); server_it != host_configs.end(); ++server_it)
+    for (std::map<int, HostConfig>::const_iterator server_it = host_configs.begin(); server_it != host_configs.end(); ++server_it)
     {
-        const HostConfig& HostConfig = *server_it;
-         std::cout << "port is: " << HostConfig.port << "\n";
+        const HostConfig& HostConfig = (*server_it).second;
+        std::cout << "port is: " << HostConfig.port << "\n";
         if (HostConfig.port > 0 && HostConfig.port < 65536)
         {
             host_ports.push_back(HostConfig.port);
@@ -95,8 +95,8 @@ bool Server::setupServerSockets(std::vector<int> &host_ports)
 	int	server_fd;
 	int	opt;
 	int	server_port;
-		struct sockaddr_in addr;
-		struct pollfd pfd;
+	struct sockaddr_in addr;
+	struct pollfd pfd;
 
 	for (std::vector<int>::iterator port_it = host_ports.begin(); port_it != host_ports.end(); ++port_it)
 	{
@@ -140,7 +140,8 @@ bool Server::setupServerSockets(std::vector<int> &host_ports)
 			close(server_fd);
 			return (false);
 		}
-		host_fds.push_back(server_fd);
+		debug(server_port);
+		host_port_and_fds.push_back(std::make_pair(server_port, server_fd));
 		// Add to poll_fds
 		pfd.fd = server_fd;
 		pfd.events = POLLIN;
@@ -253,21 +254,21 @@ void Server::checkTimeouts(void)
 
 bool Server::isHostSocket(int fd)
 {
-	return std::find(host_fds.begin(), host_fds.end(), fd) != host_fds.end();
+	for (std::vector<std::pair<int, int> >::iterator it = host_port_and_fds.begin(); it != host_port_and_fds.end(); ++it)
+	{
+		if (it->second == fd)
+			return true;
+	}
+	return false;
 }
 
 bool Server::isClientSocket(int fd)
 {
-	int	i;
-
-	i = 0;
-	while (i < (int)client_connections.size())
-	{
-		if (client_connections[i].fd != fd)
-			return false;
-		i++;
-	}
-	return true;
+	std::list<ClientConnection>::iterator client = std::find_if(client_connections.begin(),
+			client_connections.end(), MatchClientFd(fd));
+	if (client != client_connections.end())
+		return true;
+	return false;
 }
 
 void Server::processIOEvents()
@@ -300,7 +301,7 @@ void Server::processIOEvents()
 void Server::disconnectClient(std::vector<struct pollfd>::iterator poll_iterator)
 {
 	close(poll_iterator->fd);
-	std::vector<ClientConnection>::iterator client_iterator = std::find_if(client_connections.begin(),
+	std::list<ClientConnection>::iterator client_iterator = std::find_if(client_connections.begin(),
 			client_connections.end(), MatchClientFd(poll_iterator->fd));
 	if (client_iterator != client_connections.end())
 		client_connections.erase(client_iterator);
@@ -315,15 +316,14 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
 {
 	struct sockaddr_in	client_addr;
 
-	std::vector<int>::iterator host_fd_iterator = std::find_if(host_fds.begin(),
-			host_fds.end(), MatchHostFd(poll_iterator->fd));
-	if (host_fd_iterator == host_fds.end())
+	if (!isHostSocket(poll_iterator->fd))
 	{
 		std::cerr << "Error: Host doesn't exist." << std::endl;
 		return false;
 	}
+
 	socklen_t client_len = sizeof(client_addr);
-	int client_fd = accept(*host_fd_iterator, (struct sockaddr *)&client_addr,
+	int client_fd = accept(poll_iterator->fd, (struct sockaddr *)&client_addr,
 			&client_len);
 	if (client_fd == -1)
 	{
@@ -335,13 +335,22 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
         return true; // No pending connections
     }
 
-	// !! THIS LINE HARDCODES CONFIG ?? TODO REMOVE
-    this->client_connections.push_back(ClientConnection(client_fd, host_configs[0]));
+	// TODO: make descriptive smaller function
+	for (int i = 0; i < (int)host_port_and_fds.size(); ++i)
+	{
+		if (host_port_and_fds[i].second == poll_iterator->fd)
+		{
+			int port = host_port_and_fds[i].first;
+			
+			ClientConnection new_connection(client_fd, host_configs[port]);
+			this->client_connections.push_back(new_connection);
+		}
+	}
 
     // Add client to poll_fds
     struct pollfd pfd;
     pfd.fd = client_fd;
-    pfd.events = POLLIN;
+    pfd.events = POLLIN | POLLOUT;
     pfd.revents = 0;
     this->poll_fds.push_back(pfd);
 
@@ -360,7 +369,7 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
 bool Server::processClientRequest(std::vector<struct pollfd>::iterator poll_iterator)
 {
 	//	this check is unnessessary compute intensive -> std::vector allows random lookup via index O(1) which we should use instead
-	std::vector<ClientConnection>::iterator client = std::find_if(client_connections.begin(),
+	std::list<ClientConnection>::iterator client = std::find_if(client_connections.begin(),
 			client_connections.end(), MatchClientFd(poll_iterator->fd));
 	if (client == client_connections.end())
 	{
@@ -379,9 +388,9 @@ bool Server::processClientRequest(std::vector<struct pollfd>::iterator poll_iter
 	return true;
 }
 
-// std::string Server::checkRedirect(const std::string& requested_path)
+// std::string Server::getRedirect(const std::string& requested_path)
 // {
-// 	for (std::vector<HostConfig>::iterator it = servers.begin(); it != servers.end(); ++it)
+// 	for (std::vector<HostConfig>::iterator it = host_configs.begin(); it != host_configs.end(); ++it)
 // 	{
 // 		const HostConfig& config = *it;
 // 		std::map<std::string, std::string>::const_iterator redirect_it = config.redirects.find(requested_path);

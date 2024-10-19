@@ -1,19 +1,8 @@
 #include "../incl/ClientConnection.hpp"
 
-ClientConnection::ClientConnection(int client_fd, HostConfig & server_config) : _lastActivity(std::time(NULL)),
-	_server_config(server_config), fd(client_fd), timeout(TIMEOUT_DURATION) {}
-
-ClientConnection::ClientConnection(const ClientConnection &other) : _server_config(other._server_config), fd(other.fd), timeout(other.timeout)
-{
-	 _lastActivity = other._lastActivity;
-}
-
-ClientConnection &ClientConnection::operator=(const ClientConnection &other)
-{
-	// TODO
-	(void)other;
-	return *this;
-}
+ClientConnection::ClientConnection(int client_fd, HostConfig & server_config)
+    : _lastActivity(std::time(NULL)), _host_config(server_config), fd(client_fd), timeout(TIMEOUT_DURATION)
+{}
 
 ClientConnection::~ClientConnection()
 {
@@ -31,55 +20,75 @@ void ClientConnection::setLastActivity(time_t last_activity)
 
 bool ClientConnection::processRequest()
 {
-    ssize_t bytes_read = recv(this->fd, _buffer, BUFFER_SIZE - 1, 0);
+	if (!readAndParseRequest())
+		return false;
+    if (_request_parser.isComplete())
+	{
+	    Request request = _request_parser.getRequest();
+		Response response = _request_parser.getResponse();
+		_request_parser.reset();
+		if (!processResponse(request, response))
+			return false;
+		if (!sendResponse(response))
+			return false;
+    }
+    return true;
+}
+
+bool ClientConnection::readAndParseRequest()
+{
+    ssize_t bytes_read = recv(this->fd, this->_buffer, BUFFER_SIZE - 1, 0);
     if (bytes_read <= 0)
 	{
         // Handle disconnection or error
         return false;
     }
     _buffer[bytes_read] = '\0';
-	RequestParser parser = _request_parser;
-    parser.appendData(std::string(_buffer));
-    if (!parser.parse())
+
+    _request_parser.appendData(std::string(_buffer));
+    if (!_request_parser.parse())
 	{
+		this->_request_parser.reset();
         return false;
-    }
-    if (parser.isComplete())
+	}
+	return true;
+}
+
+bool ClientConnection::processResponse(Request & request, Response & response)
+{
+	// Process Uri
+	HostConfig & host_config = _host_config;
+	std::string root = host_config.root;
+	// TODO: Use host_config.route_table to check redirections
+	// TODO: Use host_config.route_table to check redirections
+	request.setUri(root + request.getUri());
+	debug(request.getUri());
+
+	// Process Headers
+	std::map<std::string, HeaderHandler> handlers;
+	std::set<std::string> required;
+
+	HeaderProcessor hp(request, response);
+	setup_post_body_handlers(handlers, required);
+	if(!hp.processHeaders(handlers, required))
 	{
-	    Request request = parser.getRequest();
-		Response response;
-		
-        //std::string root = _server_config.routes[request.getUri()].root;
-		std::string root = "/home/vketteni/42berlin/github/webserver/www";
-        request.setUri(root + request.getUri());
+		this->_request_parser.reset();
+		return false;
+	}
 
-		debug(request.getUri());
-
-        HeaderProcessor headerProcessor;
-        headerProcessor.processHeaders(request);
-
-		// response.setUri (FileManager (uri) -> file_path);
-		// if else
-        AbstractMethodHandler* method_handler = getHandlerForMethod(request.getMethod());
-        if (method_handler)
-		{
-            method_handler->invoke(request, response);
-            delete method_handler;
-        }
-		else
-		{
-            response.setStatusCode(405);
-            response.setStatusMessage("Method Not Allowed");
-        }
-
-        if (!sendResponse(response))
-		{
-            return false;
-        }
-        parser.reset();
-    }
-
-    return true;
+	// Invoke Method handler
+	AbstractMethodHandler* method_handler = getHandlerForMethod(request.getMethod());
+	if (method_handler)
+	{
+		method_handler->invoke(request, response);
+		delete method_handler;
+	}
+	else
+	{
+		response.setStatusCode(405);
+		response.setStatusMessage("Method Not Allowed");
+	}
+	return true;
 }
 
 bool ClientConnection::sendResponse(Response & response) {

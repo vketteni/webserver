@@ -23,11 +23,11 @@ public:
     CGIExecutor();
     ~CGIExecutor();
 
-    bool executeCGI(const Request & request, Response & response);
+    bool executeCGI(Request & request, Response & response);
 	bool isCGI(const std::string &path);
 
 private:
-    char** createCGIEnvironment(const Request& request);
+    char** createCGIEnvironment(Request& request);
 };
 
 

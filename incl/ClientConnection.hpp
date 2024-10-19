@@ -27,15 +27,13 @@ class ClientConnection
 		char			_buffer[BUFFER_SIZE];
 		time_t			_lastActivity;
 		RequestParser	_request_parser;
-		HostConfig &	_server_config;
+		HostConfig &	_host_config;
 
 	public:
 		const int		fd;
 		const int		timeout;
 
-		ClientConnection(int client_fd, HostConfig & server_config);
-		ClientConnection(const ClientConnection & other);
-		ClientConnection & operator=(const ClientConnection & other);
+		ClientConnection(int client_fd, HostConfig & host_config);
 		~ClientConnection();
 
 		time_t getLastActivity(void);
@@ -43,6 +41,8 @@ class ClientConnection
 		bool processRequest(void);
 
 	private:
+		bool readAndParseRequest();
+		bool processResponse(Request & request, Response & response);
 		bool sendResponse(Response & response);
 		bool sendBasicResponse(const std::string& body, int status_code, const std::string& content_type);
 };

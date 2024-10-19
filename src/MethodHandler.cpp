@@ -21,9 +21,9 @@ AbstractMethodHandler* getHandlerForMethod(const std::string& method)
 
 void GetRequestHandler::invoke(Request& request, Response& response)
 {
-    header("GetRequestHandler");
     if (isCGI(request.getUri()))
     {
+		debug("Calling CGI");
 		processCGI(request, response);
         return ;  // CGI wurde erfolgreich behandelt
     }
@@ -37,25 +37,24 @@ void GetRequestHandler::invoke(Request& request, Response& response)
         return ;
     }
 
-    //hier auf mime typ checken
-    // iscgi
-    
-
     std::ostringstream contents;
     contents << file.rdbuf();  // Read the file buffer into the stream
 
     file.close();
 
     response.setBody(contents.str());
-    response.setStatusMessage("Ok");
+    response.setStatusMessage("OK");
     response.setStatusCode(200);
     response.setHeader("Connection", "keep-alive");
 }
 
 void PostRequestHandler::invoke(Request& request, Response& response)
 {
-    (void)request;
-    (void)response;
+    if (isCGI(request.getUri()))
+    {
+		processCGI(request, response);
+        return ;  // CGI wurde erfolgreich behandelt
+    }
 }
 
 void DeleteRequestHandler::invoke(Request& request, Response& response)
@@ -64,7 +63,7 @@ void DeleteRequestHandler::invoke(Request& request, Response& response)
     (void)response;
 }
 
-void AbstractMethodHandler::processCGI(const Request& request, Response& response)
+void AbstractMethodHandler::processCGI(Request& request, Response& response)
 {
     CGIExecutor cgi_executor;
 	std::vector<std::string> env_vars;
@@ -73,7 +72,7 @@ void AbstractMethodHandler::processCGI(const Request& request, Response& respons
 	// CGI-Skript ausführen, GET oder POST spezifisch
 	if (request.getMethod() == "GET")
 	{
-		env_vars.push_back("QUERY_STRING=" + request.getQueryString());
+		env_vars.push_back("QUERY_STRING=" + request.buildQueryString());
 	}
 	else if (request.getMethod() == "POST")
 	{
