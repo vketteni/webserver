@@ -42,7 +42,7 @@ void HeaderProcessor::initDefaultHeaders()
 {
 	_response.setHeader("Date", getCurrentTime());
 	_response.setHeader("Server", "webserver/1.0");// TODO: Use config file server name;
-	if (_request.getHeader("Connection").empty())
+	if (_request.getHeaderOrDefault("", "Connection").empty())
 	{
 		_response.setHeader("Connection", "close");
 	}
@@ -80,14 +80,14 @@ HeaderValidationStatus processContentLength(Request & request, Response & respon
 	(void)request;
 	(void)response;
 
-	std::cout << "Processing Content-Length: " << request.getHeader("Content-Length") << std::endl;
+	std::cout << "Processing Content-Length: " << request.getHeaderOrDefault("", "Content-Length") << std::endl;
 	// Handle Content-Length logic
 	return SUCCESS;
 }
 
 HeaderValidationStatus processHost(Request & request, Response & response)
 {
-	std::string request_host = request.getHeader("Host");
+	std::string request_host = request.getHeaderOrDefault("", "Host");
 	std::cout << "Processing Host: " << request_host << std::endl;
 	if (request_host.empty()) return INVALID_VALUE;
 	response.setHeader("Host", request_host);
@@ -96,11 +96,11 @@ HeaderValidationStatus processHost(Request & request, Response & response)
 
 HeaderValidationStatus processConnection(Request & request, Response & response)
 {
-	std::cout << "Processing Connection: " << request.getHeader("Connection") << std::endl;
-	std::string request_header = request.getHeader("Connection");
+	std::cout << "Processing Connection: " << request.getHeaderOrDefault("", "Connection") << std::endl;
+	std::string request_header = request.getHeaderOrDefault("", "Connection");
 	response.setHeader("Connection", request_header);
 
-	if (!response.getHeader("Connection").empty() && response.getHeader("Connection") == "keep-alive")
+	if (!response.getHeaderOrDefault("", "Connection").empty() && response.getHeaderOrDefault("", "Connection") == "keep-alive")
 		response.setHeader("Keep-Alive", "timeout=5, max=1000");
 
 	if (request_header != "keep-alive" && request_header != "close")
@@ -113,7 +113,7 @@ HeaderValidationStatus processExpect(Request & request, Response & response)
 	(void)request;
 	(void)response;
 
-	std::cout << "Processing Expect: " << request.getHeader("Expect") << std::endl;
+	std::cout << "Processing Expect: " << request.getHeaderOrDefault("", "Expect") << std::endl;
 	// Handle Expect logic
 	return SUCCESS;
 }
@@ -124,7 +124,7 @@ HeaderValidationStatus processTransferEncoding(Request & request, Response & res
 	(void)request;
 	(void)response;
 
-	std::cout << "Processing Transfer-Encoding: " << request.getHeader("Transfer-Encoding") << std::endl;
+	std::cout << "Processing Transfer-Encoding: " << request.getHeaderOrDefault("", "Transfer-Encoding") << std::endl;
 	// Handle Transfer-Encoding logic
 	return SUCCESS;
 }
@@ -134,9 +134,9 @@ HeaderValidationStatus processContentType(Request & request, Response & response
 	(void)request;
 	(void)response;
 
-	std::cout << "Processing Content-Type: " << response.getHeader("Content-Type") << std::endl;
+	std::cout << "Processing Content-Type: " << response.getHeaderOrDefault("", "Content-Type") << std::endl;
 	// Handle Content-Type logic
-	if (response.getHeader("Content-Type").empty())
+	if (response.getHeaderOrDefault("", "Content-Type").empty())
 	{
 		response.setHeader("Content-Type", "application/octet-stream");
 	}
@@ -145,8 +145,8 @@ HeaderValidationStatus processContentType(Request & request, Response & response
 
 HeaderValidationStatus processAccept(Request & request, Response & response)
 {
-	std::cout << "Processing Accept: " << request.getHeader("Accept") << std::endl;
-	std::string request_header = request.getHeader("Accept");
+	std::cout << "Processing Accept: " << request.getHeaderOrDefault("", "Accept") << std::endl;
+	std::string request_header = request.getHeaderOrDefault("", "Accept");
 
 	if (request_header.find("application/json") != std::string::npos)
 	{
@@ -166,7 +166,7 @@ HeaderValidationStatus processUserAgent(Request & request, Response & response)
 	(void)request;
 	(void)response;
 
-	std::cout << "Processing User-Agent: " << request.getHeader("User-Agent") << std::endl;
+	std::cout << "Processing User-Agent: " << request.getHeaderOrDefault("", "User-Agent") << std::endl;
 	// Handle User-Agent logic
 	return SUCCESS;
 }
@@ -176,7 +176,7 @@ HeaderValidationStatus processAuthorization(Request & request, Response & respon
 	(void)request;
 	(void)response;
 
-	std::cout << "Processing Authorization: " << request.getHeader("Authorization") << std::endl;
+	std::cout << "Processing Authorization: " << request.getHeaderOrDefault("", "Authorization") << std::endl;
 	// Handle Authorization logic
 	return SUCCESS;
 }
@@ -186,7 +186,7 @@ HeaderValidationStatus processReferer(Request & request, Response & response)
 	(void)request;
 	(void)response;
 
-	std::cout << "Processing Referer: " << request.getHeader("Referer") << std::endl;
+	std::cout << "Processing Referer: " << request.getHeaderOrDefault("", "Referer") << std::endl;
 	// Handle Referer logic
 	return SUCCESS;
 }
@@ -196,7 +196,7 @@ HeaderValidationStatus processCookie(Request & request, Response & response)
 	(void)request;
 	(void)response;
 
-	std::cout << "Processing Cookie: " << request.getHeader("Cookie") << std::endl;
+	std::cout << "Processing Cookie: " << request.getHeaderOrDefault("", "Cookie") << std::endl;
 	// Handle Cookie logic
 	return SUCCESS;
 }
@@ -206,7 +206,7 @@ HeaderValidationStatus processIfModifiedSince(Request & request, Response & resp
 	(void)request;
 	(void)response;
 
-	std::cout << "Processing If-Modified-Since: " << request.getHeader("If-Modified-Since") << std::endl;
+	std::cout << "Processing If-Modified-Since: " << request.getHeaderOrDefault("", "If-Modified-Since") << std::endl;
 	// Handle If-Modified-Since logic
 	return SUCCESS;
 }
@@ -216,12 +216,12 @@ HeaderValidationStatus processLastModified(Request & request, Response & respons
 	(void)request;
 	(void)response;
 
-	std::cout << "Processing Last-Modified: " << request.getHeader("Last-Modified") << std::endl;
+	std::cout << "Processing Last-Modified: " << request.getHeaderOrDefault("", "Last-Modified") << std::endl;
 	// Handle Last-Modified logic
 
-	if (!request.getHeader("Last-Modified").empty())
+	if (!request.getHeaderOrDefault("", "Last-Modified").empty())
 	{
-		std::string ifModifiedSince = request.getHeader("Last-Modified");
+		std::string ifModifiedSince = request.getHeaderOrDefault("", "Last-Modified");
 		std::string serverLastModified = getCurrentTime();
 
 		if (ifModifiedSince == serverLastModified)
@@ -242,7 +242,7 @@ HeaderValidationStatus processIfNoneMatch(Request & request, Response & response
 {
 	(void)request;
 	(void)response;
-	std::cout << "Processing If-None-Match: " << request.getHeader("If-None-Match") << std::endl;
+	std::cout << "Processing If-None-Match: " << request.getHeaderOrDefault("", "If-None-Match") << std::endl;
 	// Handle If-None-Match logic
 	return SUCCESS;
 }
@@ -257,8 +257,9 @@ HeaderValidationStatus processIfNoneMatch(Request & request, Response & response
 */
 void setup_pre_body_handlers(std::map<std::string, HeaderHandler> & handlers, std::set<std::string> & required_headers)
 {
-	required_headers.insert("Host");
-	required_headers.insert("Content-Length");
+	(void)required_headers;
+	// required_headers.insert("Host");
+	// required_headers.insert("Content-Length");
 
 	handlers["Host"] = &processHost;
 	handlers["Connection"] = &processConnection;

@@ -1,51 +1,42 @@
 #ifndef RESPONSE_HPP
 #define RESPONSE_HPP
 
-#include <string>
-#include <map>
-#include "Request.hpp"
+#include <sstream>
+#include "AMessage.hpp"
 
-enum ResponseState {
-	WRITE_STATUS_LINE,
-	WRITE_HEADERS,
-	WRITE_BODY,
-	COMPLETE_RES
-};
-
-class Response
+class Response : public AMessage
 {
 	private:
-		ResponseState						_state;
 		int									_status_code;
 		std::string							_status_message;
-		std::string							_chunk;
-		std::string							_status_line;
-		std::string							_body;
-		std::map<std::string, std::string>	_headers;
 
+	// Inherited members (from AMessage):
+		// std::string _first_line;
+		// std::string _protocol_version;
+		// std::string _body;
+		// std::map<std::string, std::string> _headers;
 
 	public:
 		Response();
 		~Response();
 		
-		// Response Getters & Setter
 		int getStatusCode(void);
 		const std::string & getStatusMessage(void);
-		const std::string & getHeader(const std::string &key) const;
-		const std::map<std::string, std::string> & getHeaders(void);
-		const std::string & getBody(void);
-		void setBody(const std::string & body);
-		void setHeader(const std::string & key, const std::string & value);
-		void setHeaders(const std::map<std::string, std::string> & headers);
 		void setStatusCode(int code);
 		void setStatusMessage(const std::string & message);
-		// Status checkers
-		bool isComplete() const;
-		bool isValidStatusCode() const;
-		bool hasRequiredHeaders() const;
 
-		// State transition management
-		ResponseState getState() const;
+		const std::string buildFirstLine() const;
 };
 
 #endif
+
+
+// ResponseState						_state;
+// std::string							_chunk;
+
+// enum ResponseState {
+// 	WRITE_STATUS_LINE,
+// 	WRITE_HEADERS,
+// 	WRITE_BODY,
+// 	COMPLETE_RES
+// };

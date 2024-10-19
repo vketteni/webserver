@@ -18,7 +18,7 @@ bool RequestParser::parse() {
 
 				case PROCESS_HEADERS:
 					if (!processHeadersBeforeBody()) return false;
-					if (_request.getContentLength() > 0) {
+					if (_request.getHeaderOrDefault("Content-Length", "0") != "0") {
 						_state = READ_BODY;
 					} else {
 						_state = COMPLETE;
@@ -53,9 +53,6 @@ bool RequestParser::extractRequestLine(void)
 	if (pos == std::string::npos) {
 		return false;
 	}
-
-	// TODO: extract query string
-	_request.setQueryString("");
 
 	std::string requestLine = _buffer.substr(0, pos);
 	_buffer.erase(0, pos + 2);
@@ -102,8 +99,11 @@ bool RequestParser::extractHeaders()
 }
 
 bool RequestParser::extractBody()
-{	// TODO: Content length is not set!! garbage value
-	size_t content_length = _request.getContentLength();
+{
+	std::stringstream ss;
+	ss << _request.getHeaderOrDefault("Content-Length", "0");
+	size_t content_length = ss.dec;
+
 	if (_buffer.size() >= content_length) {
 		_request.setBody(_buffer.substr(0, content_length));
 		_buffer.erase(0, content_length);
