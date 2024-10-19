@@ -1,20 +1,8 @@
 #include "../incl/ClientConnection.hpp"
 
 ClientConnection::ClientConnection(int client_fd, HostConfig & server_config)
-    : _lastActivity(std::time(NULL)), _host_config(server_config), fd(client_fd), timeout(TIMEOUT_DURATION) {}
-
-ClientConnection::ClientConnection(const ClientConnection &other)
-    : _host_config(other._host_config), fd(other.fd), timeout(other.timeout)
-{
-	 _lastActivity = other._lastActivity;
-}
-
-ClientConnection &ClientConnection::operator=(const ClientConnection &other)
-{
-	// TODO
-	(void)other;
-	return *this;
-}
+    : _lastActivity(std::time(NULL)), _host_config(server_config), fd(client_fd), timeout(TIMEOUT_DURATION)
+{}
 
 ClientConnection::~ClientConnection()
 {
@@ -32,25 +20,17 @@ void ClientConnection::setLastActivity(time_t last_activity)
 
 bool ClientConnection::processRequest()
 {
-	if (readAndParseRequest())
-	{
+	if (!readAndParseRequest())
 		return false;
-	}
-    if (this->_request_parser.isComplete())
+    if (_request_parser.isComplete())
 	{
-	    Request request = this->_request_parser.getRequest();
-		Response response = this->_request_parser.getResponse();
-		this->_request_parser.reset();
-
+	    Request request = _request_parser.getRequest();
+		Response response = _request_parser.getResponse();
+		_request_parser.reset();
 		if (!processResponse(request, response))
-		{
 			return false;
-		}
-
 		if (!sendResponse(response))
-		{
 			return false;
-		}
     }
     return true;
 }

@@ -34,8 +34,6 @@ class ClientConnection
 		const int		timeout;
 
 		ClientConnection(int client_fd, HostConfig & host_config);
-		ClientConnection(const ClientConnection & other);
-		ClientConnection & operator=(const ClientConnection & other);
 		~ClientConnection();
 
 		time_t getLastActivity(void);
