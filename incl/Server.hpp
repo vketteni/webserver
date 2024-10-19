@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <list>
 #include <string>
 #include <cstring>
 #include <algorithm>
@@ -34,7 +35,7 @@ class Server {
 	private:
 		std::string config_path;
 		std::vector<std::pair<int, int> > host_port_and_fds;
-		std::vector<ClientConnection> client_connections;
+		std::list<ClientConnection> client_connections;
 		std::vector<struct pollfd> poll_fds;
 		std::map<int, HostConfig> host_configs;
 		bool running;

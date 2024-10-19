@@ -264,16 +264,11 @@ bool Server::isHostSocket(int fd)
 
 bool Server::isClientSocket(int fd)
 {
-	int	i;
-
-	i = 0;
-	while (i < (int)client_connections.size())
-	{
-		if (client_connections[i].fd != fd)
-			return false;
-		i++;
-	}
-	return true;
+	std::list<ClientConnection>::iterator client = std::find_if(client_connections.begin(),
+			client_connections.end(), MatchClientFd(fd));
+	if (client != client_connections.end())
+		return true;
+	return false;
 }
 
 void Server::processIOEvents()
@@ -306,7 +301,7 @@ void Server::processIOEvents()
 void Server::disconnectClient(std::vector<struct pollfd>::iterator poll_iterator)
 {
 	close(poll_iterator->fd);
-	std::vector<ClientConnection>::iterator client_iterator = std::find_if(client_connections.begin(),
+	std::list<ClientConnection>::iterator client_iterator = std::find_if(client_connections.begin(),
 			client_connections.end(), MatchClientFd(poll_iterator->fd));
 	if (client_iterator != client_connections.end())
 		client_connections.erase(client_iterator);
@@ -355,7 +350,7 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
     // Add client to poll_fds
     struct pollfd pfd;
     pfd.fd = client_fd;
-    pfd.events = POLLIN;
+    pfd.events = POLLIN | POLLOUT;
     pfd.revents = 0;
     this->poll_fds.push_back(pfd);
 
@@ -374,7 +369,7 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
 bool Server::processClientRequest(std::vector<struct pollfd>::iterator poll_iterator)
 {
 	//	this check is unnessessary compute intensive -> std::vector allows random lookup via index O(1) which we should use instead
-	std::vector<ClientConnection>::iterator client = std::find_if(client_connections.begin(),
+	std::list<ClientConnection>::iterator client = std::find_if(client_connections.begin(),
 			client_connections.end(), MatchClientFd(poll_iterator->fd));
 	if (client == client_connections.end())
 	{
