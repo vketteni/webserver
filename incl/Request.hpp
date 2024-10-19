@@ -15,11 +15,11 @@ class Request : public AMessage
 		std::string							_method;
 		std::string							_uri;
 
-	// Inherited members (from AMessage):
-		// std::string _first_line;
-		// std::string _protocol_version;
-		// std::string _body;
-		// std::map<std::string, std::string> _headers;
+/* 	Inherited members:
+		std::string _first_line;
+		std::string _protocol_version;
+		std::string _body;
+		std::map<std::string, std::string> _headers; */
 
 	public:
 		Request();

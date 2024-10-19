@@ -10,11 +10,11 @@ class Response : public AMessage
 		int									_status_code;
 		std::string							_status_message;
 
-	// Inherited members (from AMessage):
-		// std::string _first_line;
-		// std::string _protocol_version;
-		// std::string _body;
-		// std::map<std::string, std::string> _headers;
+/* 	Inherited members:
+		std::string _first_line;
+		std::string _protocol_version;
+		std::string _body;
+		std::map<std::string, std::string> _headers; */
 
 	public:
 		Response();
