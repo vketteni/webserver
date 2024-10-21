@@ -342,7 +342,7 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
 		{
 			int port = host_port_and_fds[i].first;
 			
-			ClientConnection new_connection(client_fd, host_configs[port]);
+			ClientConnection new_connection(client_fd, host_configs[port], port);
 			this->client_connections.push_back(new_connection);
 		}
 	}

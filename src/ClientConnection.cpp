@@ -1,5 +1,12 @@
 #include "../incl/ClientConnection.hpp"
 
+ClientConnection::ClientConnection(int client_fd, HostConfig & server_config, int port)
+    : _lastActivity(std::time(NULL)), _host_config(server_config), fd(client_fd), host_port(port), timeout(TIMEOUT_DURATION)
+{}
+
+ClientConnection::~ClientConnection()
+{
+}
 
 // Funktion zum Konvertieren von int zu std::string in C++98
 std::string intToString(int number) {
@@ -25,16 +32,6 @@ void ClientConnection::sendRedirect(const std::string& redirect_url, int status_
     }
 
     std::cout << "Sent redirect to: " << redirect_url << "\n";
-}
-
-
-
-ClientConnection::ClientConnection(int client_fd, HostConfig & server_config)
-    : _lastActivity(std::time(NULL)), _host_config(server_config), fd(client_fd), timeout(TIMEOUT_DURATION)
-{}
-
-ClientConnection::~ClientConnection()
-{
 }
 
 time_t ClientConnection::getLastActivity(void)
@@ -86,18 +83,27 @@ bool ClientConnection::readAndParseRequest()
 
 bool ClientConnection::processResponse(Request & request, Response & response)
 {
-	HeaderProcessor headerProcessor;
-	headerProcessor.processHeaders(request);
+	std::map<std::string, HeaderHandler> handlers;
+	std::set<std::string> required;
+
+	HeaderProcessor hp(request, response);
+	setup_post_body_handlers(handlers, required);
+
+	if (!hp.processHeaders(handlers, required))
+		return false;
 
     // Zuerst die Redirect-Konfiguration auslesen
     ConfigParser config_parser_test;
     config_parser_test.parseConfig("conf/index_test.conf");
     std::map<int, HostConfig> host_configs = config_parser_test.getHostConfigs();
+    std::string root = host_configs[host_port].root;
     config_parser_test.printRedirectsAndRoutes(host_configs);  // Optional, nur zur Anzeige
+    
+
 
     // Prüfen, ob es einen Redirect für die angeforderte URL gibt
-    std::map<std::string, RouteConfig>::iterator route_it = host_config.routes.find(request.getUri());
-    if (route_it != host_config.routes.end() && route_it->second.redirect_status != 0)
+    std::map<std::string, RouteConfig>::iterator route_it = _host_config.routes.find(request.getUri());
+    if (route_it != _host_config.routes.end() && route_it->second.redirect_status != 0)
     {
         // Redirect gefunden - setze die neue URL und sende den Redirect
         std::string redirect_url = route_it->second.redirect_path;
@@ -109,11 +115,11 @@ bool ClientConnection::processResponse(Request & request, Response & response)
     }
 
     // Wenn kein Redirect gefunden wurde, prüfe die Route
-    if (route_it != host_config.routes.end())
+    if (route_it != _host_config.routes.end())
     {
         // Route gefunden - setze den Pfad entsprechend der Route
         std::string new_route = route_it->second.root;
-        request.setUri(root + new_route);
+        request.setUri(new_route);
     }
     else
     {

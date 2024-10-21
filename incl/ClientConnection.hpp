@@ -31,9 +31,10 @@ class ClientConnection
 
 	public:
 		const int		fd;
+		const int		host_port;
 		const int		timeout;
 
-		ClientConnection(int client_fd, HostConfig & host_config);
+		ClientConnection(int client_fd, HostConfig & host_config, int port);
 		~ClientConnection();
 
 		time_t getLastActivity(void);
