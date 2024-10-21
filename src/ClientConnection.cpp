@@ -119,7 +119,7 @@ bool ClientConnection::processResponse(Request & request, Response & response)
     {
         // Route gefunden - setze den Pfad entsprechend der Route
         std::string new_route = route_it->second.root;
-        request.setUri(new_route);
+        request.setUri(root + new_route);
     }
     else
     {
