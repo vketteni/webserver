@@ -135,7 +135,6 @@ bool ClientConnection::processResponse(Request & request, Response & response)
         request.setUri(root + newUrl);
     }
 
-	Response response;
 	AbstractMethodHandler* method_handler = getHandlerForMethod(request.getMethod());
 	if (method_handler)
 	{

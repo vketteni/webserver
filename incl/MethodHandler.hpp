@@ -16,7 +16,7 @@ class AbstractMethodHandler
 		virtual void invoke(Request& request, Response& response) = 0;
 		virtual ~AbstractMethodHandler() {}
 	protected:
-		void processCGI(const Request& request, Response& response);
+		void processCGI(Request& request, Response& response);
 		bool shouldRedirect(const Request& request);
 		void setRedirect(Response& response, const std::string& location);
 		void setErrorResponse(Response& response, int statusCode, const std::string& message);
