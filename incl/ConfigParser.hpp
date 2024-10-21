@@ -52,6 +52,7 @@ class ConfigParser
 		~ConfigParser();
 		bool    parseConfig(const std::string& file_path);
 		const   std::map<int, HostConfig> & getHostConfigs() const;
+		void printRedirectsAndRoutes(const std::map<int, HostConfig> &host_configs);
 	private:
 		std::map<int, HostConfig> host_configs;
 

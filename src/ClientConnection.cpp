@@ -1,4 +1,34 @@
 #include "../incl/ClientConnection.hpp"
+#include "../incl/ConfigParser.hpp"
+#include <sys/stat.h>
+
+// Funktion zum Konvertieren von int zu std::string in C++98
+std::string intToString(int number) {
+    std::ostringstream oss;
+    oss << number;  // Schreibe die Zahl in den Stream
+    return oss.str();
+}
+
+// Funktion zum Senden eines Redirects
+void ClientConnection::sendRedirect(const std::string& redirect_url, int status_code) {
+    std::ostringstream response;
+    response << "HTTP/1.1 " << status_code << " Moved Permanently\r\n"
+             << "Location: " << redirect_url << "\r\n"
+             << "Content-Length: 0\r\n"
+             << "Connection: close\r\n\r\n";
+
+    std::string response_str = response.str();
+    ssize_t bytes_sent = send(this->fd, response_str.c_str(), response_str.size(), 0);
+
+    if (bytes_sent == -1)
+    {
+        perror("send");
+    }
+
+    std::cout << "Sent redirect to: " << redirect_url << "\n";
+}
+
+
 
 ClientConnection::ClientConnection(int client_fd, HostConfig & server_config)
     : _lastActivity(std::time(NULL)), _host_config(server_config), fd(client_fd), timeout(TIMEOUT_DURATION) {}
@@ -32,37 +62,74 @@ void ClientConnection::setLastActivity(time_t last_activity)
 
 bool ClientConnection::processRequest()
 {
-	if (!processRequestReading())
-	{
-		return false;
-	}
-	if (!processRequestParsing())
-	{
-		return false;
-	}
+    if (!processRequestReading())
+    {
+        return false;
+    }
+    if (!processRequestParsing())
+    {
+        return false;
+    }
     if (this->_request_parser.isComplete())
-	{
-	    Request request = this->_request_parser.getRequest();
-		this->_request_parser.reset();
+    {
+        Request request = this->_request_parser.getRequest();
+        this->_request_parser.reset();
 
-        HostConfig & host_config = _host_config;
+        // Hol dir die Host-Konfiguration
+        HostConfig &host_config = _host_config;
         std::string root = host_config.root;
+
         debug(host_config.port);
         debug(host_config.host);
         debug(root);
-        //std::string root = _host_config.routes[request.getUri()].root;
-		//std::string root = "/home/vketteni/42berlin/github/webserver/www";
 
-        // TODO: Use host_config.route_table to check redirections
-        // TODO: Use host_config.route_table to check redirections
+        // Zuerst die Redirect-Konfiguration auslesen
+        ConfigParser config_parser_test;
+        config_parser_test.parseConfig("/home/ohoro/webserver/conf/index_test.conf");
+        std::map<int, HostConfig> host_configs = config_parser_test.getHostConfigs();
+        config_parser_test.printRedirectsAndRoutes(host_configs);  // Optional, nur zur Anzeige
 
-        request.setUri(root + request.getUri());
+        // Prüfen, ob es einen Redirect für die angeforderte URL gibt
+        std::map<std::string, RouteConfig>::iterator route_it = host_config.routes.find(request.getUri());
+        if (route_it != host_config.routes.end() && route_it->second.redirect_status != 0)
+        {
+            // Redirect gefunden - setze die neue URL und sende den Redirect
+            std::string redirect_url = route_it->second.redirect_path;
+            request.setUri(redirect_url);
 
-		debug(request.getUri());
-		if (!processResponse(request))
-		{
-			return false;
-		}
+            // Hier würdest du den 301 Redirect senden
+            sendRedirect(redirect_url, route_it->second.redirect_status);
+            return true;  // Beende hier, da der Redirect gesendet wurde
+        }
+
+        // Wenn kein Redirect gefunden wurde, prüfe die Route
+        if (route_it != host_config.routes.end())
+        {
+            // Route gefunden - setze den Pfad entsprechend der Route
+            std::string new_route = route_it->second.root;
+            request.setUri(root + new_route);
+        }
+        else
+        {
+            // Keine spezielle Route - setze den Standardpfad
+            request.setUri(root + request.getUri());
+        }
+
+        // Fehlerbehandlung: 404, falls Datei nicht existiert
+        std::string newUrl = "/404.html"; 
+        struct stat fileInfo;
+        if (::stat(request.getUri().c_str(), &fileInfo) == -1) {
+            // Datei existiert nicht, sende 404-Seite
+            request.setUri(root + newUrl);
+        }
+
+        debug(request.getUri());
+
+        // Verarbeite die Antwort auf Basis der Anfrage
+        if (!processResponse(request))
+        {
+            return false;
+        }
     }
     return true;
 }
@@ -91,8 +158,8 @@ bool ClientConnection::processRequestParsing()
 
 bool ClientConnection::processResponse(Request & request)
 {
-	HeaderProcessor headerProcessor;
-	headerProcessor.processHeaders(request);
+	//HeaderProcessor headerProcessor;
+	//headerProcessor.processHeaders(request);
 
 	Response response;
 	AbstractMethodHandler* method_handler = getHandlerForMethod(request.getMethod());

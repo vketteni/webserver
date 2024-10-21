@@ -71,6 +71,7 @@ bool RequestParser::extractRequestLine(void)
 	printf ("Method: %s\n", method.c_str());
 	printf ("URI: %s\n", uri.c_str());
 	printf ("HTTP Version: %s\n", http_version.c_str());
+
 	return true;
 }
 

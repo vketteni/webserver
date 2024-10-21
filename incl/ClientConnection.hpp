@@ -41,13 +41,12 @@ class ClientConnection
 		time_t getLastActivity(void);
 		void setLastActivity(time_t last_activity);
 		bool processRequest(void);
-
+ void sendRedirect(const std::string& redirect_url, int statusCode = 301);
 	private:
 		bool processRequestParsing(void);
 		bool processRequestReading(void);
 		bool processResponse(Request & request);
 		bool sendResponse(Response & response);
-
 		bool sendBasicResponse(const std::string& body, int status_code, const std::string& content_type);
 };
 

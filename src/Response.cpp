@@ -48,6 +48,7 @@ void Response::setStatusMessage(const std::string &message)
 	_status_message = message;
 }
 
+
 bool Response::isComplete(void) const
 {
 	return (_state == COMPLETE_RES);

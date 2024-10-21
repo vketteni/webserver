@@ -208,3 +208,52 @@ void ConfigParser::normalizeSpaces(const char* file_path) {
     }
 
 }
+
+void ConfigParser::printRedirectsAndRoutes(const std::map<int, HostConfig> &host_configs) {
+    for (std::map<int, HostConfig>::const_iterator host_it = host_configs.begin(); host_it != host_configs.end(); ++host_it) {
+        const HostConfig& host_config = host_it->second;
+
+        std::cout << "Host: " << host_config.host << " Port: " << host_config.port << std::endl;
+
+        for (std::map<std::string, RouteConfig>::const_iterator route_it = host_config.routes.begin(); route_it != host_config.routes.end(); ++route_it) {
+            const std::string& route_path = route_it->first;
+            const RouteConfig& route = route_it->second;
+
+            // Überprüfe, ob es ein Redirect ist
+            if (route.redirect_status != 0) {
+                std::cout << "Redirect found:" << std::endl;
+                std::cout << " - Path: " << route_path << std::endl;
+                std::cout << " - Redirect Status: " << route.redirect_status << std::endl;
+                std::cout << " - Redirect To: " << route.redirect_path << std::endl;
+            } else {
+                // Ansonsten ist es eine Route
+                std::cout << "Route found:" << std::endl;
+                std::cout << " - Path: " << route_path << std::endl;
+                std::cout << " - Root: " << route.root << std::endl;
+                
+                if (!route.index.empty()) {
+                    std::cout << " - Index: " << route.index << std::endl;
+                }
+
+                if (!route.upload_dir.empty()) {
+                    std::cout << " - Upload Directory: " << route.upload_dir << std::endl;
+                }
+
+                if (!route.cgi_extension.empty()) {
+                    std::cout << " - CGI Extension: " << route.cgi_extension << std::endl;
+                }
+
+                if (!route.methods.empty()) {
+                    std::cout << " - Methods: ";
+                    for (std::vector<std::string>::const_iterator method_it = route.methods.begin(); method_it != route.methods.end(); ++method_it) {
+                        if (method_it != route.methods.begin()) std::cout << ", ";
+                        std::cout << *method_it;
+                    }
+                    std::cout << std::endl;
+                }
+            }
+        }
+
+        std::cout << std::endl;
+    }
+}
