@@ -8,6 +8,7 @@
 #include <sstream>
 #include <unistd.h>
 #include <fstream>
+#include <sys/stat.h>
 
 #include "Debug.hpp"
 #include "MethodHandler.hpp"
@@ -16,7 +17,6 @@
 #include "Request.hpp"
 #include "RequestParser.hpp"
 #include "ConfigParser.hpp"
-
 # define BUFFER_SIZE 4096
 
 const int TIMEOUT_DURATION = 10;
@@ -34,8 +34,6 @@ class ClientConnection
 		const int		timeout;
 
 		ClientConnection(int client_fd, HostConfig & host_config);
-		ClientConnection(const ClientConnection & other);
-		ClientConnection & operator=(const ClientConnection & other);
 		~ClientConnection();
 
 		time_t getLastActivity(void);
@@ -43,9 +41,8 @@ class ClientConnection
 		bool processRequest(void);
  void sendRedirect(const std::string& redirect_url, int statusCode = 301);
 	private:
-		bool processRequestParsing(void);
-		bool processRequestReading(void);
-		bool processResponse(Request & request);
+		bool readAndParseRequest();
+		bool processResponse(Request & request, Response & response);
 		bool sendResponse(Response & response);
 		bool sendBasicResponse(const std::string& body, int status_code, const std::string& content_type);
 };

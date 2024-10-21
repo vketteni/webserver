@@ -1,12 +1,10 @@
 #include "../incl/Response.hpp"
 
 Response::Response()
-{
-}
+	: _status_code(200), _status_message("OK")
+{}
 
-Response::~Response()
-{
-}
+Response::~Response() {}
 
 int Response::getStatusCode(void)
 {
@@ -16,26 +14,6 @@ int Response::getStatusCode(void)
 const std::string &Response::getStatusMessage(void)
 {
 	return _status_message;
-}
-
-const std::map<std::string, std::string> &Response::getHeaders(void)
-{
-	return _headers;
-}
-
-const std::string &Response::getBody(void)
-{
-	return _body;
-}
-
-void Response::setBody(const std::string &body)
-{
-	_body = body;
-}
-
-void Response::setHeader(const std::string &key, const std::string &value)
-{
-	_headers[key] = value;
 }
 
 void Response::setStatusCode(int code)
@@ -48,18 +26,12 @@ void Response::setStatusMessage(const std::string &message)
 	_status_message = message;
 }
 
-
-bool Response::isComplete(void) const
+const std::string Response::buildFirstLine() const
 {
-	return (_state == COMPLETE_RES);
+	std::stringstream ss;
+	ss << _status_code;
+	std::string status_code_str = ss.str();
+	
+	return _protocol_version + " " + status_code_str + "" + _status_message;
 }
 
-bool Response::hasRequiredHeaders(void) const
-{
-	return (false);
-}
-
-bool Response::isValidStatusCode(void) const
-{
-	return (false);
-}

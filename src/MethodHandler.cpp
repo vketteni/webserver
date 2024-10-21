@@ -31,6 +31,7 @@ void GetRequestHandler::invoke(Request& request, Response& response)
 
     if (isCGI(request.getUri()))
     {
+		debug("Calling CGI");
 		processCGI(request, response);
         return ;  // CGI wurde erfolgreich behandelt
     }
@@ -48,26 +49,7 @@ void GetRequestHandler::invoke(Request& request, Response& response)
     file.close();
 
     buildResponse(response, 200, "OK", contents.str(), "keep-alive");
-
 }
-
-/* void GetRequestHandler::invoke(Request& request, Response& response)
-{
-    header("GetRequestHandler");
-
-    if (shouldRedirect(request)) { setRedirect(response, "/new-location"); return; }
-
-    if (isCGI(request.getUri())) { processCGI(request, response); return; }
-
-    std::ifstream file(request.getUri().c_str());
-    if (!file) { setErrorResponse(response, 404, "File Not Found"); return; }
-
-    std::ostringstream contents;
-    contents << file.rdbuf();  
-
-    buildResponse(response, 200, "OK", contents.str(), "keep-alive");
-} */
-
 
 void PostRequestHandler::invoke(Request& request, Response& response)
 {
@@ -107,7 +89,7 @@ void DeleteRequestHandler::invoke(Request& request, Response& response)
     (void)response;
 }
 
-void AbstractMethodHandler::processCGI(const Request& request, Response& response)
+void AbstractMethodHandler::processCGI(Request& request, Response& response)
 {
     CGIExecutor cgi_executor;
 	std::vector<std::string> env_vars;
@@ -116,7 +98,7 @@ void AbstractMethodHandler::processCGI(const Request& request, Response& respons
 	// CGI-Skript ausführen, GET oder POST spezifisch
 	if (request.getMethod() == "GET")
 	{
-		env_vars.push_back("QUERY_STRING=" + request.getQueryString());
+		env_vars.push_back("QUERY_STRING=" + request.buildQueryString());
 	}
 	else if (request.getMethod() == "POST")
 	{
