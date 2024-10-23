@@ -131,7 +131,7 @@ bool ClientConnection::processResponse(Request & request, Response & response)
     // Fehlerbehandlung: 404, falls Datei nicht existiert
     std::string newUrl = "/404.html"; 
     struct stat fileInfo;
-    if (::stat("/home/vketteni/42berlin/github/webserver/data/www/cgi_bin/submit-superpower.py", &fileInfo) == -1) {
+    if (::stat(request.getUri().c_str(), &fileInfo) == -1) {
         // Datei existiert nicht, sende 404-Seite
         request.setUri(root + newUrl);
     }
