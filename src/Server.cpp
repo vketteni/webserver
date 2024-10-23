@@ -28,7 +28,7 @@ void	signalHandler(int signum)
 
 // Constructor
 Server::Server(const std::string &config_path) : config_path(config_path),
-	running(false)
+	running(false), logger("access.log", "error.log", INFO)
 {
 }
 
@@ -44,7 +44,7 @@ Server::~Server()
 */
 bool Server::parseConfig(std::vector<int> &host_ports)
 {
-	
+
     ConfigParser config_parser;
     if (!config_parser.parseConfig(config_path))
     {
@@ -161,10 +161,12 @@ bool Server::start()
 	std::vector<int> host_ports;
 	if (!parseConfig(host_ports))
 	{
+		logger.logError("Failed to parse config file.");
 		return (false);
 	}
 	if (!setupServerSockets(host_ports))
 	{
+		logger.logError("Failed to setup server sockets.");
 		return (false);
 	}
 	this->running = true;
@@ -204,6 +206,7 @@ void Server::eventLoop()
 				continue ; // Interrupted by signal
 			}
 			perror("poll");
+			logger.logError("Poll error.");
 			break ;
 		}
 		if (poll_result == 0)
@@ -213,6 +216,8 @@ void Server::eventLoop()
 		}
 		processIOEvents();
 		checkTimeouts();
+		logger.rotateLogs(logger.accessLogFile, "access.log");
+		logger.rotateLogs(logger.errorLogFile, "error.log");
 	}
 }
 
@@ -329,11 +334,12 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
 	{
 		if (errno != EWOULDBLOCK && errno != EAGAIN)
 		{
-            perror("accept");
-            return false;
-        }
-        return true; // No pending connections
-    }
+			perror("accept");
+			logger.logError("Error accepting new client.");
+			return false;
+		}
+		return true; // No pending connections
+	}
 
 	// TODO: make descriptive smaller function
 	for (int i = 0; i < (int)host_port_and_fds.size(); ++i)
@@ -341,23 +347,26 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
 		if (host_port_and_fds[i].second == poll_iterator->fd)
 		{
 			int port = host_port_and_fds[i].first;
-			
+
 			ClientConnection new_connection(client_fd, host_configs[port], port);
 			this->client_connections.push_back(new_connection);
 		}
 	}
 
-    // Add client to poll_fds
-    struct pollfd pfd;
-    pfd.fd = client_fd;
-    pfd.events = POLLIN | POLLOUT;
-    pfd.revents = 0;
-    this->poll_fds.push_back(pfd);
+	// Add client to poll_fds
+	struct pollfd pfd;
+	pfd.fd = client_fd;
+	pfd.events = POLLIN | POLLOUT;
+	pfd.revents = 0;
+	this->poll_fds.push_back(pfd);
 
-    char client_ip[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
-    std::cout << "Accepted connection from " << client_ip << ":" << ntohs(client_addr.sin_port)
-              << " with fd " << client_fd << "\n";
+	char client_ip[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
+	std::stringstream ss;
+	ss << "Accepted connection from " << client_ip << ":" << ntohs(client_addr.sin_port);
+	logger.logInfo(ss.str());
+    // std::cout << "Accepted connection from " << client_ip << ":" << ntohs(client_addr.sin_port)
+   //           << " with fd " << client_fd << "\n";
 
     return true;
 }
@@ -373,35 +382,19 @@ bool Server::processClientRequest(std::vector<struct pollfd>::iterator poll_iter
 			client_connections.end(), MatchClientFd(poll_iterator->fd));
 	if (client == client_connections.end())
 	{
-		// sendErrorResponse(poll_iterator->fd, 400);
-		// std::cerr << "Error, client doesn't exist.\n";
+		logger.logError("Client does not exist.");
 		return false;
 	}
 	if (!client->processRequest())
 	{
 		client->setLastActivity(std::time(NULL));
-		// sendErrorResponse(poll_iterator->fd, 500);
-		//   std::cerr << "Failed to process request from client.\n";
+		logger.logWarning("Failed to process request from client.");
 		return false;
 	}
 	client->setLastActivity(std::time(NULL));
+	logger.logDebug("Processed request successfully.");
 	return true;
 }
-
-// std::string Server::getRedirect(const std::string& requested_path)
-// {
-// 	for (std::vector<HostConfig>::iterator it = host_configs.begin(); it != host_configs.end(); ++it)
-// 	{
-// 		const HostConfig& config = *it;
-// 		std::map<std::string, std::string>::const_iterator redirect_it = config.redirects.find(requested_path);
-// 		if (redirect_it != config.redirects.end())
-// 		{
-// 			return redirect_it->second; // Gibt den neuen Pfad zurück
-// 		}
-// 	}
-// 	return ""; // Kein Redirect gefunden
-// }
-
 
 std::string Server::translateUriToCgiPath(const std::string &path)
 {

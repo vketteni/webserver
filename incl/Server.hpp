@@ -21,6 +21,7 @@
 #include "Request.hpp"
 #include "CGIExecutor.hpp"
 #include "StatusCode.hpp"
+#include "Logger.hpp"
 
 // Constants
 const int BACKLOG = 10000;
@@ -39,6 +40,7 @@ class Server {
 		std::vector<struct pollfd> poll_fds;
 		std::map<int, HostConfig> host_configs;
 		bool running;
+		Logger logger;
 
 		// Server Setup
 		bool parseConfig(std::vector<int> & host_ports);
