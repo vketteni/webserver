@@ -33,16 +33,16 @@ class Server {
 		void stop();
 
 	private:
-		std::string config_path;
-		std::vector<std::pair<int, int> > host_port_and_fds;
-		std::list<ClientConnection> client_connections;
-		std::vector<struct pollfd> poll_fds;
-		std::map<int, HostConfig> host_configs;
-		bool running;
+		std::string _config_path;
+		std::vector<std::pair<int, int> > _host_port_and_fds;
+		std::list<ClientConnection> _client_connections;
+		std::vector<struct pollfd> _poll_fds;
+		std::map<int, ServerConfig> _host_configs;
+		bool _running;
 
 		// Server Setup
-		bool parseConfig(std::vector<int> & host_ports);
-		bool setupServerSockets(std::vector<int> & host_ports);
+		bool parseConfig();
+		bool setupServerSockets();
 
 		// Event Loop
 		void eventLoop();

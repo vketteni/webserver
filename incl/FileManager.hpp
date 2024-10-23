@@ -17,7 +17,6 @@ class FileManager {
 		
 		bool constructSafePath(const std::string& file_path, std::string& outsafe_path);
 		FileManager(const FileManager&);
-		FileManager& operator=(const FileManager&);
 };
 
 #endif 
