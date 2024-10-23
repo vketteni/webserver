@@ -96,18 +96,32 @@ bool ClientConnection::processResponse(Request & request, Response & response)
 
 	std::string root = _host_config.root;
 	debug(root);
+    std::vector<LocationConfig>::iterator location_it_ = _host_config.locations.begin();
+    for (; location_it_ != _host_config.locations.end(); ++location_it_)
+    {
+        std::cerr << "Location: " << location_it_->path << std::endl;
+        std::cerr << "Root: " << location_it_->root << std::endl;
+        std::cerr << "Redirect: " << location_it_->redirect_path << std::endl;
+        std::cerr << "Redirect Status: " << location_it_->redirect_status << std::endl;
+        // std::cerr << "Methods" << location_it->methods[0] << std::endl;
+    }
+    
+
         // Prüfen, ob es einen Redirect für die angeforderte URL gibt
     std::vector<LocationConfig>::iterator location_it = std::find_if(
 		_host_config.locations.begin(),
 		_host_config.locations.end(),
 		MatchRoute(request.getUri())
 	);
+    debug(request.getUri());
+    debug(location_it->redirect_status);
 
     if (location_it != _host_config.locations.end() && location_it->redirect_status != 0)
     {
         // Redirect gefunden - setze die neue URL und sende den Redirect
         std::string redirect_url = location_it->redirect_path;
         request.setUri(redirect_url);
+        debug(request.getUri());
 
         // Hier würdest du den 301 Redirect senden
         sendRedirect(redirect_url, location_it->redirect_status);
@@ -120,11 +134,13 @@ bool ClientConnection::processResponse(Request & request, Response & response)
         // Route gefunden - setze den Pfad entsprechend der Route
         std::string new_route = location_it->root;
         request.setUri(root + new_route);
+        debug(request.getUri());
     }
     else
     {
         // Keine spezielle Route - setze den Standardpfad
         request.setUri(root + request.getUri());
+        debug(request.getUri());
     }
 	debug(request.getUri());
 

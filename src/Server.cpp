@@ -46,7 +46,8 @@ bool Server::parseConfig()
 {
     ConfigParser config_parser(_config_path);
 
-	config_parser.parse();
+	if (!config_parser.parse())
+		return false;
 	config_parser.buildServerConfigs(_host_configs);
 	
 

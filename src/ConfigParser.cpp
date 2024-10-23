@@ -395,9 +395,10 @@ void ConfigParser::parseServerBlock(BlockNode* server_block, ServerConfig & serv
 void ConfigParser::parseLocationBlock(BlockNode* location_block, ServerConfig & server_config)
 {
 	LocationConfig location;
-	location.root = server_config.root;
-
 	DirectiveNode * directive;
+	location.root = server_config.root;
+	location.path = location_block->parameters[0];
+	
 
 	std::map<std::string, LocationDirectiveHandler> directive_handlers;
 	setup_directive_handlers(directive_handlers);
@@ -407,6 +408,7 @@ void ConfigParser::parseLocationBlock(BlockNode* location_block, ServerConfig & 
 	{
 		if ((directive = dynamic_cast<DirectiveNode*> (*location_block_it)))
 		{
+
 			std::map<std::string, LocationDirectiveHandler>::iterator handler_it = std::find_if(
 				directive_handlers.begin(),
 				directive_handlers.end(),
@@ -414,7 +416,11 @@ void ConfigParser::parseLocationBlock(BlockNode* location_block, ServerConfig & 
 			);
 
 			if (handler_it != directive_handlers.end())
+			{
 				directive_handlers[directive->key](directive->values, location);
+				// if (directive->key == "path")
+				// 	debug(location.path);
+			}
 			else
 			{
 				debug(directive->key);
@@ -426,6 +432,7 @@ void ConfigParser::parseLocationBlock(BlockNode* location_block, ServerConfig & 
 			throw std::runtime_error("Error: Unknown directive type in 'location' directive");
 	}
 	server_config.locations.push_back(location);
+	// debug(server_config.locations.back().path);
 }
 
 void DirectiveNode::print(int indent) const
@@ -478,7 +485,7 @@ void setup_directive_handlers(std::map<std::string, LocationDirectiveHandler> & 
 {
 	handler.clear();
 	handler["methods"] = &handle_http_method;
-	handler["path"] = &handle_path;
+	// handler["path"] = &handle_path;
 	handler["root"] = &handle_root;
 	handler["index"] = &handle_index;
 	handler["upload_dir"] = &handle_upload_dir;
@@ -616,7 +623,8 @@ void handle_redirect(std::vector<std::string> & directive_values, LocationConfig
 	ss << directive_values[0];
 	int status_code;
 	ss >> status_code;
-
+	header("handle_redirect");
+	debug(status_code);
 	location.redirect_status = status_code;
 	location.redirect_path = directive_values[1];
 }
