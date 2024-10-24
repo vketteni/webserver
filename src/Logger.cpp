@@ -4,8 +4,13 @@
 // Default constructor
 Logger::Logger(const std::string& accessLogPath, const std::string& errorLogPath, LogLevel level) : currentLog(level)
 {
-	 accessLogFile.open(accessLogPath.c_str(), std::ios::app);
-	 errorLogFile.open(errorLogPath.c_str(), std::ios::app);
+	struct stat info;
+
+	if(stat("log", &info) != 0) {
+		mkdir("log", 0777);
+	}
+	 accessLogFile.open(("log/" + accessLogPath).c_str(), std::ios::app);
+	 errorLogFile.open(("log/" + errorLogPath).c_str(), std::ios::app);
 }
 
 // Default destructor
@@ -28,25 +33,25 @@ void Logger::logRequest(const std::string &clientIp, const std::string &method, 
 void Logger::logError(const std::string &errorMessage)
 {
 	rotateLogs(errorLogFile, errorLogPath);
-	logMessage("Error: " + errorMessage, LERROR, errorLogFile);
+	logMessage(errorMessage, LERROR, errorLogFile);
 }
 
 void Logger::logDebug(const std::string &debugMessage)
 {
 	rotateLogs(accessLogFile, accessLogPath);
-	logMessage("Debug: " + debugMessage, DEBUG, accessLogFile);
+	logMessage(debugMessage, DEBUG, accessLogFile);
 }
 
 void Logger::logWarning(const std::string &warningMessage)
 {
 	rotateLogs(errorLogFile, errorLogPath);
-	logMessage("Warning: " + warningMessage, WARNING, errorLogFile);
+	logMessage(warningMessage, WARNING, errorLogFile);
 }
 
 void Logger::logInfo(const std::string &infoMessage)
 {
 	rotateLogs(accessLogFile, accessLogPath);
-	logMessage("Info: " + infoMessage, INFO, accessLogFile);
+	logMessage(infoMessage, INFO, accessLogFile);
 }
 
 std::string Logger::getCurrentTime()
@@ -67,7 +72,7 @@ void Logger::logMessage(const std::string &message, LogLevel level, std::ofstrea
 			case DEBUG: logFile << "[DEBUG] "; break;
 			case INFO: logFile << "[INFO] "; break;
 			case WARNING: logFile << "[WARNING] "; break;
-			case LERROR: logFile << "ERROR] "; break;
+			case LERROR: logFile << "[ERROR] "; break;
 		}
 		logFile << message << std::endl;
 	}
@@ -83,14 +88,16 @@ size_t Logger::getFileSize(const std::string &filePath)
 
 void Logger::rotateLogs(std::ofstream &logFile, const std::string &logFilePath)
 {
-	if (getFileSize(logFilePath) >= maxLogFileSize) {
+	maxLogFileSize = 50 * 1024 * 1024;
+	std::string fullPath = "log/" + logFilePath;
+	if (getFileSize(fullPath) >= maxLogFileSize) {
 		logFile.close();
 
-		std::string newLogFileName = logFilePath + "." + getCurrentTime();
+		std::string newLogFileName = fullPath + "." + getCurrentTime();
 		std::replace(newLogFileName.begin(), newLogFileName.end(), ' ', '_');
 		std::replace(newLogFileName.begin(), newLogFileName.end(), ':', '-');
 
-		rename(logFilePath.c_str(), newLogFileName.c_str());
-		logFile.open(logFilePath.c_str(), std::ios::app);
+		rename(fullPath.c_str(), newLogFileName.c_str());
+		logFile.open(fullPath.c_str(), std::ios::app);
 	}
 }

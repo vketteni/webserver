@@ -5,6 +5,7 @@ MAIN = Logger AMessage Response Request ConfigParser RequestParser MethodHandler
 
 OBJ_DIR= obj/
 SRC_DIR= src/
+LOG_DIR= log/
 
 SRCS = $(addprefix $(SRC_DIR), $(addsuffix .cpp, $(MAIN)))
 
@@ -30,6 +31,7 @@ clean:
 
 fclean: clean
 	$(RM) $(NAME)
+	$(RM) -r $(LOG_DIR)
 
 re: fclean all
 
