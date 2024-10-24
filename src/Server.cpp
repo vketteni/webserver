@@ -179,7 +179,7 @@ void Server::eventLoop()
 	std::cout << "Server is _running. Press Ctrl+C to stop.\n";
 	while (this->_running && g_keep__running)
 	{
-		int poll_result = poll(_poll_fds.data(), _poll_fds.size(), 1000);
+		int poll_result = poll(_poll_fds.data(), _poll_fds.size(), -1);
 			// 1-second timeout
 		if (poll_result == -1)
 		{
@@ -265,7 +265,7 @@ void Server::processIOEvents()
 	for (int i = 0; i < (int)_poll_fds.size(); ++i)
 	{
 		fd = _poll_fds[i].fd;
-		if (_poll_fds[i].revents & POLLIN)
+		if (_poll_fds[i].revents & (POLLIN | POLL_OUT))
 		{
 			if (isHostSocket(fd))
 			{

@@ -71,7 +71,7 @@ bool ClientConnection::readAndParseRequest()
         return false;
     }
     _buffer[bytes_read] = '\0';
-
+	debug("\n" + std::string(_buffer) + "\n");
     _request_parser.appendData(std::string(_buffer));
     if (!_request_parser.parse())
 	{
