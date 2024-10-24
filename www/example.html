@@ -85,6 +85,13 @@
         </form>
     </div>
 
+	<h1>NEW Superpower Formular</h1>
+    <form action="submit-superpower.py" method="post">
+        <label for="superpower">Gib deine Superkraft ein:</label><br>
+        <input type="text" id="superpower" name="superpower" required><br><br>
+        <input type="submit" value="Absenden">
+    </form>
+
     <!-- Thank you message, initially hidden -->
     <p id="thankYouMessage"><em>Thank you for being so awesome! 🌟</em></p>
 
@@ -114,7 +121,7 @@
             // Ensure the input is a number between 0 and 100
             if (userInput >= 0 && userInput <= 100) {
                 // Determine the index for the links based on the input value
-                const index = Math.floor(userInput / 20); // Divide by 20 to get an index between 0 and 4
+                const index = Math.floor(userInput / 20) - 1; // Divide by 20 to get an index between 0 and 4
 
                 // Update spirit animal link and show it
                 document.getElementById("spiritLink").href = spiritLinks[index];
