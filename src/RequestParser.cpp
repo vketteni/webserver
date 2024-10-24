@@ -68,6 +68,7 @@ bool RequestParser::extractRequestLine(void)
 	printf ("Method: %s\n", method.c_str());
 	printf ("URI: %s\n", uri.c_str());
 	printf ("HTTP Version: %s\n", http_version.c_str());
+
 	return true;
 }
 
@@ -89,12 +90,21 @@ bool RequestParser::extractHeaders()
 			throw std::invalid_argument("Invalid header line");
 		}
 		std::string name = header_line.substr(0, colon_pos);
+		// debug(name);
+
+	#if 1
+		size_t value_start = header_line.find_first_not_of(WSPACE, colon_pos + 1);
+		std::string value = (value_start != std::string::npos) ? header_line.substr(value_start) : "";
+	#else
 		std::string value = header_line.substr(colon_pos + 1);
-		Utils::trim(name, WSPACE);
-		Utils::trim(value, WSPACE);
+	#endif
+		// debug(value);
 		headers[name] = value;
+		// just print the last header with key and value
+		printf ("Header: %s:%s\n", name.c_str(), value.c_str());
 	}
 	_buffer.erase(0, 2);
+	_request.setHeaders(headers);
 	return true;
 }
 
@@ -102,7 +112,7 @@ bool RequestParser::extractBody()
 {
 	std::stringstream ss;
 	ss << _request.getHeaderOrDefault("Content-Length", "0");
-	size_t content_length = ss.dec;
+	size_t content_length = std::atoi(ss.str().c_str());
 
 	if (_buffer.size() >= content_length) {
 		_request.setBody(_buffer.substr(0, content_length));
@@ -122,6 +132,12 @@ bool RequestParser::processHeadersBeforeBody(void)
 	
 	if (!hp.processHeaders(handlers, required))
 		return false;
+	std::map<std::string, std::string> headers = (std::map<std::string, std::string>) _request.getHeaders();
+	std::map<std::string, std::string>::const_iterator header_it = headers.begin();
+	for (; header_it != headers.end(); ++header_it)
+	{
+		std::cerr << header_it->first << "=" << header_it->second << std::endl;
+	}
 	return true;
 }
 

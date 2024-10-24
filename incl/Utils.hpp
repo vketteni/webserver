@@ -12,6 +12,7 @@ class Utils
 	public:
 		static std::string trim(const std::string& str, const std::string &trim_set);
 		static std::vector<std::string> split(const std::string& str, char delimiter);
+		static std::string replaceChars(const std::string& input, const std::string& charsToReplace, const std::string& replacement);
 };
 
 #endif

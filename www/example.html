@@ -1,39 +1,161 @@
 <!DOCTYPE html>
-	<html>
-		<head>
-			<title>Welcome to Hennis World!</title>
-			<style>
-				html { color-scheme: dark green; }
-				body {
-					width: 35em; margin: 0 auto;
-					font-family: Tahoma, Arial, Arial, serif;
-					background-color: #90ee00;
-					color: #f08080
-				}
-				a {
-					color: #0066cc;
-				}
-				a:hover {
-					color: #ff0000;
-				}
-				.input-box {
-					margin-top: 20px;
-				}
-			</style>
-		</head>
-		<body>
-			<h1>Welcome to VinOmennis World!</h1>
-			<p>Think of a number between 0 and 15</p>
-			<p>That's your spirit animal: 
-				<a href=\"https://www.tiktok.com/@bangkokpost.official/video/7415169714932043026\">click here</a>.</p>
-			<p>You as a flower: 
-				<a href=\"https://www.google.com/search?sca_esv=7746fac465ae621b&sca_upv=1&q=fledermaus+blume&udm=2&fbs=AEQNm0A6bwEop21ehxKWq5cj-cHa02QUie7apaStVTrDAEoT1FdmHTSMJP_rxgj2yFrTtBkpn7UArWKMytkxok4kynJeftYBbqn-Ez1pg2pPqfulAAELa9yA80L_cabL9a6EJ4sNogkLT1whdNbW2y6Ka0Llqz6M0tEc1mD0fQnpgheyhLwK9mtDc-zJ2yTyPMZ0mV7RzKWn&sa=X&sqi=2&ved=2ahUKEwjF7Z_G4OCIAxUT_rsIHaGXPUoQtKgLegQIDRAB&biw=960&bih=880&dpr=1\">click here</a>.</p>
-				<form action="/submit-superpower.py" method="POST">
-					<label for="userInput">What's your superpower?:</label><br>
-					<input type="text" id="userInput" name="userInput" placeholder="Answer me please..">
-					<input type="submit" value="Submit">
-				</form>
-				
-			<p><em>Thank you for visiting.</em></p>
-		</body>
-	</html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="https://img.icons8.com/fluency/48/pokemon.png" type="image/png">
+    <title>Welcome to Hennis World!</title>
+    <style>
+        body {
+            background-color: #194e16;
+            color: #61dafb;
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #ff06f7;
+        }
+        p {
+            font-size: 1.2em;
+        }
+        a {
+            color: #61dafb;
+            text-decoration: none;
+        }
+        a:hover {
+            color: #ff0000;
+            text-decoration: underline;
+        }
+        .input-box {
+            margin-top: 20px;
+        }
+        .input-box input[type="number"] {
+            padding: 10px;
+            width: 300px;
+            border: 2px solid #61dafb;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        .input-box input[type="submit"] {
+            padding: 10px 20px;
+            margin-top: 10px;
+            background-color: #61dafb;
+            color: #282c34;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .input-box input[type="submit"]:hover {
+            background-color: #ff0000;
+        }
+        #spiritAnimal, #flower, #superpowerBox, #thankYouMessage {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to VinOmHennis World! 🌍</h1>
+    <p>Think of a number between 0 and 100 🤔</p>
+
+    <!-- First input box -->
+    <div class="input-box">
+        <form id="numberForm">
+            <input type="number" id="userInput" name="userInput" min="0" max="100" placeholder="Enter your number...">
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+
+    <!-- Spirit animal section, initially hidden -->
+    <p id="spiritAnimal">That's your spirit animal 🦄:
+        <a href="#" target="_blank" id="spiritLink">click here</a>.
+    </p>
+
+    <!-- Flower section, initially hidden -->
+    <p id="flower">You as a flower 🌸:
+        <a href="#" target="_blank" id="flowerLink">click here</a>.
+    </p>
+
+    <!-- Superpower input box, initially hidden -->
+    <div class="input-box" id="superpowerBox">
+        <form id="superpowerForm">
+            <label for="superpowerInput">What's your superpower? 💪</label><br>
+            <input type="text" id="superpowerInput" name="superpowerInput" placeholder="Answer me please...">
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+
+	<h1>NEW Superpower Formular</h1>
+    <form action="submit-superpower.py" method="post">
+        <label for="superpower">Gib deine Superkraft ein:</label><br>
+        <input type="text" id="superpower" name="superpower" required><br><br>
+        <input type="submit" value="Absenden">
+    </form>
+
+    <!-- Thank you message, initially hidden -->
+    <p id="thankYouMessage"><em>Thank you for being so awesome! 🌟</em></p>
+
+    <script>
+        // Links for spirit animals and flowers
+        const spiritLinks = [
+            "https://www.tiktok.com/@bangkokpost.official/video/7415169714932043026",
+            "https://www.tiktok.com/@kylethomas/video/7406044326175837472?lang=de-DE",
+            "https://www.tiktok.com/@couriermail/video/7315254640424144130?lang=de-DE",
+            "https://www.tiktok.com/@ozzytheminimini/video/7375578001922133280",
+            "https://www.tiktok.com/@juuzou.bean/video/7040099657866906885"
+        ];
+
+        const flowerLinks = [
+            "https://www.google.com/search?sca_esv=7746fac465ae621b&sca_upv=1&q=fledermaus+blume",
+            "https://en.wikipedia.org/wiki/Carrion_flower",
+            "https://de.wikipedia.org/wiki/Papageienschnabel",
+            "https://www.google.com/search?sca_esv=381a7a3a6a330f37&q=Affengesicht-Orchidee",
+            "https://www.google.com/search?sca_esv=381a7a3a6a330f37&q=Leichenblume+(Amorphophallus+titanum)"
+        ];
+
+        // Handle the first form submission (number input)
+        document.getElementById("numberForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Prevent the form from submitting
+            const userInput = document.getElementById("userInput").value;
+
+            // Ensure the input is a number between 0 and 100
+            if (userInput >= 0 && userInput <= 100) {
+                // Determine the index for the links based on the input value
+                const index = Math.floor(userInput / 20) - 1; // Divide by 20 to get an index between 0 and 4
+
+                // Update spirit animal link and show it
+                document.getElementById("spiritLink").href = spiritLinks[index];
+                document.getElementById("spiritAnimal").style.display = "block";
+
+                // Update flower link and show it
+                document.getElementById("flowerLink").href = flowerLinks[index];
+                document.getElementById("flower").style.display = "block";
+            } else {
+                alert("Please enter a number between 0 and 100.");
+            }
+        });
+
+        // Handle the spirit link click
+        document.getElementById("spiritLink").addEventListener("click", function() {
+            // Show the flower section after the spirit link is clicked
+            document.getElementById("flower").style.display = "block";
+        });
+
+        // Handle the flower link click
+        document.getElementById("flowerLink").addEventListener("click", function() {
+            // Show the superpower input box after the flower link is clicked
+            document.getElementById("superpowerBox").style.display = "block";
+        });
+
+        // Handle the superpower form submission
+        document.getElementById("superpowerForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Prevent the form from submitting
+            const superpowerInput = document.getElementById("superpowerInput").value;
+            if (superpowerInput.trim() !== "") {
+                // Show the thank you message
+                document.getElementById("thankYouMessage").style.display = "block";
+            }
+        });
+    </script>
+</body>
+</html>

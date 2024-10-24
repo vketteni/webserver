@@ -17,6 +17,11 @@ class AbstractMethodHandler
 		virtual ~AbstractMethodHandler() {}
 	protected:
 		void processCGI(Request& request, Response& response);
+		bool shouldRedirect(const Request& request);
+		void setRedirect(Response& response, const std::string& location);
+		void setErrorResponse(Response& response, int statusCode, const std::string& message);
+		void buildResponse(Response& response, int statusCode, const std::string& statusMessage, const std::string& body, const std::string& connection);
+
 };
 
 // TODO: Implement as dependency injection (*)-(*)
