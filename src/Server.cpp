@@ -44,22 +44,7 @@ Server::~Server()
 */
 bool Server::parseConfig()
 {
-
-    ConfigParser config_parser;
-    if (!config_parser.parseConfig(config_path))
-    {
-        std::cerr << "Failed to parse configuration file: " << config_path << "\n";
-        return false;
-    }
-    host_configs = config_parser.getHostConfigs();
-    if (host_configs.empty())
-    {
-        std::cerr << "No valid server configurations found.\n";
-        return false;
-    }
-
-    for (std::map<int, HostConfig>::const_iterator server_it = host_configs.begin(); server_it != host_configs.end(); ++server_it)
-    ConfigParser config_parser(_config_path);
+ 	ConfigParser config_parser(_config_path);
 
 	if (!config_parser.parse())
 		return false;
@@ -317,7 +302,7 @@ void Server::disconnectClient(std::vector<struct pollfd>::iterator poll_iterator
 */
 bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
 {
-	struct sockaddr_in	client_addr;
+		struct sockaddr_in	client_addr;
 
 	if (!isHostSocket(poll_iterator->fd))
 	{
@@ -332,22 +317,22 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
 	{
 		if (errno != EWOULDBLOCK && errno != EAGAIN)
 		{
-			perror("accept");
+            perror("accept");
 			logger.logError("Error accepting new client.");
-			return false;
-		}
-		return true; // No pending connections
-	}
+            return false;
+        }
+        return true; // No pending connections
+    }
 
 	// TODO: make descriptive smaller function
 	for (int i = 0; i < (int)_host_port_and_fds.size(); ++i)
 	{
 		if (_host_port_and_fds[i].second == poll_iterator->fd)
 		{
-			int port = host_port_and_fds[i].first;
+			int port = _host_port_and_fds[i].first;
 
-			ClientConnection new_connection(client_fd, host_configs[port], port);
-			this->client_connections.push_back(new_connection);
+			ClientConnection new_connection(client_fd, _host_configs[port], port);
+			this->_client_connections.push_back(new_connection);
 		}
 	}
 
@@ -358,12 +343,12 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
     pfd.revents = 0;
     this->_poll_fds.push_back(pfd);
 
-	char client_ip[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
-	std::stringstream ss;
-	ss << "Accepted connection from " << client_ip << ":" << ntohs(client_addr.sin_port);
-	logger.logInfo(ss.str());
-    // std::cout << "Accepted connection from " << client_ip << ":" << ntohs(client_addr.sin_port)
+    char client_ip[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
+ 	std::stringstream ss;
+ 	ss << "Accepted connection from " << client_ip << ":" << ntohs(client_addr.sin_port);
+ 	logger.logInfo(ss.str());
+   // std::cout << "Accepted connection from " << client_ip << ":" << ntohs(client_addr.sin_port)
    //           << " with fd " << client_fd << "\n";
 
     return true;
