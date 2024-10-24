@@ -48,7 +48,7 @@ bool ClientConnection::processRequest()
 {
 	if (!readAndParseRequest())
 		return false;
-	
+
     if (_request_parser.isComplete())
 	{
 	    Request request = _request_parser.getRequest();
@@ -104,7 +104,7 @@ bool ClientConnection::processResponse(Request & request, Response & response)
         std::cerr << "Redirect Status: " << location_it_->redirect_status << std::endl;
         // std::cerr << "Methods" << location_it->methods[0] << std::endl;
     }
-    
+
 
         // Prüfen, ob es einen Redirect für die angeforderte URL gibt
     std::vector<LocationConfig>::iterator location_it = std::find_if(
@@ -138,7 +138,7 @@ bool ClientConnection::processResponse(Request & request, Response & response)
     }
 
     // Fehlerbehandlung: 404, falls Datei nicht existiert
-    std::string newUrl = "/404.html"; 
+    std::string newUrl = "/404.html";
     struct stat fileInfo;
     if (::stat(request.getUri().c_str(), &fileInfo) == -1) {
         // Datei existiert nicht, sende 404-Seite
@@ -167,7 +167,7 @@ bool ClientConnection::sendResponse(Response & response) {
 	const std::map<std::string, std::string> & headers = response.getHeaders();
 	for (std::map<std::string, std::string>::const_iterator headerIterator = headers.begin(); headerIterator != headers.end(); ++headerIterator)
 	{
-        
+
         oss << headerIterator->first << ": " << headerIterator->second << "\r\n";
     }
     oss << "\r\n";

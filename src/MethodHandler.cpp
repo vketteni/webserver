@@ -24,7 +24,7 @@ void GetRequestHandler::invoke(Request& request, Response& response)
     if (shouldRedirect(request))
     {
         setRedirect(response, "/new-location");
-        return; 
+        return;
     }
 
     if (isCGI(request.getUri()))
@@ -67,7 +67,7 @@ void PostRequestHandler::invoke(Request& request, Response& response)
             response.setHeader("Connection", "close");
             response.setBody("CGI execution failed.");
         }
-        
+
         return;  // CGI wurde erfolgreich oder nicht erfolgreich behandelt
     }
 

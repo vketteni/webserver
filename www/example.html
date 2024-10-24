@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,7 +30,7 @@
         .input-box {
             margin-top: 20px;
         }
-        .input-box input[type="text"] {
+        .input-box input[type="number"] {
             padding: 10px;
             width: 300px;
             border: 2px solid #61dafb;
@@ -49,7 +49,6 @@
         .input-box input[type="submit"]:hover {
             background-color: #ff0000;
         }
-        /* Hide initially */
         #spiritAnimal, #flower, #superpowerBox, #thankYouMessage {
             display: none;
         }
@@ -62,19 +61,19 @@
     <!-- First input box -->
     <div class="input-box">
         <form id="numberForm">
-            <input type="text" id="userInput" name="userInput" placeholder="Enter your number...">
+            <input type="number" id="userInput" name="userInput" min="0" max="100" placeholder="Enter your number...">
             <input type="submit" value="Submit">
         </form>
     </div>
 
     <!-- Spirit animal section, initially hidden -->
     <p id="spiritAnimal">That's your spirit animal 🦄:
-        <a href="https://www.tiktok.com/@bangkokpost.official/video/7415169714932043026" target="_blank" id="spiritLink">click here</a>.
+        <a href="#" target="_blank" id="spiritLink">click here</a>.
     </p>
 
     <!-- Flower section, initially hidden -->
     <p id="flower">You as a flower 🌸:
-        <a href="https://www.google.com/search?sca_esv=7746fac465ae621b&sca_upv=1&q=fledermaus+blume" target="_blank" id="flowerLink">click here</a>.
+        <a href="#" target="_blank" id="flowerLink">click here</a>.
     </p>
 
     <!-- Superpower input box, initially hidden -->
@@ -90,13 +89,42 @@
     <p id="thankYouMessage"><em>Thank you for being so awesome! 🌟</em></p>
 
     <script>
+        // Links for spirit animals and flowers
+        const spiritLinks = [
+            "https://www.tiktok.com/@bangkokpost.official/video/7415169714932043026",
+            "https://www.tiktok.com/@kylethomas/video/7406044326175837472?lang=de-DE",
+            "https://www.tiktok.com/@couriermail/video/7315254640424144130?lang=de-DE",
+            "https://www.tiktok.com/@ozzytheminimini/video/7375578001922133280",
+            "https://www.tiktok.com/@juuzou.bean/video/7040099657866906885"
+        ];
+
+        const flowerLinks = [
+            "https://www.google.com/search?sca_esv=7746fac465ae621b&sca_upv=1&q=fledermaus+blume",
+            "https://en.wikipedia.org/wiki/Carrion_flower",
+            "https://de.wikipedia.org/wiki/Papageienschnabel",
+            "https://www.google.com/search?sca_esv=381a7a3a6a330f37&q=Affengesicht-Orchidee",
+            "https://www.google.com/search?sca_esv=381a7a3a6a330f37&q=Leichenblume+(Amorphophallus+titanum)"
+        ];
+
         // Handle the first form submission (number input)
         document.getElementById("numberForm").addEventListener("submit", function(event) {
             event.preventDefault(); // Prevent the form from submitting
             const userInput = document.getElementById("userInput").value;
-            if (userInput.trim() !== "") {
-                // Show the spirit animal section
+
+            // Ensure the input is a number between 0 and 100
+            if (userInput >= 0 && userInput <= 100) {
+                // Determine the index for the links based on the input value
+                const index = Math.floor(userInput / 20); // Divide by 20 to get an index between 0 and 4
+
+                // Update spirit animal link and show it
+                document.getElementById("spiritLink").href = spiritLinks[index];
                 document.getElementById("spiritAnimal").style.display = "block";
+
+                // Update flower link and show it
+                document.getElementById("flowerLink").href = flowerLinks[index];
+                document.getElementById("flower").style.display = "block";
+            } else {
+                alert("Please enter a number between 0 and 100.");
             }
         });
 
