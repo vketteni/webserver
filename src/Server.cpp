@@ -28,7 +28,7 @@ void	signalHandler(int signum)
 
 // Constructor
 Server::Server(const std::string &config_path)
-	: _config_path(config_path), _running(false)
+	: _config_path(config_path), _running(false), logger("access.log", "error.log", INFO)
 {
 }
 
@@ -44,12 +44,12 @@ Server::~Server()
 */
 bool Server::parseConfig()
 {
-    ConfigParser config_parser(_config_path);
+ 	ConfigParser config_parser(_config_path);
 
 	if (!config_parser.parse())
 		return false;
 	config_parser.buildServerConfigs(_host_configs);
-	
+
 
 	if (_host_configs.empty())
 	{
@@ -143,10 +143,12 @@ bool Server::start()
 {
 	if (!parseConfig())
 	{
+		logger.logError("Failed to parse config file.");
 		return (false);
 	}
 	if (!setupServerSockets())
 	{
+		logger.logError("Failed to setup server sockets.");
 		return (false);
 	}
 	this->_running = true;
@@ -186,6 +188,7 @@ void Server::eventLoop()
 				continue ; // Interrupted by signal
 			}
 			perror("poll");
+			logger.logError("Poll error.");
 			break ;
 		}
 		if (poll_result == 0)
@@ -195,6 +198,8 @@ void Server::eventLoop()
 		}
 		processIOEvents();
 		checkTimeouts();
+		logger.rotateLogs(logger.accessLogFile, "access.log");
+		logger.rotateLogs(logger.errorLogFile, "error.log");
 	}
 }
 
@@ -296,7 +301,7 @@ void Server::disconnectClient(std::vector<struct pollfd>::iterator poll_iterator
 */
 bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
 {
-	struct sockaddr_in	client_addr;
+		struct sockaddr_in	client_addr;
 
 	if (!isHostSocket(poll_iterator->fd))
 	{
@@ -312,6 +317,7 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
 		if (errno != EWOULDBLOCK && errno != EAGAIN)
 		{
             perror("accept");
+			logger.logError("Error accepting new client.");
             return false;
         }
         return true; // No pending connections
@@ -323,7 +329,7 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
 		if (_host_port_and_fds[i].second == poll_iterator->fd)
 		{
 			int port = _host_port_and_fds[i].first;
-			
+
 			ClientConnection new_connection(client_fd, _host_configs[port], port);
 			this->_client_connections.push_back(new_connection);
 		}
@@ -338,8 +344,11 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
 
     char client_ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
-    std::cout << "Accepted connection from " << client_ip << ":" << ntohs(client_addr.sin_port)
-              << " with fd " << client_fd << "\n";
+ 	std::stringstream ss;
+ 	ss << "Accepted connection from " << client_ip << ":" << ntohs(client_addr.sin_port);
+ 	logger.logInfo(ss.str());
+   // std::cout << "Accepted connection from " << client_ip << ":" << ntohs(client_addr.sin_port)
+   //           << " with fd " << client_fd << "\n";
 
     return true;
 }
@@ -355,18 +364,17 @@ bool Server::processClientRequest(std::vector<struct pollfd>::iterator poll_iter
 			_client_connections.end(), MatchClientFd(poll_iterator->fd));
 	if (client == _client_connections.end())
 	{
-		// sendErrorResponse(poll_iterator->fd, 400);
-		// std::cerr << "Error, client doesn't exist.\n";
+		logger.logError("Client does not exist.");
 		return false;
 	}
 	if (!client->processRequest())
 	{
 		client->setLastActivity(std::time(NULL));
-		// sendErrorResponse(poll_iterator->fd, 500);
-		//   std::cerr << "Failed to process request from client.\n";
+		logger.logWarning("Failed to process request from client.");
 		return false;
 	}
 	client->setLastActivity(std::time(NULL));
+	logger.logDebug("Processed request successfully.");
 	return true;
 }
 

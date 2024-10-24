@@ -1,16 +1,17 @@
 NAME=webserv
 CC=c++
 
-MAIN = AMessage Response Request ConfigParser RequestParser MethodHandler ClientConnection Server main FileManager StatusCode CGIExecutor Utils HeaderProcessor 
+MAIN = Logger AMessage Response Request ConfigParser RequestParser MethodHandler ClientConnection Server main FileManager StatusCode CGIExecutor Utils HeaderProcessor
 
 OBJ_DIR= obj/
 SRC_DIR= src/
+LOG_DIR= log/
 
 SRCS = $(addprefix $(SRC_DIR), $(addsuffix .cpp, $(MAIN)))
 
 OBJS = $(SRCS:src/%.cpp=$(OBJ_DIR)%.o)
 
-FLAGS=-Wall -Wextra -std=c++98 -g# -Werror
+FLAGS=-Wall -Wextra -std=c++98 -g -Werror
 # FLAGS+= -DNDEBUG
 INC= -I incl/
 
@@ -30,6 +31,7 @@ clean:
 
 fclean: clean
 	$(RM) $(NAME)
+	$(RM) -r $(LOG_DIR)
 
 re: fclean all
 
