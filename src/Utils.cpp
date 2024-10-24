@@ -22,3 +22,21 @@ std::vector<std::string> Utils::split(const std::string& str, char delimiter)
 	}
 	return tokens;
 }
+
+
+std::string Utils::replaceChars(const std::string& input, const std::string& chars_to_replace, const std::string& replacement)
+{
+    std::string result;
+    
+    for (size_t i = 0; i < input.length(); ++i)
+	{
+        char current_char = input[i];
+        
+        if (chars_to_replace.find(current_char) != std::string::npos)
+            result.append(replacement);
+		else
+            result.push_back(current_char);
+    }
+    
+    return result;
+}

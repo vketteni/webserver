@@ -1,7 +1,7 @@
 #include "../incl/ClientConnection.hpp"
 
-ClientConnection::ClientConnection(int client_fd, HostConfig & server_config, int port)
-    : _lastActivity(std::time(NULL)), _host_config(server_config), fd(client_fd), host_port(port), timeout(TIMEOUT_DURATION)
+ClientConnection::ClientConnection(int client_fd, ServerConfig host_config, int port)
+    : _lastActivity(std::time(NULL)), _host_config(host_config), fd(client_fd), host_port(port), timeout(TIMEOUT_DURATION)
 {}
 
 ClientConnection::~ClientConnection()
@@ -93,39 +93,56 @@ bool ClientConnection::processResponse(Request & request, Response & response)
 		return false;
 
     // Zuerst die Redirect-Konfiguration auslesen
-    ConfigParser config_parser_test;
-    config_parser_test.parseConfig("conf/index_test.conf");
-    std::map<int, HostConfig> host_configs = config_parser_test.getHostConfigs();
-    std::string root = host_configs[host_port].root;
-    config_parser_test.printRedirectsAndRoutes(host_configs);  // Optional, nur zur Anzeige
+
+	std::string root = _host_config.root;
+	debug(root);
+    std::vector<LocationConfig>::iterator location_it_ = _host_config.locations.begin();
+    for (; location_it_ != _host_config.locations.end(); ++location_it_)
+    {
+        std::cerr << "Location: " << location_it_->path << std::endl;
+        std::cerr << "Root: " << location_it_->root << std::endl;
+        std::cerr << "Redirect: " << location_it_->redirect_path << std::endl;
+        std::cerr << "Redirect Status: " << location_it_->redirect_status << std::endl;
+        // std::cerr << "Methods" << location_it->methods[0] << std::endl;
+    }
     
 
+        // Prüfen, ob es einen Redirect für die angeforderte URL gibt
+    std::vector<LocationConfig>::iterator location_it = std::find_if(
+		_host_config.locations.begin(),
+		_host_config.locations.end(),
+		MatchRoute(request.getUri())
+	);
+    debug(request.getUri());
+    debug(location_it->redirect_status);
 
-    // Prüfen, ob es einen Redirect für die angeforderte URL gibt
-    std::map<std::string, RouteConfig>::iterator route_it = _host_config.routes.find(request.getUri());
-    if (route_it != _host_config.routes.end() && route_it->second.redirect_status != 0)
+    if (location_it != _host_config.locations.end() && location_it->redirect_status != 0)
     {
         // Redirect gefunden - setze die neue URL und sende den Redirect
-        std::string redirect_url = route_it->second.redirect_path;
+        std::string redirect_url = location_it->redirect_path;
         request.setUri(redirect_url);
+        debug(request.getUri());
 
         // Hier würdest du den 301 Redirect senden
-        sendRedirect(redirect_url, route_it->second.redirect_status);
+        sendRedirect(redirect_url, location_it->redirect_status);
         return true;  // Beende hier, da der Redirect gesendet wurde
     }
 
     // Wenn kein Redirect gefunden wurde, prüfe die Route
-    if (route_it != _host_config.routes.end())
+    if (location_it != _host_config.locations.end())
     {
         // Route gefunden - setze den Pfad entsprechend der Route
-        std::string new_route = route_it->second.root;
+        std::string new_route = location_it->root;
         request.setUri(root + new_route);
+        debug(request.getUri());
     }
     else
     {
         // Keine spezielle Route - setze den Standardpfad
         request.setUri(root + request.getUri());
+        debug(request.getUri());
     }
+	debug(request.getUri());
 
     // Fehlerbehandlung: 404, falls Datei nicht existiert
     std::string newUrl = "/404.html"; 

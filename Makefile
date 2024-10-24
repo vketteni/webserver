@@ -10,7 +10,7 @@ SRCS = $(addprefix $(SRC_DIR), $(addsuffix .cpp, $(MAIN)))
 
 OBJS = $(SRCS:src/%.cpp=$(OBJ_DIR)%.o)
 
-FLAGS=-Wall -Wextra -Werror -std=c++98 -g
+FLAGS=-Wall -Wextra -std=c++98 -g# -Werror
 # FLAGS+= -DNDEBUG
 INC= -I incl/
 
