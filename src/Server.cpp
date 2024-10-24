@@ -124,7 +124,6 @@ bool Server::setupServerSockets()
 			close(server_fd);
 			return (false);
 		}
-		debug(server_port);
 		_host_port_and_fds.push_back(std::make_pair(server_port, server_fd));
 		// Add to _poll_fds
 		pfd.fd = server_fd;

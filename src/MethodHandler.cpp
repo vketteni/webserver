@@ -21,8 +21,6 @@ AbstractMethodHandler* getHandlerForMethod(const std::string& method)
 
 void GetRequestHandler::invoke(Request& request, Response& response)
 {
-    header("GetRequestHandler");
-
     if (shouldRedirect(request))
     {
         setRedirect(response, "/new-location");
@@ -31,7 +29,6 @@ void GetRequestHandler::invoke(Request& request, Response& response)
 
     if (isCGI(request.getUri()))
     {
-		debug("Calling CGI");
 		processCGI(request, response);
         return ;  // CGI wurde erfolgreich behandelt
     }

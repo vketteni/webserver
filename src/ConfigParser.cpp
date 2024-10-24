@@ -383,7 +383,6 @@ void ConfigParser::parseServerBlock(BlockNode* server_block, ServerConfig & serv
 				directive_handlers[directive->key](directive->values, server_config);
 			else
 			{
-				debug(directive->key);
 				throw std::runtime_error("Error: Unknown directive name in 'server' directive");
 			}
 		}
@@ -418,12 +417,9 @@ void ConfigParser::parseLocationBlock(BlockNode* location_block, ServerConfig & 
 			if (handler_it != directive_handlers.end())
 			{
 				directive_handlers[directive->key](directive->values, location);
-				// if (directive->key == "path")
-				// 	debug(location.path);
 			}
 			else
 			{
-				debug(directive->key);
 				throw std::runtime_error("Error: Unknown directive name in 'location' directive");
 			}
 
@@ -432,7 +428,6 @@ void ConfigParser::parseLocationBlock(BlockNode* location_block, ServerConfig & 
 			throw std::runtime_error("Error: Unknown directive type in 'location' directive");
 	}
 	server_config.locations.push_back(location);
-	// debug(server_config.locations.back().path);
 }
 
 void DirectiveNode::print(int indent) const
@@ -462,7 +457,6 @@ void BlockNode::print(int indent) const
 
 void ConfigParser::printConfig() const
 {
-	debug(config_tree.size());
 	for (std::list<IConfigNode*>::const_iterator it = config_tree.begin(); it != config_tree.end(); ++it)
 		(*it)->print();
 }
@@ -623,8 +617,6 @@ void handle_redirect(std::vector<std::string> & directive_values, LocationConfig
 	ss << directive_values[0];
 	int status_code;
 	ss >> status_code;
-	header("handle_redirect");
-	debug(status_code);
 	location.redirect_status = status_code;
 	location.redirect_path = directive_values[1];
 }

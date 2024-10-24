@@ -60,10 +60,6 @@ struct MatchRoute
 
     bool operator()(const LocationConfig & location) const
 	{
-		header("MatchRoute");
-		debug(location.path);
-		debug(route);
-
 		if (location.path == route)
 		{
 			std::cerr << (location.path) << std::endl; 

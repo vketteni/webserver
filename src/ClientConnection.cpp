@@ -95,7 +95,6 @@ bool ClientConnection::processResponse(Request & request, Response & response)
     // Zuerst die Redirect-Konfiguration auslesen
 
 	std::string root = _host_config.root;
-	debug(root);
     std::vector<LocationConfig>::iterator location_it_ = _host_config.locations.begin();
     for (; location_it_ != _host_config.locations.end(); ++location_it_)
     {
@@ -113,15 +112,12 @@ bool ClientConnection::processResponse(Request & request, Response & response)
 		_host_config.locations.end(),
 		MatchRoute(request.getUri())
 	);
-    debug(request.getUri());
-    debug(location_it->redirect_status);
 
     if (location_it != _host_config.locations.end() && location_it->redirect_status != 0)
     {
         // Redirect gefunden - setze die neue URL und sende den Redirect
         std::string redirect_url = location_it->redirect_path;
         request.setUri(redirect_url);
-        debug(request.getUri());
 
         // Hier würdest du den 301 Redirect senden
         sendRedirect(redirect_url, location_it->redirect_status);
@@ -134,15 +130,12 @@ bool ClientConnection::processResponse(Request & request, Response & response)
         // Route gefunden - setze den Pfad entsprechend der Route
         std::string new_route = location_it->root;
         request.setUri(root + new_route);
-        debug(request.getUri());
     }
     else
     {
         // Keine spezielle Route - setze den Standardpfad
         request.setUri(root + request.getUri());
-        debug(request.getUri());
     }
-	debug(request.getUri());
 
     // Fehlerbehandlung: 404, falls Datei nicht existiert
     std::string newUrl = "/404.html"; 
@@ -167,7 +160,6 @@ bool ClientConnection::processResponse(Request & request, Response & response)
 }
 
 bool ClientConnection::sendResponse(Response & response) {
-	debug(response.getStatusCode());
     std::ostringstream oss;
     oss << "HTTP/1.1 " << response.getStatusCode() << " " << response.getStatusMessage() << "\r\n";
     oss << "Content-Type: " << "text/html; charset=utf-8" << "\r\n";
@@ -177,12 +169,10 @@ bool ClientConnection::sendResponse(Response & response) {
 	{
         
         oss << headerIterator->first << ": " << headerIterator->second << "\r\n";
-        debug(oss.str());
     }
     oss << "\r\n";
     oss << response.getBody();
     std::string responseStr = oss.str();
-    // debug(responseStr);
     ssize_t bytesSent = send(fd, responseStr.c_str(), responseStr.size(), 0);
     return bytesSent == static_cast<ssize_t>(responseStr.size());
 }

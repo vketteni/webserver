@@ -90,10 +90,17 @@ bool RequestParser::extractHeaders()
 			throw std::invalid_argument("Invalid header line");
 		}
 		std::string name = header_line.substr(0, colon_pos);
+	#if 1
+		size_t value_start = header_line.find_first_not_of(WSPACE, colon_pos + 1);
+		std::string value = (value_start != std::string::npos) ? header_line.substr(value_start) : "";
+	#else
 		std::string value = header_line.substr(colon_pos + 1);
+	#endif
 		Utils::trim(name, WSPACE);
 		Utils::trim(value, WSPACE);
 		headers[name] = value;
+		// just print the last header with key and value
+		printf ("Header: %s:%s\n", name.c_str(), value.c_str());
 	}
 	_buffer.erase(0, 2);
 	return true;
