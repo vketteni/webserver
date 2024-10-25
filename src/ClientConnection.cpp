@@ -46,9 +46,8 @@ void ClientConnection::setLastActivity(time_t last_activity)
 
 bool ClientConnection::processRequest()
 {
-	if (!readAndParseRequest())
+	if (!_request_parser.readAndParse(this->fd))
 		return false;
-
     if (_request_parser.isComplete())
 	{
 	    Request request = _request_parser.getRequest();
@@ -60,25 +59,6 @@ bool ClientConnection::processRequest()
             return false;
     }
     return true;
-}
-
-bool ClientConnection::readAndParseRequest()
-{
-    ssize_t bytes_read = recv(this->fd, this->_buffer, BUFFER_SIZE - 1, 0);
-    if (bytes_read <= 0)
-	{
-        // Handle disconnection or error
-        return false;
-    }
-    _buffer[bytes_read] = '\0';
-	debug("\n" + std::string(_buffer) + "\n");
-    _request_parser.appendData(std::string(_buffer));
-    if (!_request_parser.parse())
-	{
-		this->_request_parser.reset();
-        return false;
-	}
-	return true;
 }
 
 bool ClientConnection::processResponse(Request & request, Response & response)
@@ -136,7 +116,7 @@ bool ClientConnection::processResponse(Request & request, Response & response)
         // Keine spezielle Route - setze den Standardpfad
         request.setUri(root + request.getUri());
     }
-
+	debug(request.getUri());
     // Fehlerbehandlung: 404, falls Datei nicht existiert
     std::string newUrl = "/404.html";
     struct stat fileInfo;
