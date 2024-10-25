@@ -4,6 +4,7 @@
 #include <ctime>
 #include <string>
 #include <map>
+#include <vector>
 #include <iostream>
 #include <sstream>
 #include <unistd.h>
@@ -17,7 +18,6 @@
 #include "Request.hpp"
 #include "RequestParser.hpp"
 #include "ConfigParser.hpp"
-# define BUFFER_SIZE 4096
 
 const int TIMEOUT_DURATION = 10;
 
@@ -43,7 +43,6 @@ class ClientConnection
 		void sendRedirect(const std::string& redirect_url, int statusCode = 301);
 
 	private:
-		bool readAndParseRequest();
 		bool processResponse(Request & request, Response & response);
 		bool sendResponse(Response & response);
 		bool sendBasicResponse(const std::string& body, int status_code, const std::string& content_type);
