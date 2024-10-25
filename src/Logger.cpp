@@ -22,36 +22,35 @@ Logger::~Logger()
 
 void Logger::logRequest(const std::string &clientIp, const std::string &method, const std::string &path, int statusCode)
 {
-	(void)path;
 	rotateLogs(accessLogFile, accessLogPath);
 	std::stringstream ss;
-	ss << "Client IP: " << clientIp << ", Method: " << method << ", Status Code: " << statusCode;
+	ss << "Client IP: " << clientIp << ", Method: " << method << ", Path: " << path << ", Status Code: " << statusCode;
 	std::string	message = ss.str();
-	logMessage(message, INFO, accessLogFile);
+	logMessage(statusCode, message, INFO, accessLogFile);
 }
 
-void Logger::logError(const std::string &errorMessage)
+void Logger::logError(int statusCode, const std::string &errorMessage)
 {
 	rotateLogs(errorLogFile, errorLogPath);
-	logMessage(errorMessage, LERROR, errorLogFile);
+	logMessage(statusCode, errorMessage, LERROR, errorLogFile);
 }
 
-void Logger::logDebug(const std::string &debugMessage)
+void Logger::logDebug(int statusCode, const std::string &debugMessage)
 {
 	rotateLogs(accessLogFile, accessLogPath);
-	logMessage(debugMessage, DEBUG, accessLogFile);
+	logMessage(statusCode, debugMessage, DEBUG, accessLogFile);
 }
 
-void Logger::logWarning(const std::string &warningMessage)
+void Logger::logWarning(int statusCode, const std::string &warningMessage)
 {
 	rotateLogs(errorLogFile, errorLogPath);
-	logMessage(warningMessage, WARNING, errorLogFile);
+	logMessage(statusCode, warningMessage, WARNING, errorLogFile);
 }
 
-void Logger::logInfo(const std::string &infoMessage)
+void Logger::logInfo(int statusCode, const std::string &infoMessage)
 {
 	rotateLogs(accessLogFile, accessLogPath);
-	logMessage(infoMessage, INFO, accessLogFile);
+	logMessage(statusCode, infoMessage, INFO, accessLogFile);
 }
 
 std::string Logger::getCurrentTime()
@@ -64,7 +63,7 @@ std::string Logger::getCurrentTime()
 	return std::string(buffer);
 }
 
-void Logger::logMessage(const std::string &message, LogLevel level, std::ofstream &logFile)
+void Logger::logMessage(int statusCode, const std::string &message, LogLevel level, std::ofstream &logFile)
 {
 	if (level >= currentLog) {
 		logFile << "[" << getCurrentTime() << "]";
@@ -74,7 +73,7 @@ void Logger::logMessage(const std::string &message, LogLevel level, std::ofstrea
 			case WARNING: logFile << "[WARNING] "; break;
 			case LERROR: logFile << "[ERROR] "; break;
 		}
-		logFile << message << std::endl;
+		logFile << "<" << statusCode << "> " << message << std::endl;
 	}
 }
 

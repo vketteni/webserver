@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="https://img.icons8.com/fluency/48/pokemon.png" type="image/png">
-    <title>Welcome to Hennis World!</title>
+    <title>Welcome to Webserv World!</title>
     <style>
         body {
             background-color: #194e16;
@@ -56,7 +56,7 @@
 </head>
 <body>
     <h1>Welcome to VinOmHennis World! 🌍</h1>
-    <p>Think of a number between 0 and 100 🤔</p>
+    <p>Think of a number between 0 and 99 🤔</p>
 
     <!-- First input box -->
     <div class="input-box">
@@ -125,10 +125,10 @@
             event.preventDefault(); // Prevent the form from submitting
             const userInput = document.getElementById("userInput").value;
 
-            // Ensure the input is a number between 0 and 100
-            if (userInput >= 0 && userInput <= 100) {
+            // Ensure the input is a number between 0 and 99
+            if (userInput >= 0 && userInput <= 99) {
                 // Determine the index for the links based on the input value
-                const index = Math.floor(userInput / 20) - 1; // Divide by 20 to get an index between 0 and 4
+                const index = Math.floor(userInput / 20); // Divide by 20 to get an index between 0 and 4
 
                 // Update spirit animal link and show it
                 document.getElementById("spiritLink").href = spiritLinks[index];
@@ -138,7 +138,7 @@
                 document.getElementById("flowerLink").href = flowerLinks[index];
                 document.getElementById("flower").style.display = "block";
             } else {
-                alert("Please enter a number between 0 and 100.");
+                alert("Please enter a number between 0 and 99.");
             }
         });
 

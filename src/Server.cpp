@@ -143,12 +143,12 @@ bool Server::start()
 {
 	if (!parseConfig())
 	{
-		logger.logError("Failed to parse config file.");
+		logger.logError(400, "Failed to parse config file.");
 		return (false);
 	}
 	if (!setupServerSockets())
 	{
-		logger.logError("Failed to setup server sockets.");
+		logger.logError(400, "Failed to setup server sockets.");
 		return (false);
 	}
 	this->_running = true;
@@ -188,7 +188,7 @@ void Server::eventLoop()
 				continue ; // Interrupted by signal
 			}
 			perror("poll");
-			logger.logError("Poll error.");
+			logger.logError(500, "Poll error.");
 			break ;
 		}
 		if (poll_result == 0)
@@ -317,7 +317,7 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
 		if (errno != EWOULDBLOCK && errno != EAGAIN)
 		{
             perror("accept");
-			logger.logError("Error accepting new client.");
+			logger.logError(400, "Error accepting new client.");
             return false;
         }
         return true; // No pending connections
@@ -346,9 +346,7 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
     inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
  	std::stringstream ss;
  	ss << "Accepted connection from " << client_ip << ":" << ntohs(client_addr.sin_port);
- 	logger.logInfo(ss.str());
-   // std::cout << "Accepted connection from " << client_ip << ":" << ntohs(client_addr.sin_port)
-   //           << " with fd " << client_fd << "\n";
+ 	logger.logInfo(200, ss.str());
 
     return true;
 }
@@ -364,17 +362,17 @@ bool Server::processClientRequest(std::vector<struct pollfd>::iterator poll_iter
 			_client_connections.end(), MatchClientFd(poll_iterator->fd));
 	if (client == _client_connections.end())
 	{
-		logger.logError("Client does not exist.");
+		logger.logError(400, "Client does not exist.");
 		return false;
 	}
 	if (!client->processRequest())
 	{
 		client->setLastActivity(std::time(NULL));
-		logger.logWarning("Failed to process request from client.");
+		logger.logWarning(500, "Failed to process request from client.");
 		return false;
 	}
 	client->setLastActivity(std::time(NULL));
-	logger.logDebug("Processed request successfully.");
+	logger.logDebug(200, "Processed request successfully.");
 	return true;
 }
 

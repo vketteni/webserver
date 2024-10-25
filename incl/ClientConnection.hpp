@@ -26,8 +26,8 @@ class ClientConnection
 	private:
 		char			_buffer[BUFFER_SIZE];
 		time_t			_lastActivity;
-		RequestParser	_request_parser;
 		ServerConfig	_host_config;
+		RequestParser	_request_parser;
 
 	public:
 		const int		fd;
@@ -62,7 +62,7 @@ struct MatchRoute
 	{
 		if (location.path == route)
 		{
-			std::cerr << (location.path) << std::endl; 
+			std::cerr << (location.path) << std::endl;
 			std::cerr << (location.redirect_path) << std::endl;
 			std::cerr << (location.redirect_status) << std::endl;
 			return  true;
