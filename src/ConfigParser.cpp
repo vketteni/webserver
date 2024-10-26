@@ -620,3 +620,57 @@ void handle_redirect(std::vector<std::string> & directive_values, LocationConfig
 	location.redirect_status = status_code;
 	location.redirect_path = directive_values[1];
 }
+
+
+const LocationConfig * findMatchingLocation(const std::string normalized_uri, const std::vector<LocationConfig> locations)
+{
+	// Longest Match Approach
+	// This function selects the most specific match 
+	const LocationConfig * best_match = NULL;
+	std::vector<LocationConfig>::const_iterator location_it = locations.begin();
+	for (; location_it != locations.end(); ++location_it)																				// std::vector<LocationConfig>::iterator location_it = std::find_if(_host_config.locations.begin(), _host_config.locations.end(), MatchRoute(request.getUri()));
+	{
+		// Allow / as default fall back 
+		if (!best_match && location_it->path == "/")
+		{
+			best_match = &(*location_it);
+			continue ;
+		}
+		size_t pos;
+		// Check if location path is a prefix of normalized_uri and validate boundaries
+		if ((pos = normalized_uri.find(location_it->path)) == 0 &&
+			(normalized_uri.size() == location_it->path.size() || normalized_uri[location_it->path.size()] == '/'))
+		{
+			if (!best_match || (best_match->path).size() < (location_it->path).size())
+				best_match = &(*location_it);
+		}
+	}
+	return best_match; 
+}	
+
+void printConfigLocations(ServerConfig & config)
+{
+    std::vector<LocationConfig>::iterator location_it = config.locations.begin();
+    for (; location_it != config.locations.end(); ++location_it)
+    {
+        std::cerr << "Location: " << location_it->path << std::endl;
+        std::cerr << "Root: " << location_it->root << std::endl;
+        std::cerr << "Redirect: " << location_it->redirect_path << std::endl;
+        std::cerr << "Redirect Status: " << location_it->redirect_status << std::endl;
+		std::cerr << "Methods:";
+		std::vector<std::string>::iterator method_it = location_it->methods.begin();
+        for (; method_it != location_it->methods.end(); ++method_it)
+			std::cerr << " " << *method_it << std::endl;
+		std::cerr << std::endl;
+    }
+}
+
+std::string joinMethods(const std::vector<std::string>& methods) {
+    std::ostringstream oss;
+    for (size_t i = 0; i < methods.size(); ++i) {
+        oss << methods[i];
+        if (i < methods.size() - 1)
+            oss << ", ";
+    }
+    return oss.str();
+}

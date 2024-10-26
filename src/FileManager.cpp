@@ -1,10 +1,5 @@
 #include "../incl/FileManager.hpp"
-#include <fstream>
-#include <sstream>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <limits.h>
-#include <errno.h>
+
 
 FileManager::FileManager(const std::string& baseDirectory) : base_directory(baseDirectory), max_file_size(10485760) // Default to 10 MB
 {
@@ -120,4 +115,57 @@ bool FileManager::writeFile(const std::string& file_path, const std::string& dat
 
     file.close();
     return true;
+}
+
+std::string extractFileName(const std::string& uri) {
+    size_t pos = uri.find_last_of('/');
+    if (pos != std::string::npos)
+        return uri.substr(pos + 1);
+    return uri;
+}
+
+bool isDirectory(const std::string& path) {
+    struct stat info;
+    if (stat(path.c_str(), &info) != 0)
+        return false; // Error accessing path
+    return (info.st_mode & S_IFDIR) != 0;
+}
+
+bool fileExists(const std::string& path) {
+    struct stat info;
+    return stat(path.c_str(), &info) == 0;
+}
+
+std::string readFile(const std::string& path) {
+    std::ifstream file(path.c_str(), std::ios::binary);
+    std::ostringstream ss;
+    ss << file.rdbuf();
+    return ss.str();
+}
+
+bool saveFile(const std::string& path, const std::string& content) {
+    std::ofstream file(path.c_str(), std::ios::binary);
+    if (!file.is_open())
+        return false;
+    file << content;
+    return true;
+}
+
+std::string generateDirectoryListing(const std::string& dirPath, const std::string& uriPath) {
+    DIR* dir = opendir(dirPath.c_str());
+    if (!dir)
+        return "Unable to open directory.";
+
+    std::ostringstream ss;
+    ss << "<html><body><h1>Index of " << uriPath << "</h1><ul>";
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != NULL) {
+        std::string name = entry->d_name;
+        if (name == "." || name == "..")
+            continue;
+        ss << "<li><a href=\"" << uriPath << "/" << name << "\">" << name << "</a></li>";
+    }
+    ss << "</ul></body></html>";
+    closedir(dir);
+    return ss.str();
 }

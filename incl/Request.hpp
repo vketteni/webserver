@@ -6,6 +6,10 @@
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
+#include <string>
+#include <cctype>
+#include <vector>
+
 #include "AMessage.hpp"
 #include "Debug.hpp"
 
@@ -31,6 +35,12 @@ class Request : public AMessage
 
 		const std::string buildFirstLine() const;
 		const std::string buildQueryString() const;
+
+		std::string normalizeUri(const std::string& raw_uri);
+		
+	private:
+		std::string removeDotSegments(const std::string& path);
+		std::string decodePercentEncoding(const std::string& uri);
 };
 
 #endif

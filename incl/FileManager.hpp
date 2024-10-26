@@ -2,6 +2,13 @@
 #define FILEMANAGER_H
 
 #include <string>
+#include <fstream>
+#include <sstream>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <limits.h>
+#include <errno.h>
+#include <dirent.h>
 
 class FileManager {
 	public:
@@ -18,5 +25,14 @@ class FileManager {
 		bool constructSafePath(const std::string& file_path, std::string& outsafe_path);
 		FileManager(const FileManager&);
 };
+
+std::string extractFileName(const std::string& uri);
+bool isDirectory(const std::string& path);
+bool fileExists(const std::string& path);
+std::string readFile(const std::string& path);
+std::string extractFileName(const std::string& uri);
+bool saveFile(const std::string& path, const std::string& content);
+std::string generateDirectoryListing(const std::string& dirPath, const std::string& uriPath);
+
 
 #endif 

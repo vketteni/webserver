@@ -1,6 +1,37 @@
 #include "../incl/MethodHandler.hpp"
 
-
+	// if (method == "GET") {
+    //     // Serve the file
+    //     if (fileExists(filePath)) {
+    //         response.statusCode = 200; // OK
+    //         response.body = readFile(filePath);
+    //         response.headers["Content-Type"] = getContentType(filePath);
+    //     } else {
+    //         // File not found
+    //         response.statusCode = 404; // Not Found
+    //         response.body = "404 Not Found";
+    //     }
+    // } else if (method == "POST") {
+    //     // Handle file upload
+    //     if (!locationConfig.upload_dir.empty()) {
+    //         std::string uploadPath = locationConfig.upload_dir + "/" + extractFileName(request.uri);
+    //         if (saveFile(uploadPath, request.body)) {
+    //             response.statusCode = 201; // Created
+    //             response.body = "File uploaded successfully.";
+    //         } else {
+    //             response.statusCode = 500; // Internal Server Error
+    //             response.body = "Failed to upload file.";
+    //         }
+    //     } else {
+    //         response.statusCode = 403; // Forbidden
+    //         response.body = "Upload directory not configured.";
+    //     }
+    // } else {
+    //     // Other methods are not implemented
+    //     response.statusCode = 501; // Not Implemented
+    //     response.body = "501 Not Implemented";
+    // }
+	
 AbstractMethodHandler* getHandlerForMethod(const std::string& method)
 {
     if (method == "GET")

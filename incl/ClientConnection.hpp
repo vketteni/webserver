@@ -39,11 +39,17 @@ class ClientConnection
 		time_t getLastActivity(void);
 		void setLastActivity(time_t last_activity);
 		bool processRequest(void);
-		void sendRedirect(const std::string& redirect_url, int statusCode = 301);
+
+		// void sendRedirect(const std::string& redirect_url, int statusCode = 301);
 
 	private:
 		bool processResponse(Request & request, Response & response);
 		bool sendResponse(Response & response);
+		
+		void headerHandler(Request & request, Response & response);
+		void methodHandler(Request & request, Response & response, const LocationConfig & route, const ServerConfig & config);
+		void handleErrorResponse(Response & response, ServerConfig & config);
+
 };
 
 struct MatchRoute

@@ -75,6 +75,7 @@ class ConfigParser
 		bool parse();
 		void buildServerConfigs(std::map<int, ServerConfig> & server_configs);
 		void printConfig() const;
+		
 
 	private:
 		std::string filename;
@@ -134,5 +135,9 @@ void handle_index(std::vector<std::string> & directive_values, LocationConfig & 
 void handle_upload_dir(std::vector<std::string> & directive_values, LocationConfig & location);
 void handle_cgi_extension(std::vector<std::string> & directive_values, LocationConfig & location);
 void handle_redirect(std::vector<std::string> & directive_values, LocationConfig & location);
+
+const LocationConfig * findMatchingLocation(const std::string normalized_uri, const std::vector<LocationConfig> locations);
+void printConfigLocations(ServerConfig & config);
+std::string joinMethods(const std::vector<std::string>& methods);
 
 #endif 

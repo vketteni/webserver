@@ -57,5 +57,6 @@ void setup_post_body_handlers(std::map<std::string, HeaderHandler> & handlers, s
 
 // Util
 std::string getCurrentTime();
+std::string getContentType(const std::string& path);
 
 #endif

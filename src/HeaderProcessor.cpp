@@ -1,6 +1,7 @@
 #include "../incl/HeaderProcessor.hpp"
 
-HeaderProcessor::HeaderProcessor(Request & request, Response & response) : _request(request), _response(response)
+HeaderProcessor::HeaderProcessor(Request & request, Response & response)
+	: _request(request), _response(response)
 {}
 
 bool HeaderProcessor::processHeaders(std::map<std::string, HeaderHandler> & handlers, std::set<std::string> & required_headers)
@@ -71,9 +72,6 @@ void HeaderProcessor::handleMissingHeaders(const std::set<std::string> &missing_
 
 	// Additional error handling (e.g., setting response status to 400 Bad Request)
 }
-
-//	** Injected Handler Functions Below **
-//
 
 HeaderValidationStatus processContentLength(Request & request, Response & response)
 {
@@ -247,8 +245,6 @@ HeaderValidationStatus processIfNoneMatch(Request & request, Response & response
 	return SUCCESS;
 }
 
-//	** Handler Setup Below **
-// 
 /*
 	Description: Initializes handlers to be applied before the body is parsed
 	Arguments:	std::map<std::string, HeaderHandler> & handlers,
@@ -298,3 +294,21 @@ std::string getCurrentTime()
 	strftime(buf, sizeof(buf), "%a, %d %b %Y %X GMT", &tstruct);
 	return buf;
 }
+
+bool endsWith(const std::string& str, const std::string& suffix) {
+    // Ensure suffix is not longer than the string
+    if (suffix.size() > str.size()) return false;
+    return str.substr(str.size() - suffix.size()) == suffix;
+}
+
+std::string getContentType(const std::string& path) {
+    // Simple MIME type mapping based on file extension
+    if (endsWith(path, ".html")) return "text/html";
+    if (endsWith(path, ".css")) return "text/css";
+    if (endsWith(path, ".js")) return "application/javascript";
+    if (endsWith(path, ".png")) return "image/png";
+    if (endsWith(path, ".jpg") || endsWith(path, ".jpeg")) return "image/jpeg";
+    // Add more as needed
+    return "application/octet-stream";
+}
+
