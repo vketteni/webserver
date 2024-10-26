@@ -24,7 +24,6 @@ const int TIMEOUT_DURATION = 10;
 class ClientConnection
 {
 	private:
-		char			_buffer[BUFFER_SIZE];
 		time_t			_lastActivity;
 		ServerConfig	_host_config;
 		RequestParser	_request_parser;
