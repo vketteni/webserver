@@ -44,7 +44,6 @@ class ClientConnection
 	private:
 		bool processResponse(Request & request, Response & response);
 		bool sendResponse(Response & response);
-		bool sendBasicResponse(const std::string& body, int status_code, const std::string& content_type);
 };
 
 struct MatchRoute

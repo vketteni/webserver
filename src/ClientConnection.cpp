@@ -140,41 +140,21 @@ bool ClientConnection::processResponse(Request & request, Response & response)
 }
 
 bool ClientConnection::sendResponse(Response & response) {
+	const std::string new_line = "\r\n";
     std::ostringstream oss;
-    oss << "HTTP/1.1 " << response.getStatusCode() << " " << response.getStatusMessage() << "\r\n";
-    oss << "Content-Type: " << "text/html; charset=utf-8" << "\r\n";
-    oss << "Content-Length: " << response.getBody().size() << "\r\n";
+    oss << response.getVersion() << " " << response.getStatusCode() << " " << response.getStatusMessage() << new_line;
+    oss << "Content-Type: " << "text/html; charset=utf-8" << new_line;
+    oss << "Content-Length: " << response.getBody().size() << new_line;
 	const std::map<std::string, std::string> & headers = response.getHeaders();
 	for (std::map<std::string, std::string>::const_iterator headerIterator = headers.begin(); headerIterator != headers.end(); ++headerIterator)
 	{
 
-        oss << headerIterator->first << ": " << headerIterator->second << "\r\n";
+        oss << headerIterator->first << ": " << headerIterator->second << new_line;
     }
-    oss << "\r\n";
+    oss << new_line;
     oss << response.getBody();
     std::string responseStr = oss.str();
     ssize_t bytesSent = send(fd, responseStr.c_str(), responseStr.size(), 0);
     return bytesSent == static_cast<ssize_t>(responseStr.size());
 }
 
-bool ClientConnection::sendBasicResponse(const std::string &body, int status_code, const std::string &content_type)
-{
-    std::ostringstream response;
-    response << "HTTP/1.1 " << status_code << " OK\r\n"
-             << "Content-Type: " << content_type << "\r\n"
-             << "Content-Length: " << body.size() << "\r\n"
-             << "Connection: keep-alive\r\n\r\n"
-             << body;
-
-    std::string response_str = response.str();
-    ssize_t bytes_sent = send(this->fd, response_str.c_str(), response_str.size(), 0);
-
-    if (bytes_sent == -1)
-	{
-        perror("send");
-        return false;
-    }
-
-    std::cout << "Sent response: " << response_str << "\n";
-    return true;
-}
