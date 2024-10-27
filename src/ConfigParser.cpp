@@ -407,7 +407,6 @@ void ConfigParser::parseLocationBlock(BlockNode* location_block, ServerConfig & 
 	{
 		if ((directive = dynamic_cast<DirectiveNode*> (*location_block_it)))
 		{
-
 			std::map<std::string, LocationDirectiveHandler>::iterator handler_it = std::find_if(
 				directive_handlers.begin(),
 				directive_handlers.end(),
@@ -552,9 +551,12 @@ void handle_http_method(std::vector<std::string> & directive_values, LocationCon
 {
 	if (directive_values.empty())
 		throw std::runtime_error("Error: 'method' directive was declared but has no value."); 
-
+	// debug(location.path);
 	for (std::vector<std::string>::iterator it = directive_values.begin(); it != directive_values.end(); ++it)
+	{
+
 		location.methods.push_back(*it);
+	}
 	
 }
 
@@ -622,7 +624,7 @@ void handle_redirect(std::vector<std::string> & directive_values, LocationConfig
 }
 
 
-const LocationConfig * findMatchingLocation(const std::string normalized_uri, const std::vector<LocationConfig> locations)
+const LocationConfig * findMatchingLocation(const std::string normalized_uri, const std::vector<LocationConfig> & locations)
 {
 	// Longest Match Approach
 	// This function selects the most specific match 
@@ -634,6 +636,7 @@ const LocationConfig * findMatchingLocation(const std::string normalized_uri, co
 		if (!best_match && location_it->path == "/")
 		{
 			best_match = &(*location_it);
+			debug((*location_it).methods.front());
 			continue ;
 		}
 		size_t pos;
@@ -648,9 +651,9 @@ const LocationConfig * findMatchingLocation(const std::string normalized_uri, co
 	return best_match; 
 }	
 
-void printConfigLocations(ServerConfig & config)
+void printConfigLocations(const ServerConfig & config)
 {
-    std::vector<LocationConfig>::iterator location_it = config.locations.begin();
+    std::vector<LocationConfig>::const_iterator location_it = config.locations.begin();
     for (; location_it != config.locations.end(); ++location_it)
     {
         std::cerr << "Location: " << location_it->path << std::endl;
@@ -658,9 +661,11 @@ void printConfigLocations(ServerConfig & config)
         std::cerr << "Redirect: " << location_it->redirect_path << std::endl;
         std::cerr << "Redirect Status: " << location_it->redirect_status << std::endl;
 		std::cerr << "Methods:";
-		std::vector<std::string>::iterator method_it = location_it->methods.begin();
+		std::vector<std::string>::const_iterator method_it = location_it->methods.begin();
         for (; method_it != location_it->methods.end(); ++method_it)
+		{
 			std::cerr << " " << *method_it << std::endl;
+		}
 		std::cerr << std::endl;
     }
 }

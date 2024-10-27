@@ -74,4 +74,25 @@ struct MatchRoute
     }
 };
 
+struct MatchMethod
+{
+    const std::string & _method;
+
+	/*
+		Match object to find LocationConfig.path in search collection
+	*/
+    MatchMethod(const std::string & method) : _method(method) {}
+
+    bool operator()(const std::string & method) const
+	{
+			if (method == _method)
+			{
+				std::cerr << "MatchMethod: " << (_method) << std::endl;
+				return  true;
+			}
+
+		return false;
+    }
+};
+
 #endif
