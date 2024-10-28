@@ -9,6 +9,9 @@
 #include <limits.h>
 #include <errno.h>
 #include <dirent.h>
+#include <map>
+#include <vector>
+#include <iostream>
 
 class FileManager {
 	public:
@@ -33,6 +36,9 @@ std::string readFile(const std::string& path);
 std::string extractFileName(const std::string& uri);
 bool saveFile(const std::string& path, const std::string& content);
 std::string generateDirectoryListing(const std::string& dirPath, const std::string& uriPath);
+std::string extractBoundary(const std::map<std::string, std::string>& headers);
+bool parseMultipartData(const std::string& body, const std::string& boundary, std::string& out_filename, std::vector<char>& out_filecontent);
+bool writeFileDirectly(const std::string& directory, const std::string& filename, const std::vector<char>& file_data);
 
 
 #endif 

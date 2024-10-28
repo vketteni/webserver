@@ -169,3 +169,116 @@ std::string generateDirectoryListing(const std::string& dirPath, const std::stri
     closedir(dir);
     return ss.str();
 }
+
+
+std::string extractBoundary(const std::map<std::string, std::string>& headers) {
+    // Suche nach dem Content-Type Header
+    std::map<std::string, std::string>::const_iterator it = headers.find("Content-Type");
+    if (it == headers.end()) {
+        std::cerr << "Content-Type Header nicht gefunden." << std::endl;
+        return "";
+    }
+
+    // Suche nach "boundary=" in der Content-Type-Zeile
+    const std::string& content_type = it->second;
+    size_t boundary_pos = content_type.find("boundary=");
+    if (boundary_pos == std::string::npos) {
+        std::cerr << "Boundary Parameter nicht gefunden." << std::endl;
+        return "";
+    }
+
+    // Extrahiere die Boundary nach "boundary="
+    boundary_pos += 9; // 9 ist die Länge von "boundary="
+    size_t end_of_boundary = content_type.find_first_of("\r\n", boundary_pos);
+    std::string boundary;
+
+    // Wenn kein Ende gefunden wurde, gehe bis zum Ende der Zeichenkette
+    if (end_of_boundary == std::string::npos) {
+        boundary = content_type.substr(boundary_pos);
+    } else {
+        boundary = content_type.substr(boundary_pos, end_of_boundary - boundary_pos);
+    }
+
+    return boundary;
+}
+
+
+bool parseMultipartData(const std::string& body, const std::string& boundary, std::string& out_filename, std::vector<char>& out_filecontent) {
+    // Finde die Start-Boundary
+    size_t boundary_pos = body.find("--" + boundary);
+    if (boundary_pos == std::string::npos) {
+        std::cerr << "Boundary nicht gefunden." << std::endl;
+        return false;
+    }
+
+    // Suche nach `Content-Disposition` und Dateinamen
+    size_t disposition_pos = body.find("Content-Disposition:", boundary_pos);
+    if (disposition_pos == std::string::npos) {
+        std::cerr << "Content-Disposition Header nicht gefunden." << std::endl;
+        return false;
+    }
+
+    // Suche den Dateinamen in der `Content-Disposition` Zeile
+    size_t filename_pos = body.find("filename=\"", disposition_pos);
+    if (filename_pos == std::string::npos) {
+        std::cerr << "Dateiname nicht gefunden." << std::endl;
+        return false;
+    }
+    filename_pos += 10; // Überspringe `filename="`
+    size_t filename_end = body.find("\"", filename_pos);
+    out_filename = body.substr(filename_pos, filename_end - filename_pos);
+
+    // Suche das Ende der Header und den Anfang der Binärdaten
+    size_t content_pos = body.find("\r\n\r\n", filename_end);
+    if (content_pos == std::string::npos) {
+        std::cerr << "Kein Inhalt gefunden." << std::endl;
+        return false;
+    }
+    content_pos += 4; // Überspringe die Kopfzeilenendmarkierung
+
+    // Finde die End-Boundary
+    std::string end_boundary = "\r\n--" + boundary + "--"; // mit zwei zusätzlichen Bindestrichen am Ende
+    size_t end_boundary_pos = body.find(end_boundary, content_pos);
+    if (end_boundary_pos == std::string::npos) {
+        std::cerr << "Ende des Inhalts nicht gefunden." << std::endl;
+        return false;
+    }
+
+    // Dateiinhalt (binär) extrahieren
+    out_filecontent.resize(end_boundary_pos - content_pos); // Resize the vector to hold the file content
+    std::copy(body.begin() + content_pos, body.begin() + end_boundary_pos, out_filecontent.begin());
+    return true;
+}
+
+bool writeFileDirectly(const std::string& directory, const std::string& filename, const std::vector<char>& file_data) {
+    // Kompletter Dateipfad
+    std::string file_path = directory + "/" + filename;
+
+    // Verzeichnis erstellen, falls es nicht existiert
+    struct stat dir_stat;
+    if (stat(directory.c_str(), &dir_stat) != 0) {
+        // Verzeichnis erstellen, falls es noch nicht existiert
+        if (mkdir(directory.c_str(), 0755) != 0) {
+            std::cerr << "Fehler: Verzeichnis konnte nicht erstellt werden: " << directory << std::endl;
+            return false;
+        }
+    }
+
+    // Datei im Binärmodus öffnen, wobei bestehende Inhalte überschrieben werden
+    std::ofstream file(file_path.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+    if (!file.is_open()) {
+        std::cerr << "Fehler: Datei konnte nicht geöffnet werden: " << file_path << std::endl;
+        return false;
+    }
+
+    // Dateiinhalt schreiben
+    file.write(file_data.data(), file_data.size());
+    if (!file.good()) {
+        std::cerr << "Fehler: Beim Schreiben der Datei ist ein Problem aufgetreten." << std::endl;
+        file.close();
+        return false;
+    }
+
+    file.close();
+    return true;
+}

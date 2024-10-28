@@ -96,7 +96,7 @@ void ClientConnection::methodHandler(Request & request, Response & response, con
 	std::string file_path = root + relative_path;
 
 	request.setUri(file_path);
-
+    #if 0
 	if (isDirectory(file_path))
 	{
         std::string index_file = !route.index.empty() ? route.index : "index.html";
@@ -118,7 +118,7 @@ void ClientConnection::methodHandler(Request & request, Response & response, con
             return;
         }
     }
-
+    #endif
 	AbstractMethodHandler * method_handler = getHandlerForMethod(request.getMethod());
 	if (method_handler)
 	{
