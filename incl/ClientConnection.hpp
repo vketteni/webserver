@@ -45,7 +45,7 @@ class ClientConnection
 	private:
 		bool processResponse(Request & request, Response & response);
 		bool sendResponse(Response & response);
-		
+
 		void headerHandler(Request & request, Response & response);
 		void methodHandler(Request & request, Response & response, const LocationConfig & route, const ServerConfig & config);
 		void handleErrorResponse(Response & response, ServerConfig & config);
