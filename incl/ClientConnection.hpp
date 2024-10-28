@@ -43,13 +43,13 @@ class ClientConnection
 		// void sendRedirect(const std::string& redirect_url, int statusCode = 301);
 
 	private:
-		bool processResponse(Request & request, Response & response);
-		bool sendResponse(Response & response);
+		bool		processResponse(Request & request, Response & response);
+		bool		sendResponse(Response & response);
 
-		void headerHandler(Request & request, Response & response);
-		void methodHandler(Request & request, Response & response, const LocationConfig & route, const ServerConfig & config);
-		void handleErrorResponse(Response & response, ServerConfig & config);
-
+		void		headerHandler(Request & request, Response & response);
+		void		methodHandler(Request & request, Response & response, const LocationConfig & route, const ServerConfig & config);
+		void		handleErrorResponse(Response & response, ServerConfig & config);
+		std::string	generateErrorPage(int status_code, const std::string &status_message);
 };
 
 struct MatchRoute

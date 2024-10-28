@@ -1,4 +1,5 @@
 #include "../incl/ClientConnection.hpp"
+#include "ClientConnection.hpp"
 
 ClientConnection::ClientConnection(int client_fd, ServerConfig host_config, int port)
     : _lastActivity(std::time(NULL)), _host_config(host_config), fd(client_fd), host_port(port), timeout(TIMEOUT_DURATION)
@@ -66,7 +67,7 @@ void ClientConnection::headerHandler(Request & request, Response & response)
 	std::set<std::string> required;
 
 	setup_post_body_handlers(handlers, required);
-	
+
 	HeaderProcessor hp(request, response);
 	hp.processHeaders(handlers, required);
 
@@ -129,34 +130,77 @@ void ClientConnection::methodHandler(Request & request, Response & response, con
 
 void ClientConnection::handleErrorResponse(Response & response, ServerConfig & server_config)
 {
-	(void)response;
-	(void)server_config;
+	(void) server_config;
+	int status_code = response.getStatusCode();
+	std::string	status_message;
 
-		//  "500 Internal Server Error"
-        //  "501 Not Implemented"
-		//  "403 Forbidden";
-       	//  "404 Method Not Found";
-       	//  "405 Method Not Allowed";
-
+	switch (status_code)
+	{
+		case 400: status_message = "Bad Request"; break;
+		case 403: status_message = "Forbidden"; break;
+		case 404: status_message = "Not Found"; break;
+		case 405: status_message = "Method Not Allowed"; break;
+		case 500: status_message = "Internal Server Error"; break;
+		default: status_message = "Error"; break;
+	}
+	std::string error_page = generateErrorPage(status_code, status_message);
+	response.setBody(error_page);
+	response.setHeader("Content-Type", "text/html; charset=utf-80");
+	std::ostringstream oss;
+	oss << error_page.size();
+	response.setHeader("Content-Length", oss.str());
+	response.setStatusMessage(status_message);
 }
 
+std::string ClientConnection::generateErrorPage(int status_code, const std::string &status_message)
+{
+	std::ostringstream	html;
+
+	html << "<!DOCTYPE html><html><head><meta charset=\"UTF-8\">";
+	html << "<title>" << status_code << " " << status_message << "</title></head><body>";
+	html << "<h1>" << status_code << " " << status_message << "</h1>";
+	switch (status_code)
+	{
+		case 400:
+			html << "<p>Bad Request: The server could not understand the request.</p>";
+			break;
+		case 403:
+			html << "<p>Forbidden: Access to this resource is denied.</p>";
+			break;
+		case 404:
+			html << "<p>Not Found: The requested resource could not be found.</p>";
+			break;
+		case 405:
+			html << "<p>Method Not Allowed: This HTTP method is not supported for the requested URL.</p>";
+			break;
+		case 500:
+			html << "<p>Internal Server Error: The server encountered an unexpected condition.</p>";
+			break;
+		default:
+			html << "<p>An error occurred while processing your request.</p>";
+			break;
+	}
+	html << "<hr><p><em>VinOmHennis Web Server</em></p></body></html>";
+
+	return html.str();
+}
 
 bool ClientConnection::sendResponse(Response & response)
 {
 	const std::string new_line = "\r\n";
-    std::ostringstream oss;
-    oss << response.getVersion() << " " << response.getStatusCode() << " " << response.getStatusMessage() << new_line;
-    oss << "Content-Type: " << "text/html; charset=utf-8" << new_line;
-    oss << "Content-Length: " << response.getBody().size() << new_line;
+	std::ostringstream oss;
+	oss << response.getVersion() << " " << response.getStatusCode() << " " << response.getStatusMessage() << new_line;
+	oss << "Content-Type: " << "text/html; charset=utf-8" << new_line;
+	oss << "Content-Length: " << response.getBody().size() << new_line;
 	const std::map<std::string, std::string> & headers = response.getHeaders();
 	for (std::map<std::string, std::string>::const_iterator headerIterator = headers.begin(); headerIterator != headers.end(); ++headerIterator)
 	{
 
-        oss << headerIterator->first << ": " << headerIterator->second << new_line;
-    }
-    oss << new_line;
-    oss << response.getBody();
-    std::string responseStr = oss.str();
-    ssize_t bytesSent = send(fd, responseStr.c_str(), responseStr.size(), 0);
-    return bytesSent == static_cast<ssize_t>(responseStr.size());
+		oss << headerIterator->first << ": " << headerIterator->second << new_line;
+	}
+	oss << new_line;
+	oss << response.getBody();
+	std::string responseStr = oss.str();
+	ssize_t bytesSent = send(fd, responseStr.c_str(), responseStr.size(), 0);
+	return bytesSent == static_cast<ssize_t>(responseStr.size());
 }
