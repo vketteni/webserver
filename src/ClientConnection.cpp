@@ -130,7 +130,7 @@ void ClientConnection::methodHandler(Request & request, Response & response, con
 
 void ClientConnection::handleErrorResponse(Response & response, ServerConfig & server_config)
 {
-	(void) server_config;
+	//(void) server_config;
 	int status_code = response.getStatusCode();
 	std::string	status_message;
 
@@ -143,13 +143,38 @@ void ClientConnection::handleErrorResponse(Response & response, ServerConfig & s
 		case 500: status_message = "Internal Server Error"; break;
 		default: status_message = "Error"; break;
 	}
-	std::string error_page = generateErrorPage(status_code, status_message);
-	response.setBody(error_page);
-	response.setHeader("Content-Type", "text/html; charset=utf-80");
-	std::ostringstream oss;
-	oss << error_page.size();
-	response.setHeader("Content-Length", oss.str());
+	std::string error_page_path = server_config.error_pages.count(status_code) ? server_config.error_pages[status_code] : "";
+	if (!error_page_path.empty() && fileExists(error_page_path))
+	{
+		std::ifstream file(error_page_path.c_str());
+		if (file)
+		{
+			std::string error_page_content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+			pretty_debug(error_page_content);
+			response.setBody(error_page_content);
+			response.setHeader("Content-Typr", "text/html; charset=utf-8");
+			std::ostringstream oss;
+			oss << error_page_content.size();
+			response.setHeader("Content-Length", oss.str());
+		}
+		else
+		{
+			response.setBody(generateErrorPage(status_code, status_message));
+			response.setHeader("Content-Type", "text/html; charset=utf-8");
+		}
+	}
+	else
+	{
+		response.setBody(generateErrorPage(status_code, status_message));
+		response.setHeader("Content-Type", "text/html; charset=utf-8");
+	}
 	response.setStatusMessage(status_message);
+}
+
+bool ClientConnection::fileExists(const std::string &path)
+{
+	struct stat buffer;
+	return (stat(path.c_str(), &buffer) == 0);
 }
 
 std::string ClientConnection::generateErrorPage(int status_code, const std::string &status_message)

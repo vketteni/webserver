@@ -36,15 +36,16 @@ class ClientConnection
 		ClientConnection(int client_fd, ServerConfig host_config, int port);
 		~ClientConnection();
 
-		time_t getLastActivity(void);
-		void setLastActivity(time_t last_activity);
-		bool processRequest(void);
+		time_t		getLastActivity(void);
+		void		setLastActivity(time_t last_activity);
+		bool		processRequest(void);
 
 		// void sendRedirect(const std::string& redirect_url, int statusCode = 301);
 
 	private:
 		bool		processResponse(Request & request, Response & response);
 		bool		sendResponse(Response & response);
+		bool		fileExists(const std::string & path);
 
 		void		headerHandler(Request & request, Response & response);
 		void		methodHandler(Request & request, Response & response, const LocationConfig & route, const ServerConfig & config);
