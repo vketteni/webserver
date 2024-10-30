@@ -89,40 +89,7 @@ void ClientConnection::methodHandler(Request & request, Response & response, con
         response.setHeader("Allow", joinMethods(location.methods));
         return;
     }
-	std::string root = !route.root.empty() ? route.root : server_config.root;
 
-	std::string uri_path = request.getUri();
-    if (uri_path.find('?') != std::string::npos)
-	{
-        uri_path = uri_path.substr(0, uri_path.find('?')); // Remove query string
-    }
-    std::string relative_path = uri_path.substr(route.path.length());
-	std::string file_path = root + relative_path;
-
-	request.setUri(file_path);
-    #if 0
-	if (isDirectory(file_path))
-	{
-        std::string index_file = !route.index.empty() ? route.index : "index.html";
-        std::string index_path = file_path + "/" + index_file;
-        if (fileExists(index_path))
-            file_path = index_path;
-		else if (route.autoindex == "on")
-		{
-            // Generate directory listing
-            response.setStatusCode(200);
-            response.setBody(generateDirectoryListing(file_path, uri_path));
-            response.setHeader("Content-Type", "text/html");
-            return;
-        }
-		else
-		{
-            // Directory access is forbidden
-            response.setStatusCode(403);
-            return;
-        }
-    }
-    #endif
 	AbstractMethodHandler * method_handler = getHandlerForMethod(request.getMethod());
 	if (method_handler)
 	{

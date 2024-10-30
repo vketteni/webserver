@@ -46,54 +46,88 @@ AbstractMethodHandler* getHandlerForMethod(const std::string& method)
 	{
         return new DeleteRequestHandler();
     }
-
     return NULL;
 }
 
-void GetRequestHandler::invoke(Request& request, Response& response)
+void GetRequestHandler::invoke(Request& request, Response& response, const LocationConfig & location, const ServerConfig & config)
 {
+	std::string root = !location.root.empty() ? location.root : config.root;
 
-    if (isCGI(request.getUri()))
+	std::string uri_path = request.getUri();
+	if (uri_path.find('?') != std::string::npos)
+	{
+		uri_path = uri_path.substr(0, uri_path.find('?')); // Remove query string
+	}
+	std::string relative_path = uri_path.substr(location.path.length());
+	std::string file_path = root + relative_path;
+
+
+    if (isCGI(file_path))
     {
-		processCGI(request, response);
-        return ;  // CGI wurde erfolgreich behandelt
+		CGIExecutor cgi;
+		if (!cgi.executeCGI(request, response))
+			response.setStatusCode(500);
+		return ;
     }
 
-	std::ifstream file(request.getUri().c_str());
+
+	if (isDirectory(file_path))
+	{
+        std::string index_file = !location.index.empty() ? location.index : "index.html";
+        std::string index_path = file_path + "/" + index_file;
+        if (fileExists(index_path))
+            file_path = index_path;
+		else if (location.autoindex == "on")
+		{
+            // Generate directory listing
+            response.setStatusCode(200);
+            response.setBody(generateDirectoryListing(file_path, uri_path));
+            response.setHeader("Content-Type", "text/html");
+            return;
+        }
+		else
+		{
+            // Directory access is forbidden
+            response.setStatusCode(403);
+            return;
+        }
+    }
+
+	std::ifstream file(file_path.c_str());
     if (!file)
     {
-        setErrorResponse(response, 404, "File Not Found");
-        return ;
+		response.setStatusCode(404);
+		return ;
     }
-
     std::ostringstream contents;
-    contents << file.rdbuf();  // Read the file buffer into the stream
-
+    contents << file.rdbuf();
     file.close();
 
-    buildResponse(response, 200, "OK", contents.str(), "keep-alive");
+	response.setBody(contents.str());
+	response.setHeader("Connection", "keep-alive");
 }
 
-void PostRequestHandler::invoke(Request& request, Response& response)
+void PostRequestHandler::invoke(Request& request, Response& response, const LocationConfig & location, const ServerConfig & config)
 {
+	std::string root = !location.root.empty() ? location.root : config.root;
+
+	std::string uri_path = request.getUri();
+	if (uri_path.find('?') != std::string::npos)
+	{
+		uri_path = uri_path.substr(0, uri_path.find('?')); // Remove query string
+	}
+	std::string relative_path = uri_path.substr(location.path.length());
+	std::string file_path = root + relative_path;
+
     if (isCGI(request.getUri()))
     {
-        // CGI ausführen
-        processCGI(request, response);
-
-        // Verbindung und Body je nach Erfolg des CGI-Prozesses setzen
-        if (response.getStatusCode() == 200)  // CGI erfolgreich
-        {
-            response.setHeader("Connection", "keep-alive");
-            // Hier wird angenommen, dass der Body im response bereits von processCGI gesetzt wurde.
-        }
-        else  // CGI fehlgeschlagen
-        {
+		CGIExecutor cgi;
+		if (!cgi.executeCGI(request, response))
+		{
             response.setHeader("Connection", "close");
-            response.setBody("CGI execution failed.");
-        }
-
-        return;  // CGI wurde erfolgreich oder nicht erfolgreich behandelt
+			response.setStatusCode(500);
+		}
+		return ;
     }
 
     std::string boundary = extractBoundary(request.getHeaders()); // Die Boundary extrahieren
@@ -118,72 +152,12 @@ void PostRequestHandler::invoke(Request& request, Response& response)
 
 
 
-void DeleteRequestHandler::invoke(Request& request, Response& response)
+void DeleteRequestHandler::invoke(Request& request, Response& response, const LocationConfig & location, const ServerConfig & config)
 {
     (void)request;
+    (void)location;
+    (void)config;
     (void)response;
 }
 
-void AbstractMethodHandler::processCGI(Request& request, Response& response)
-{
-    CGIExecutor cgi_executor;
-	std::vector<std::string> env_vars;
-	env_vars.push_back("REQUEST_METHOD=" + request.getMethod());
 
-	// CGI-Skript ausführen, GET oder POST spezifisch
-	if (request.getMethod() == "GET")
-	{
-		env_vars.push_back("QUERY_STRING=" + request.buildQueryString());
-	}
-	else if (request.getMethod() == "POST")
-	{
-		std::stringstream ss;
-		ss << request.getBody().size();
-		env_vars.push_back("CONTENT_LENGTH=" + ss.str());
-	}
-
-	// Skript ausführen
-	if (!cgi_executor.executeCGI(request, response))
-	{
-		response.setStatusCode(500);
-		response.setStatusMessage("Internal Server Error");
-	}
-	else
-	{
-		response.setStatusCode(200);
-		response.setStatusMessage("OK");
-	}
-}
-
-bool isCGI(const std::string & path)
-{
-	return path.find("/cgi-bin/") == 0 || path.find(".cgi") != std::string::npos
-		|| path.find(".py") != std::string::npos;
-}
-
-bool AbstractMethodHandler::shouldRedirect(const Request& request) {
-    // Beispiel: Wenn die URI "/old-path" ist, leite auf "/new-path" um
-    if (request.getUri() == "/old-path") {
-        return true;
-    }
-    return false;
-}
-
-void AbstractMethodHandler::setRedirect(Response& response, const std::string& location) {
-    response.setStatusCode(301);
-    response.setStatusMessage("Moved Permanently");
-    response.setHeader("Location", location);
-}
-
-void AbstractMethodHandler::setErrorResponse(Response& response, int statusCode, const std::string& message) {
-    response.setStatusCode(statusCode);
-    response.setStatusMessage(message);
-    response.setHeader("Connection", "close");
-}
-
-void AbstractMethodHandler::buildResponse(Response& response, int statusCode, const std::string& statusMessage, const std::string& body, const std::string& connection) {
-    response.setStatusCode(statusCode);
-    response.setStatusMessage(statusMessage);
-    response.setBody(body);
-    response.setHeader("Connection", connection);
-}
