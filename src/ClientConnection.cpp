@@ -1,9 +1,10 @@
 #include "../incl/ClientConnection.hpp"
 #include "ClientConnection.hpp"
 
-ClientConnection::ClientConnection(int client_fd, ServerConfig host_config, int port)
-    : _lastActivity(std::time(NULL)), _host_config(host_config), fd(client_fd), host_port(port), timeout(TIMEOUT_DURATION)
+ClientConnection::ClientConnection(int client_fd, ServerConfig host_config, int port, Logger &logger)
+    : _logger(logger), _lastActivity(std::time(NULL)), _host_config(host_config), fd(client_fd), host_port(port), timeout(TIMEOUT_DURATION)
 {}
+
 
 ClientConnection::~ClientConnection()
 {}
@@ -57,6 +58,9 @@ bool ClientConnection::processResponse(Request & request, Response & response)
 
     if (response.getStatusCode() >= 400)
 		handleErrorResponse(response, _host_config);
+	else {
+        _logger.logInfo(response.getStatusCode(), "Successfully processed request to " ); //+ response.getPath()
+    }
 
 	return true;
 }
@@ -143,14 +147,18 @@ void ClientConnection::handleErrorResponse(Response & response, ServerConfig & s
 		case 500: status_message = "Internal Server Error"; break;
 		default: status_message = "Error"; break;
 	}
+	_logger.logError(status_code, "Error: " + status_message + " for request to " ); // + response.getPath()
 	std::string error_page_path = server_config.error_pages.count(status_code) ? server_config.error_pages[status_code] : "";
+	std::string root = server_config.root;
+	error_page_path = root + error_page_path;
+	debug(error_page_path);
 	if (!error_page_path.empty() && fileExists(error_page_path))
 	{
 		std::ifstream file(error_page_path.c_str());
 		if (file)
 		{
 			std::string error_page_content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-			pretty_debug(error_page_content);
+			debug(error_page_content);
 			response.setBody(error_page_content);
 			response.setHeader("Content-Typr", "text/html; charset=utf-8");
 			std::ostringstream oss;

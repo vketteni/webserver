@@ -20,7 +20,6 @@
 #include "ConfigParser.hpp"
 #include "Request.hpp"
 #include "CGIExecutor.hpp"
-#include "StatusCode.hpp"
 #include "Logger.hpp"
 
 // Constants

@@ -1,3 +1,6 @@
+#ifndef LOGGER_HPP_
+#define LOGGER_HPP_
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -7,6 +10,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <algorithm>
+#include "Response.hpp"
 
 enum LogLevel {
 	DEBUG,
@@ -16,8 +20,6 @@ enum LogLevel {
 } ;
 
 
-#ifndef LOGGER_HPP_
-#define LOGGER_HPP_
 
 // Class declaration
 class Logger {

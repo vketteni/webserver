@@ -1,7 +1,7 @@
 NAME=webserv
 CC=c++
 
-MAIN = Logger AMessage Response Request ConfigParser RequestParser MethodHandler ClientConnection Server main FileManager StatusCode CGIExecutor Utils HeaderProcessor
+MAIN = Logger AMessage Response Request ConfigParser RequestParser MethodHandler ClientConnection Server main FileManager CGIExecutor Utils HeaderProcessor
 
 OBJ_DIR= obj/
 SRC_DIR= src/

@@ -353,11 +353,11 @@ void ConfigParser::buildServerConfigs(std::map<int, ServerConfig> & server_confi
 				// Todo: handle http directives
 			}
 			else
-				throw std::runtime_error("Error: Unknown directive type in 'http' directive"); 
+				throw std::runtime_error("Error: Unknown directive type in 'http' directive");
 		}
 	}
 	else
-		throw std::runtime_error("Error: Configuration file is missing 'http' directive"); 
+		throw std::runtime_error("Error: Configuration file is missing 'http' directive");
 }
 
 void ConfigParser::parseServerBlock(BlockNode* server_block, ServerConfig & server_config)
@@ -395,7 +395,7 @@ void ConfigParser::parseLocationBlock(BlockNode* location_block, ServerConfig & 
 	DirectiveNode * directive;
 	location.root = server_config.root;
 	location.path = location_block->parameters.front();
-	
+
 
 	std::map<std::string, LocationDirectiveHandler> directive_handlers;
 	setup_directive_handlers(directive_handlers);
@@ -489,8 +489,8 @@ void setup_directive_handlers(std::map<std::string, LocationDirectiveHandler> & 
 void handle_client_max_body_size(std::vector<std::string> & directive_values, ServerConfig & config)
 {
 	if (directive_values.size() != 1)
-		throw std::runtime_error("Error: 'client_max_body_size' directive requires exactly one value."); 
-	
+		throw std::runtime_error("Error: 'client_max_body_size' directive requires exactly one value.");
+
 	std::string directive_value = directive_values[0];
 	std::stringstream ss;
 	ss << directive_value;
@@ -504,7 +504,7 @@ void handle_client_max_body_size(std::vector<std::string> & directive_values, Se
 void handle_port(std::vector<std::string> & directive_values, ServerConfig & config)
 {
 	if (directive_values.empty())
-		throw std::runtime_error("Error: 'port' directive has no value."); 
+		throw std::runtime_error("Error: 'port' directive has no value.");
 
 	std::string directive_value = directive_values.front();
 	std::stringstream ss;
@@ -534,7 +534,7 @@ void handle_host(std::vector<std::string> & directive_values, ServerConfig & con
 void handle_server_name(std::vector<std::string> & directive_values, ServerConfig & config)
 {
 	if (directive_values.empty())
-		throw std::runtime_error("Error: 'server_name' directive has no value."); 
+		throw std::runtime_error("Error: 'server_name' directive has no value.");
 
 	for (std::vector<std::string>::iterator it = directive_values.begin(); it != directive_values.end(); ++it)
 		config.serverNames.push_back(*it);
@@ -543,7 +543,7 @@ void handle_server_name(std::vector<std::string> & directive_values, ServerConfi
 void handle_error_page(std::vector<std::string> & directive_values, ServerConfig & config)
 {
 	if (directive_values.size() != 2)
-		throw std::runtime_error("Error: 'error_page' directive requires exactly two values, code and page."); 
+		throw std::runtime_error("Error: 'error_page' directive requires exactly two values, code and page.");
 
 	std::stringstream ss;
 	ss << directive_values[0];
@@ -552,31 +552,32 @@ void handle_error_page(std::vector<std::string> & directive_values, ServerConfig
 
 	std::string error_page = directive_values[1];
 	config.error_pages[error_code] = error_page[0] == '/' ? error_page.substr(1) : error_page;
+	std::cout << "Error page for code " << error_code << " set to " << directive_values[1] << std::endl;
 }
 
 void handle_http_method(std::vector<std::string> & directive_values, LocationConfig & location)
 {
 	if (directive_values.empty())
-		throw std::runtime_error("Error: 'method' directive was declared but has no value."); 
+		throw std::runtime_error("Error: 'method' directive was declared but has no value.");
 	// debug(location.path);
 	for (std::vector<std::string>::iterator it = directive_values.begin(); it != directive_values.end(); ++it)
 	{
 		location.methods.push_back(*it);
 	}
-	
+
 }
 
 void handle_path(std::vector<std::string> & directive_values, LocationConfig & location)
 {
 	if (directive_values.size() != 1)
-		throw std::runtime_error("Error: 'path' directive requires exactly one value."); 
+		throw std::runtime_error("Error: 'path' directive requires exactly one value.");
 	location.path = directive_values[0];
 }
 
 void handle_location_root(std::vector<std::string> & directive_values, LocationConfig & location)
 {
 	if (directive_values.size() != 1)
-		throw std::runtime_error("Error: 'root' directive requires exactly one value."); 
+		throw std::runtime_error("Error: 'root' directive requires exactly one value.");
 	std::string root = directive_values.front();
 	// Add ending slash if it's missing
 	location.root = root[root.size() - 1] != '/' ? root + "/" : root;
@@ -585,7 +586,7 @@ void handle_location_root(std::vector<std::string> & directive_values, LocationC
 void handle_server_root(std::vector<std::string> & directive_values, ServerConfig & server)
 {
 	if (directive_values.size() != 1)
-		throw std::runtime_error("Error: 'root' directive requires exactly one value."); 
+		throw std::runtime_error("Error: 'root' directive requires exactly one value.");
 	std::string root = directive_values.front();
 	// Add ending slash if it's missing
 	server.root = root[root.size() - 1] != '/' ? root + "/" : root;
@@ -594,28 +595,28 @@ void handle_server_root(std::vector<std::string> & directive_values, ServerConfi
 void handle_index(std::vector<std::string> & directive_values, LocationConfig & location)
 {
 	if (directive_values.size() != 1)
-		throw std::runtime_error("Error: 'index' directive requires exactly one value."); 
+		throw std::runtime_error("Error: 'index' directive requires exactly one value.");
 	location.index = directive_values[0];
 }
 
 void handle_autoindex(std::vector<std::string> & directive_values, LocationConfig & location)
 {
 	if (directive_values.size() != 1)
-		throw std::runtime_error("Error: 'autoindex' directive requires exactly one value."); 
+		throw std::runtime_error("Error: 'autoindex' directive requires exactly one value.");
 	location.autoindex = directive_values[0];
 }
 
 void handle_upload_dir(std::vector<std::string> & directive_values, LocationConfig & location)
 {
 	if (directive_values.size() != 1)
-		throw std::runtime_error("Error: 'upload_dir' directive requires exactly one value."); 
+		throw std::runtime_error("Error: 'upload_dir' directive requires exactly one value.");
 	location.upload_dir = directive_values[0];
 }
 
 void handle_cgi_extension(std::vector<std::string> & directive_values, LocationConfig & location)
 {
 	if (directive_values.size() != 1)
-		throw std::runtime_error("Error: 'cgi_extension' directive requires exactly one value."); 
+		throw std::runtime_error("Error: 'cgi_extension' directive requires exactly one value.");
 	location.cgi_extension = directive_values[0];
 }
 
@@ -623,7 +624,7 @@ void handle_cgi_extension(std::vector<std::string> & directive_values, LocationC
 void handle_redirect(std::vector<std::string> & directive_values, LocationConfig & location)
 {
 	if (directive_values.size() != 2)
-		throw std::runtime_error("Error: 'redirect' directive requires exactly two values, status-code and redirect-path."); 
+		throw std::runtime_error("Error: 'redirect' directive requires exactly two values, status-code and redirect-path.");
 
 	std::stringstream ss;
 	ss << directive_values[0];
@@ -636,7 +637,7 @@ void handle_redirect(std::vector<std::string> & directive_values, LocationConfig
 void handle_rewrite(std::vector<std::string> & directive_values, LocationConfig & location)
 {
 	if (directive_values.size() != 1)
-		throw std::runtime_error("Error: 'rewrite' directive requires exactly one value."); 
+		throw std::runtime_error("Error: 'rewrite' directive requires exactly one value.");
 
 	location.rewrite = directive_values[0];
 }
@@ -644,12 +645,12 @@ void handle_rewrite(std::vector<std::string> & directive_values, LocationConfig 
 const LocationConfig * findMatchingLocation(const std::string normalized_uri, const std::vector<LocationConfig> & locations)
 {
 	// Longest Match Approach
-	// This function selects the most specific match 
+	// This function selects the most specific match
 	const LocationConfig * best_match = NULL;
 	std::vector<LocationConfig>::const_iterator location_it = locations.begin();
 	for (; location_it != locations.end(); ++location_it)																				// std::vector<LocationConfig>::iterator location_it = std::find_if(_host_config.locations.begin(), _host_config.locations.end(), MatchRoute(request.getUri()));
 	{
-		// Allow / as default fall back 
+		// Allow / as default fall back
 		if (!best_match && location_it->path == "/")
 		{
 			best_match = &(*location_it);
@@ -665,8 +666,8 @@ const LocationConfig * findMatchingLocation(const std::string normalized_uri, co
 				best_match = &(*location_it);
 		}
 	}
-	return best_match; 
-}	
+	return best_match;
+}
 
 void printConfigLocations(const ServerConfig & config)
 {

@@ -18,12 +18,14 @@
 #include "Request.hpp"
 #include "RequestParser.hpp"
 #include "ConfigParser.hpp"
+#include "Logger.hpp"
 
 const int TIMEOUT_DURATION = 10;
 
 class ClientConnection
 {
 	private:
+		Logger&			_logger;
 		time_t			_lastActivity;
 		ServerConfig	_host_config;
 		RequestParser	_request_parser;
@@ -33,7 +35,7 @@ class ClientConnection
 		const int		host_port;
 		const int		timeout;
 
-		ClientConnection(int client_fd, ServerConfig host_config, int port);
+		ClientConnection(int client_fd, ServerConfig host_config, int port, Logger &logger);
 		~ClientConnection();
 
 		time_t		getLastActivity(void);
