@@ -78,15 +78,15 @@ void ClientConnection::headerHandler(Request & request, Response & response)
 	return ;
 }
 
-void ClientConnection::methodHandler(Request & request, Response & response, const LocationConfig & route, const ServerConfig & server_config)
+void ClientConnection::methodHandler(Request & request, Response & response, const LocationConfig & location, const ServerConfig & server_config)
 {
 	// printConfigLocations(server_config);
 	std::string request_method = request.getMethod();
 
-    if (std::find_if(route.methods.begin(), route.methods.end(), MatchMethod(request_method)) == route.methods.end())
+    if (std::find_if(location.methods.begin(), location.methods.end(), MatchMethod(request_method)) == location.methods.end())
 	{
         response.setStatusCode(405);
-        response.setHeader("Allow", joinMethods(route.methods));
+        response.setHeader("Allow", joinMethods(location.methods));
         return;
     }
 	std::string root = !route.root.empty() ? route.root : server_config.root;
@@ -126,7 +126,7 @@ void ClientConnection::methodHandler(Request & request, Response & response, con
 	AbstractMethodHandler * method_handler = getHandlerForMethod(request.getMethod());
 	if (method_handler)
 	{
-		method_handler->invoke(request, response);
+		method_handler->invoke(request, response, location, server_config);
 	}
 
 	return ;

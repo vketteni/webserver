@@ -50,7 +50,7 @@ class ClientConnection
 		bool		fileExists(const std::string & path);
 
 		void		headerHandler(Request & request, Response & response);
-		void		methodHandler(Request & request, Response & response, const LocationConfig & route, const ServerConfig & config);
+		void		methodHandler(Request & request, Response & response, const LocationConfig & location, const ServerConfig & config);
 		void		handleErrorResponse(Response & response, ServerConfig & config);
 		std::string	generateErrorPage(int status_code, const std::string &status_message);
 		void setErrorResponse(Response& response, int statusCode, const std::string& message);
