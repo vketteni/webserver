@@ -14,11 +14,11 @@ bool CGIExecutor::executeCGI(Request & request, Response & response)
 {
     char **env = createCGIEnvironment(request);
     // show the every value in **env
-    for (int i = 0; env[i] != NULL; i++) {
-        std::cout << env[i] << std::endl;
-    }
-    // debug body
-    debug("body: " + request.getBody() + "\n");
+    // for (int i = 0; env[i] != NULL; i++) {
+    //     std::cout << env[i] << std::endl;
+    // }
+    // // debug body
+    // debug("body: " + request.getBody() + "\n");
 
     const char *path = request.getUri().c_str();
     char *argv[1];
@@ -110,12 +110,17 @@ char** CGIExecutor::createCGIEnvironment(Request& request)
 {
     std::map<std::string, std::string> env_map;
 
-    env_map["REQUEST_METHOD"] = request.getMethod().substr(0);
+	env_map["REQUEST_METHOD"] = request.getMethod();
     env_map["SCRIPT_NAME"] = request.getUri();
-    env_map["QUERY_STRING"] = request.buildQueryString();
     env_map["SERVER_PROTOCOL"] = request.getVersion();
-    env_map["CONTENT_TYPE"] = request.getHeaderOrDefault("Content-Type", "");
-    env_map["CONTENT_LENGTH"] = request.getHeaderOrDefault("Content-Length", "0");
+
+	if (request.getMethod() == "GET")
+		env_map["QUERY_STRING="] = request.buildQueryString();
+	else if (request.getMethod() == "POST")
+	{
+		env_map["CONTENT_TYPE"] = request.getHeaderOrDefault("Content-Type", "");
+		env_map["CONTENT_LENGTH"] = request.getHeaderOrDefault("Content-Length", "0");
+	}
 
     char** env = new char*[env_map.size() + 1];
     int i = 0;
