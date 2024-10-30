@@ -130,4 +130,9 @@ char** CGIExecutor::createCGIEnvironment(Request& request)
     return env;
 }
 		
+bool isCGI(const std::string & path)
+{
+	return path.find("/cgi-bin/") == 0 || path.find(".cgi") != std::string::npos
+		|| path.find(".py") != std::string::npos;
+}
 

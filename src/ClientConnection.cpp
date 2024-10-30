@@ -237,3 +237,30 @@ bool ClientConnection::sendResponse(Response & response)
 	ssize_t bytesSent = send(fd, responseStr.c_str(), responseStr.size(), 0);
 	return bytesSent == static_cast<ssize_t>(responseStr.size());
 }
+
+// bool ClientConnection::shouldRedirect(const Request& request) {
+//     // Beispiel: Wenn die URI "/old-path" ist, leite auf "/new-path" um
+//     if (request.getUri() == "/old-path") {
+//         return true;
+//     }
+//     return false;
+// }
+
+// void ClientConnection::setRedirect(Response& response, const std::string& location) {
+//     response.setStatusCode(301);
+//     response.setStatusMessage("Moved Permanently");
+//     response.setHeader("Location", location);
+// }
+
+void ClientConnection::setErrorResponse(Response& response, int statusCode, const std::string& message) {
+    response.setStatusCode(statusCode);
+    response.setStatusMessage(message);
+    response.setHeader("Connection", "close");
+}
+
+void ClientConnection::buildResponse(Response& response, int statusCode, const std::string& statusMessage, const std::string& body, const std::string& connection) {
+    response.setStatusCode(statusCode);
+    response.setStatusMessage(statusMessage);
+    response.setBody(body);
+    response.setHeader("Connection", connection);
+}

@@ -24,12 +24,12 @@ public:
     ~CGIExecutor();
 
     bool executeCGI(Request & request, Response & response);
-	bool isCGI(const std::string &path);
 
 private:
     char** createCGIEnvironment(Request& request);
 };
 
+bool isCGI(const std::string &path);
 
 #endif
 

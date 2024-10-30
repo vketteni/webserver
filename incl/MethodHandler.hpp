@@ -8,20 +8,15 @@
 #include "Response.hpp"
 #include "FileManager.hpp"
 #include "CGIExecutor.hpp"
+#include "ConfigParser.hpp"
 #include "Debug.hpp"
+
 
 class AbstractMethodHandler
 {
 	public:
-		virtual void invoke(Request& request, Response& response) = 0;
+		virtual void invoke(Request& request, Response& response, const LocationConfig & location, const ServerConfig & config) = 0;
 		virtual ~AbstractMethodHandler() {}
-	protected:
-		void processCGI(Request& request, Response& response);
-		bool shouldRedirect(const Request& request);
-		void setRedirect(Response& response, const std::string& location);
-		void setErrorResponse(Response& response, int statusCode, const std::string& message);
-		void buildResponse(Response& response, int statusCode, const std::string& statusMessage, const std::string& body, const std::string& connection);
-
 };
 
 // TODO: Implement as dependency injection (*)-(*)
@@ -33,23 +28,20 @@ AbstractMethodHandler* getHandlerForMethod(const std::string& method);
 class GetRequestHandler : public AbstractMethodHandler
 {
 	public:
-		void invoke(Request& request, Response& response);
+		void invoke(Request& request, Response& response, const LocationConfig & location, const ServerConfig & config);
 };
 
 class PostRequestHandler : public AbstractMethodHandler
 {
 	public:
-		void invoke(Request& request, Response& response);
+		void invoke(Request& request, Response& response, const LocationConfig & location, const ServerConfig & config);
 		
 };
 
 class DeleteRequestHandler : public AbstractMethodHandler
 {
 	public:
-		void invoke(Request& request, Response& response);
+		void invoke(Request& request, Response& response, const LocationConfig & location, const ServerConfig & config);
 };
-
-
-bool isCGI(const std::string &path);
 
 #endif
