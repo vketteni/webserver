@@ -44,12 +44,15 @@ class Server {
 		// Server Setup
 		bool parseConfig();
 		bool setupServerSockets();
+		void set_non_blocking_and_start_listen(int host_fd);
+		void bind_port_to_interfaces(int host_port, int host_fd, ServerConfig & host_config);
+		void allow_address_reuse(int host_fd);
+
 
 		// Event Loop
 		void eventLoop();
 		void processIOEvents();
-		bool acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator);
-		bool processClientRequest(std::vector<struct pollfd>::iterator poll_iterator);
+		bool acceptNewClient(const std::vector<struct pollfd>::const_iterator poll_iterator);
 		void checkTimeouts(void);
 		void disconnectClient(std::vector<struct pollfd >::iterator poll_iterator);
 		// std::string getRedirect(const std::string& requested_path);
@@ -59,17 +62,6 @@ class Server {
 		void closeAllSockets();
 		bool isHostSocket(int fd);
 		bool isClientSocket(int fd);
-
-		// void sendErrorResponse(int client_fd, int status_code);
-
-		bool isCGI(const std::string& path);
-		std::string translateUriToCgiPath(const std::string& path);
-
-
-		// routing table functions
-		// lookup route bool doesRouteExist(std::string route);
-		bool routeExists(std::string route);
-
 };
 
 void signalHandler(int signum);

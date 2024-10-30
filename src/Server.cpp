@@ -1,22 +1,5 @@
 #include "../incl/Server.hpp"
 
-static int	setNonBlocking(int fd)
-{
-	int	flags;
-
-	if ((flags = fcntl(fd, F_GETFL, 0)) == -1)
-	{
-		perror("fcntl F_GETFL");
-		return (-1);
-	}
-	if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
-	{
-		perror("fcntl F_SETFL O_NONBLOCK");
-		return (-1);
-	}
-	return (0);
-}
-
 // Global
 volatile bool	g_keep__running = true;
 
@@ -74,63 +57,91 @@ bool Server::parseConfig()
 	Method: 		Server::setupServerSockets
 	Description: 	Sets up listening sockets for each server port
 */
+void Server::set_non_blocking_and_start_listen(int host_fd)
+{
+	int	flags;
+
+	if ((flags = fcntl(host_fd, F_GETFL, 0)) == -1)
+	{
+		perror("fcntl F_GETFL");
+		throw std::runtime_error("Error: Failed to get file descriptor flags: F_GETFL"); 
+	}
+	if (fcntl(host_fd, F_SETFL, flags | O_NONBLOCK) == -1)
+	{
+		perror("fcntl F_SETFL O_NONBLOCK");
+		throw std::runtime_error("Error: Failed to set flags on host file descriptor: O_NONBLOCK."); 
+	}
+
+	if (listen(host_fd, BACKLOG) == -1)
+	{
+		perror("listen");
+		close(host_fd);
+		throw std::runtime_error("Error: Failed to listen to host file descriptor."); 
+	}
+}
+
+void Server::bind_port_to_interfaces(int host_port, int host_fd, ServerConfig & host_config)
+{
+		struct sockaddr_in addr;
+		std::memset(&addr, 0, sizeof(addr));
+		addr.sin_family = AF_INET;
+		addr.sin_addr.s_addr = inet_addr(host_config.host.c_str()); // 0.0.0.0
+		addr.sin_port = htons(host_port);
+		if (bind(host_fd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
+		{
+			perror("bind");
+			close(host_fd);
+			throw std::runtime_error("Error: Failed to bind to a host port."); 
+		}
+}
+
+void Server::allow_address_reuse(int host_fd)
+{
+	int	opt;
+	opt = 1;
+	if (setsockopt(host_fd, SOL_SOCKET, SO_REUSEADDR, &opt,
+			sizeof(opt)) == -1)
+	{
+		perror("setsockopt SO_REUSEADDR");
+		close(host_fd);
+		throw std::runtime_error("Error: Failed to set socket option SO_REUSEADDR."); 
+	}
+}
+
 bool Server::setupServerSockets()
 {
-	int	server_fd;
-	int	opt;
-	int	server_port;
-	struct sockaddr_in addr;
-	struct pollfd pfd;
-
-	for (std::map<int, ServerConfig>::iterator host_it = _host_configs.begin(); host_it != _host_configs.end(); ++host_it)
+	std::map<int, ServerConfig>::iterator host_it = _host_configs.begin();
+	for (; host_it != _host_configs.end(); ++host_it)
 	{
-		server_fd = socket(AF_INET, SOCK_STREAM, 0);
-		if (server_fd == -1)
+		ServerConfig & host_config = host_it->second;
+		int host_port = host_it->first;
+		int	host_fd;
+		if ((host_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 		{
 			perror("socket");
 			return (false);
 		}
 		// Allow address reuse
-		opt = 1;
-		if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt,
-				sizeof(opt)) == -1)
-		{
-			perror("setsockopt SO_REUSEADDR");
-			close(server_fd);
-			return (false);
-		}
+		allow_address_reuse(host_fd);
+
 		// Bind to the specified port on all interfaces
-		server_port = host_it->first;
-		std::memset(&addr, 0, sizeof(addr));
-		addr.sin_family = AF_INET;
-		addr.sin_addr.s_addr = INADDR_ANY; // 0.0.0.0
-		addr.sin_port = htons(server_port);
-		if (bind(server_fd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
-		{
-			perror("bind");
-			close(server_fd);
-			return (false);
-		}
+		bind_port_to_interfaces(host_port, host_fd, host_config);
+
 		// Set the socket to non-blocking mode
-		if (setNonBlocking(server_fd) == -1)
-		{
-			close(server_fd);
-			return (false);
-		}
 		// Start listening
-		if (listen(server_fd, BACKLOG) == -1)
-		{
-			perror("listen");
-			close(server_fd);
-			return (false);
-		}
-		_host_port_and_fds.push_back(std::make_pair(server_port, server_fd));
-		// Add to _poll_fds
-		pfd.fd = server_fd;
+		set_non_blocking_and_start_listen(host_fd);
+
+		// Create internal mapping between host port and file descriptor
+		_host_port_and_fds.push_back(std::make_pair(host_port, host_fd));
+
+		// Add pollfd to this instance
+		struct pollfd pfd;
+		pfd.fd = host_fd;
 		pfd.events = POLLIN;
 		pfd.revents = 0;
 		_poll_fds.push_back(pfd);
-		std::cout << "Listening on port " << server_port << " with fd " << server_fd << "\n";
+
+		std::cout << "Listening on port " << host_port << " with fd " << host_fd << "\n";
 	}
 	return (true);
 }
@@ -251,57 +262,66 @@ bool Server::isHostSocket(int fd)
 
 bool Server::isClientSocket(int fd)
 {
-	std::list<ClientConnection>::iterator client = std::find_if(_client_connections.begin(),
-			_client_connections.end(), MatchClientFd(fd));
-	if (client != _client_connections.end())
-		return true;
-	return false;
+	std::list<ClientConnection>::iterator client;
+	client = std::find_if(
+		_client_connections.begin(), _client_connections.end(), MatchClientFd(fd));
+	return client != _client_connections.end();
 }
 
 void Server::processIOEvents()
 {
 	int	fd;
 
-	for (int i = 0; i < (int)_poll_fds.size(); ++i)
+	for (size_t i = 0; i < _poll_fds.size(); ++i)
 	{
 		fd = _poll_fds[i].fd;
-		if (_poll_fds[i].revents & (POLLIN | POLL_OUT))
+		if (!(_poll_fds[i].revents & (POLLIN | POLL_OUT)))
+			continue;
+		if (isHostSocket(fd))
 		{
-			if (isHostSocket(fd))
+			// Event on host socket, accept new connection
+			if (!acceptNewClient(_poll_fds.begin() + i))
 			{
-				// Event on host socket, accept new connection
-				if (!acceptNewClient(_poll_fds.begin() + i))
-				{
-					std::cerr << "Failed to handle new connection on fd " << fd << "\n";
-				}
+				std::cerr << "Failed to handle new connection on fd " << fd << "\n";
 			}
-			else if (!processClientRequest(_poll_fds.begin() + i))
+		}
+		else
+		{
+			std::list<ClientConnection>::iterator client;
+			if ((client = std::find_if(_client_connections.begin(), _client_connections.end(), MatchClientFd(fd))) == _client_connections.end())
 			{
+				_logger.logError(400, "Client does not exist.");
 				std::cout << "Disconnecting client on fd " << fd << "\n";
 				disconnectClient(_poll_fds.begin() + i);
 				--i;
+				continue ;
 			}
+			else if (!client->processRequest())
+			{
+				_logger.logWarning(500, "Failed to process request from client.");
+				std::cout << "Disconnecting client on fd " << fd << "\n";
+				disconnectClient(_poll_fds.begin() + i);
+				--i;
+				continue ;
+			}
+			else
+				_logger.logDebug(200, "Processed request successfully.");
+
+			client->setLastActivity(std::time(NULL));
+
 		}
 	}
 }
 
-void Server::disconnectClient(std::vector<struct pollfd>::iterator poll_iterator)
-{
-	close(poll_iterator->fd);
-	std::list<ClientConnection>::iterator client_iterator = std::find_if(_client_connections.begin(),
-			_client_connections.end(), MatchClientFd(poll_iterator->fd));
-	if (client_iterator != _client_connections.end())
-		_client_connections.erase(client_iterator);
-	_poll_fds.erase(poll_iterator);
-}
-
 /*
-	Method: 		Server::closeAllSockets
-	Description: 	Handles a new incoming connection
+	Method: 		Server::acceptNewClient
+	Description: 	Accepts an incoming network connection.
+					Wraps the socked file descriptor and the accepting host configuration inside an instance of ClientConnection.
+					Also saves the socket file descriptor inside this instance of Server.
 */
-bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
+bool Server::acceptNewClient(const std::vector<struct pollfd>::const_iterator poll_iterator)
 {
-		struct sockaddr_in	client_addr;
+	struct sockaddr_in client_addr;
 
 	if (!isHostSocket(poll_iterator->fd))
 	{
@@ -329,9 +349,8 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
 		if (_host_port_and_fds[i].second == poll_iterator->fd)
 		{
 			int port = _host_port_and_fds[i].first;
-
 			ClientConnection new_connection(client_fd, _host_configs[port], port, _logger);
-			this->_client_connections.push_back(new_connection);
+			_client_connections.push_back(new_connection);
 		}
 	}
 
@@ -340,7 +359,7 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
     pfd.fd = client_fd;
     pfd.events = POLLIN | POLLOUT;
     pfd.revents = 0;
-    this->_poll_fds.push_back(pfd);
+    _poll_fds.push_back(pfd);
 
     char client_ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
@@ -351,50 +370,16 @@ bool Server::acceptNewClient(std::vector<struct pollfd>::iterator poll_iterator)
     return true;
 }
 
-/*
-	Method: 		Server::processClientRequest
-	Description: 	Handles client request reading and response sending
-*/
-bool Server::processClientRequest(std::vector<struct pollfd>::iterator poll_iterator)
+void Server::disconnectClient(std::vector<struct pollfd>::iterator poll_iterator)
 {
-	//	this check is unnessessary compute intensive -> std::vector allows random lookup via index O(1) which we should use instead
-	std::list<ClientConnection>::iterator client = std::find_if(_client_connections.begin(),
-			_client_connections.end(), MatchClientFd(poll_iterator->fd));
-	if (client == _client_connections.end())
-	{
-		_logger.logError(400, "Client does not exist.");
-		return false;
-	}
-	if (!client->processRequest())
-	{
-		client->setLastActivity(std::time(NULL));
-		_logger.logWarning(500, "Failed to process request from client.");
-		return false;
-	}
-	client->setLastActivity(std::time(NULL));
-	_logger.logDebug(200, "Processed request successfully.");
-	return true;
+	std::list<ClientConnection>::iterator client_it = std::find_if(
+		_client_connections.begin(),
+		_client_connections.end(),
+		MatchClientFd(poll_iterator->fd)
+		);
+	if (client_it != _client_connections.end())
+		_client_connections.erase(client_it);
+
+	close(poll_iterator->fd);
+	_poll_fds.erase(poll_iterator);
 }
-
-// std::string Server::getRedirect(const std::string& requested_path)
-// {
-// 	for (std::vector<HostConfig>::iterator it = _host_configs.begin(); it != _host_configs.end(); ++it)
-// 	{
-// 		const HostConfig& config = *it;
-// 		std::map<std::string, std::string>::const_iterator redirect_it = config.redirects.find(requested_path);
-// 		if (redirect_it != config.redirects.end())
-// 		{
-// 			return redirect_it->second; // Gibt den neuen Pfad zurück
-// 		}
-// 	}
-// 	return ""; // Kein Redirect gefunden
-// }
-
-
-std::string Server::translateUriToCgiPath(const std::string &path)
-{
-	std::string cgi_root = "/var/www/cgi-bin";
-	std::string cgi_path = cgi_root + path.substr(path.find("/cgi-bin/") + 8);
-	return cgi_path;
-}
-
