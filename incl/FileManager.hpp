@@ -12,6 +12,8 @@
 #include <map>
 #include <vector>
 #include <iostream>
+#include <iomanip>
+#include "Debug.hpp"
 
 class FileManager {
 	public:
@@ -39,6 +41,8 @@ std::string generateDirectoryListing(const std::string& dirPath, const std::stri
 std::string extractBoundary(const std::map<std::string, std::string>& headers);
 bool parseMultipartData(const std::string& body, const std::string& boundary, std::string& out_filename, std::vector<char>& out_filecontent);
 bool writeFileDirectly(const std::string& directory, const std::string& filename, const std::vector<char>& file_data);
+//std::string url_encode(const std::string& value);
+bool deleteFile(const std::string& path);
 
 
 #endif 

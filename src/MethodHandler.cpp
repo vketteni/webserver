@@ -135,7 +135,7 @@ void PostRequestHandler::invoke(Request& request, Response& response, const Loca
     std::vector<char> file_content;
 
     if (parseMultipartData(request.getBody(), boundary, filename, file_content)) {
-        if (writeFileDirectly("uploads", filename, file_content)) {
+        if (writeFileDirectly("www/uploads", filename, file_content)) {
          std::cout << "Datei erfolgreich hochgeladen: " << filename << std::endl;
         } else {
             std::cerr << "Fehler beim Hochladen der Datei." << std::endl;
@@ -154,10 +154,19 @@ void PostRequestHandler::invoke(Request& request, Response& response, const Loca
 
 void DeleteRequestHandler::invoke(Request& request, Response& response, const LocationConfig & location, const ServerConfig & config)
 {
-    (void)request;
-    (void)location;
-    (void)config;
-    (void)response;
+    std::string file_name = extractFileName(request.getUri());
+    std::string upload_folder = "www/uploads/";
+    std::string file_path = upload_folder + file_name;
+    pretty_debug(file_path);
+   
+    if (deleteFile(file_path ))
+    {
+       response.setStatusCode(200);
+    }
+    else
+    {
+       response.setStatusCode(404);
+    }
 }
 
 

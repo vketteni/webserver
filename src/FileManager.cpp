@@ -202,6 +202,7 @@ std::string extractBoundary(const std::map<std::string, std::string>& headers) {
     return boundary;
 }
 
+// this is the actual stuff we are using 
 
 bool parseMultipartData(const std::string& body, const std::string& boundary, std::string& out_filename, std::vector<char>& out_filecontent) {
     // Finde die Start-Boundary
@@ -253,7 +254,6 @@ bool parseMultipartData(const std::string& body, const std::string& boundary, st
 bool writeFileDirectly(const std::string& directory, const std::string& filename, const std::vector<char>& file_data) {
     // Kompletter Dateipfad
     std::string file_path = directory + "/" + filename;
-
     // Verzeichnis erstellen, falls es nicht existiert
     struct stat dir_stat;
     if (stat(directory.c_str(), &dir_stat) != 0) {
@@ -280,5 +280,26 @@ bool writeFileDirectly(const std::string& directory, const std::string& filename
     }
 
     file.close();
+    return true;
+}
+
+/* std::string url_encode(const std::string& value) {
+    std::ostringstream encoded;
+    for (char c : value) {
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+            encoded << c;
+        } else {
+            encoded << '%' << std::uppercase << std::setw(2) << std::setfill('0') 
+                    << static_cast<int>(static_cast<unsigned char>(c));
+        }
+    }
+    return encoded.str();
+} */
+
+bool deleteFile(const std::string& file_path) {
+    if (remove(file_path.c_str()) != 0) {
+        std::cerr << "Fehler: Datei konnte nicht gelöscht werden: " << file_path << std::endl;
+        return false;
+    }
     return true;
 }
