@@ -1,5 +1,4 @@
 #include "../incl/ClientConnection.hpp"
-#include "ClientConnection.hpp"
 
 ClientConnection::ClientConnection(int client_fd, ServerConfig host_config, int port, Logger &logger)
     : _logger(logger), _lastActivity(std::time(NULL)), _host_config(host_config), fd(client_fd), host_port(port), timeout(TIMEOUT_DURATION)
