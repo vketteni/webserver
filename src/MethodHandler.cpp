@@ -61,7 +61,7 @@ void GetRequestHandler::invoke(Request& request, Response& response, const Locat
 	std::string relative_path = uri_path.substr(location.path.length());
 	std::string file_path = root + relative_path;
 
-
+    pretty_debug(file_path);
     if (isCGI(file_path))
     {
 		CGIExecutor cgi;
@@ -157,7 +157,8 @@ void DeleteRequestHandler::invoke(Request& request, Response& response, const Lo
     std::string file_name = extractFileName(request.getUri());
     std::string upload_folder = "www/uploads/";
     std::string file_path = upload_folder + file_name;
-    pretty_debug(file_path);
+   (void) location;
+    (void) config;
    
     if (deleteFile(file_path ))
     {
