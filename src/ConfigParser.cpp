@@ -433,6 +433,12 @@ void ConfigParser::parseLocationBlock(BlockNode* location_block, ServerConfig & 
     location.methods.push_back("DELETE");
 	}
 
+	// Other not specified
+	location.autoindex = location.autoindex.empty() ? "off" : location.autoindex;
+	location.cgi_extension = location.cgi_extension.empty() ? ".py" : location.autoindex;
+	location.index = location.index.empty() ? "index.html" : location.autoindex;
+	location.upload_dir = location.upload_dir.empty() ? "upload/" : location.autoindex;
+	
 	server_config.locations.push_back(location);
 }
 
@@ -500,7 +506,7 @@ void handle_client_max_body_size(std::vector<std::string> & directive_values, Se
 	if (directive_values.size() != 1)
 		throw std::runtime_error("Error: 'client_max_body_size' directive requires exactly one value.");
 
-	std::string directive_value = directive_values[0];
+	std::string directive_value = directive_values.front();
 	std::stringstream ss;
 	ss << directive_value;
 	int client_max_body_size;
@@ -555,7 +561,7 @@ void handle_error_page(std::vector<std::string> & directive_values, ServerConfig
 		throw std::runtime_error("Error: 'error_page' directive requires exactly two values, code and page.");
 
 	std::stringstream ss;
-	ss << directive_values[0];
+	ss << directive_values.front();
 	int error_code;
 	ss >> error_code;
 
@@ -580,7 +586,7 @@ void handle_path(std::vector<std::string> & directive_values, LocationConfig & l
 {
 	if (directive_values.size() != 1)
 		throw std::runtime_error("Error: 'path' directive requires exactly one value.");
-	location.path = directive_values[0];
+	location.path = directive_values.front();
 }
 
 void handle_location_root(std::vector<std::string> & directive_values, LocationConfig & location)
@@ -605,28 +611,33 @@ void handle_index(std::vector<std::string> & directive_values, LocationConfig & 
 {
 	if (directive_values.size() != 1)
 		throw std::runtime_error("Error: 'index' directive requires exactly one value.");
-	location.index = directive_values[0];
+	location.index = directive_values.front();
 }
 
 void handle_autoindex(std::vector<std::string> & directive_values, LocationConfig & location)
 {
 	if (directive_values.size() != 1)
 		throw std::runtime_error("Error: 'autoindex' directive requires exactly one value.");
-	location.autoindex = directive_values[0];
+
+	std::string autoindex = directive_values.front();
+	if (autoindex != "on" && autoindex != "off")
+		throw std::runtime_error("Error: 'autoindex' directive value is not allowed. Allowed: 'on', 'off'.");
+
+	location.autoindex = autoindex;
 }
 
 void handle_upload_dir(std::vector<std::string> & directive_values, LocationConfig & location)
 {
 	if (directive_values.size() != 1)
 		throw std::runtime_error("Error: 'upload_dir' directive requires exactly one value.");
-	location.upload_dir = directive_values[0];
+	location.upload_dir = directive_values.front();
 }
 
 void handle_cgi_extension(std::vector<std::string> & directive_values, LocationConfig & location)
 {
 	if (directive_values.size() != 1)
 		throw std::runtime_error("Error: 'cgi_extension' directive requires exactly one value.");
-	location.cgi_extension = directive_values[0];
+	location.cgi_extension = directive_values.front();
 }
 
 
@@ -636,7 +647,7 @@ void handle_redirect(std::vector<std::string> & directive_values, LocationConfig
 		throw std::runtime_error("Error: 'redirect' directive requires exactly two values, status-code and redirect-path.");
 
 	std::stringstream ss;
-	ss << directive_values[0];
+	ss << directive_values.front();
 	int status_code;
 	ss >> status_code;
 	location.redirect_status = status_code;
@@ -648,7 +659,7 @@ void handle_rewrite(std::vector<std::string> & directive_values, LocationConfig 
 	if (directive_values.size() != 1)
 		throw std::runtime_error("Error: 'rewrite' directive requires exactly one value.");
 
-	location.rewrite = directive_values[0];
+	location.rewrite = directive_values.front();
 }
 
 const LocationConfig * findMatchingLocation(const std::string normalized_uri, const std::vector<LocationConfig> & locations)
@@ -663,7 +674,7 @@ const LocationConfig * findMatchingLocation(const std::string normalized_uri, co
 		if (!best_match && location_it->path == "/")
 		{
 			best_match = &(*location_it);
-			debug((*location_it).methods.front());
+			pretty_debug((*location_it).methods.front());
 			continue ;
 		}
 		size_t pos;

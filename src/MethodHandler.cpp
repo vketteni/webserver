@@ -73,7 +73,7 @@ void GetRequestHandler::invoke(Request& request, Response& response, const Locat
 
 	if (isDirectory(file_path))
 	{
-        std::string index_file = !location.index.empty() ? location.index : "index.html";
+        std::string index_file = location.index;
         std::string index_path = file_path + "/" + index_file;
         if (fileExists(index_path))
             file_path = index_path;
