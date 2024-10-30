@@ -424,6 +424,15 @@ void ConfigParser::parseLocationBlock(BlockNode* location_block, ServerConfig & 
 		else
 			throw std::runtime_error("Error: Unknown directive type in 'location' directive");
 	}
+
+	// If methods not specified
+	if (location.methods.empty()) {
+    location.methods.clear();
+    location.methods.push_back("GET");
+    location.methods.push_back("POST");
+    location.methods.push_back("DELETE");
+	}
+
 	server_config.locations.push_back(location);
 }
 
