@@ -7,6 +7,12 @@ OBJ_DIR= obj/
 SRC_DIR= src/
 LOG_DIR= log/
 
+DEFAULT_PORT = 8080
+DEFAULT_MAX_BODY_SIZE = 10280
+DEFAULT_HOST = "127.0.0.1"
+DEFAULT_ROOT = "path/from/root/"
+DEFAULT_SERVER_NAME = "localhost"
+
 SRCS = $(addprefix $(SRC_DIR), $(addsuffix .cpp, $(MAIN)))
 
 OBJS = $(SRCS:src/%.cpp=$(OBJ_DIR)%.o)
@@ -18,7 +24,12 @@ INC= -I incl/
 all: $(NAME)
 
 $(NAME):  $(OBJS)
-		$(CC) $(FLAGS) $(INC) $(OBJS) -o $(NAME)
+		$(CC) $(FLAGS) $(INC) $(OBJS) -o $(NAME) \
+ 		-D DEFAULT_HOST=$(DEFAULT_HOST) \
+ 		-D DEFAULT_MAX_BODY_SIZE=$(DEFAULT_MAX_BODY_SIZE) \
+ 		-D DEFAULT_PORT=$(DEFAULT_PORT) \
+ 		-D DEFAULT_ROOT=$(DEFAULT_ROOT) \
+ 		-D DEFAULT_SERVER_NAME=$(DEFAULT_SERVER_NAME) \
 
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
