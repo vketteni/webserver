@@ -93,7 +93,6 @@ struct MatchMethod
 	{
 			if (method == _method)
 			{
-				std::cerr << "MatchMethod: " << (_method) << std::endl;
 				return  true;
 			}
 

@@ -71,9 +71,9 @@ bool RequestParser::extractRequestLine(void)
     _request.setMethod(method);
     _request.setUri(uri);
     _request.setVersion(http_version);
-    printf("Method: %s\n", method.c_str());
-    printf("URI: %s\n", uri.c_str());
-    printf("HTTP Version: %s\n", http_version.c_str());
+    pretty_debug("Method: " + method);
+    pretty_debug("URI: " + uri);
+    pretty_debug("HTTP Version: " + http_version);
     return true;
 }
 
@@ -107,7 +107,8 @@ bool RequestParser::extractHeaders()
         std::string value = (value_start != std::string::npos) ? header_line.substr(value_start) : "";
 
         headers[name] = value;
-        printf("Header: %s:%s\n", name.c_str(), value.c_str());
+
+        pretty_debug(name + "=" + value);
     }
 
     _buffer.erase(_buffer.begin(), _buffer.begin() + 2);
@@ -144,12 +145,6 @@ bool RequestParser::processHeadersBeforeBody(void)
 	
 	if (!hp.processHeaders(handlers, required))
 		return false;
-	std::map<std::string, std::string> headers = (std::map<std::string, std::string>) _request.getHeaders();
-	std::map<std::string, std::string>::const_iterator header_it = headers.begin();
-	for (; header_it != headers.end(); ++header_it)
-	{
-		std::cerr << header_it->first << "=" << header_it->second << std::endl;
-	}
 	return true;
 }
 
