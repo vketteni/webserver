@@ -36,6 +36,10 @@ bool ConfigParser::parse()
 	}
 
 	tokenize();
+	// std::list<std::string>::iterator print_it = tokens.begin();
+	// for(; print_it != tokens.end(); ++print_it)
+	// 	pretty_debug(*print_it);
+
 	std::list<std::string>::iterator it = tokens.begin();
 	while (it != tokens.end())
 	{
@@ -338,13 +342,10 @@ void ConfigParser::buildServerConfigs(std::map<int, ServerConfig> & server_confi
 				if (block_directive->name == "server")
 				{
 					ServerConfig server_config;
-					server_config.root = "";
 
+					init_default_values(server_config);
 					parseServerBlock(block_directive, server_config);
-					if (server_config.ports.empty())
-						server_configs[8080] = server_config;
-					else
-						server_configs[server_config.ports[0]] = server_config;
+					server_configs[server_config.ports.front()] = server_config;
 				}
 			}
 			else if ((directive = dynamic_cast<DirectiveNode*> (*http_it)))
@@ -363,8 +364,8 @@ void ConfigParser::parseServerBlock(BlockNode* server_block, ServerConfig & serv
 {
 	DirectiveNode * directive;
 	BlockNode * block_directive;
-
 	std::map<std::string, ServerDirectiveHandler> directive_handlers;
+
 	setup_directive_handlers(directive_handlers);
 
 	std::list<IConfigNode*>::iterator server_block_it = server_block->children.begin();
@@ -375,12 +376,9 @@ void ConfigParser::parseServerBlock(BlockNode* server_block, ServerConfig & serv
 		else if ((directive = dynamic_cast<DirectiveNode*> (*server_block_it)))
 		{
 			std::map<std::string, ServerDirectiveHandler>::const_iterator handler_it = std::find_if(
-				directive_handlers.begin(),
-				directive_handlers.end(),
-				MatchDirectiveKey(directive->key)
-			);
+			directive_handlers.begin(), directive_handlers.end(), MatchDirectiveKey(directive->key));
 			if (handler_it != directive_handlers.end())
-				directive_handlers[directive->key](directive->values, server_config);
+							directive_handlers[directive->key](directive->values, server_config);
 			else
 			{
 				throw std::runtime_error("Error: Unknown directive name in 'server' directive");
@@ -396,7 +394,7 @@ void ConfigParser::parseLocationBlock(BlockNode* location_block, ServerConfig & 
 	LocationConfig location;
 	DirectiveNode * directive;
 	location.root = server_config.root;
-	location.path = location_block->parameters[0];
+	location.path = location_block->parameters.front();
 	
 
 	std::map<std::string, LocationDirectiveHandler> directive_handlers;
@@ -469,7 +467,7 @@ void setup_directive_handlers(std::map<std::string, ServerDirectiveHandler> & ha
 	handler["server_name"] = &handle_server_name;
 	// handler["location"] = &handle_location;
 	handler["error_page"] = &handle_error_page;
-	handler["root"] = &handle_root;
+	handler["root"] = &handle_server_root;
 
 }
 
@@ -479,11 +477,12 @@ void setup_directive_handlers(std::map<std::string, LocationDirectiveHandler> & 
 	handler.clear();
 	handler["methods"] = &handle_http_method;
 	// handler["path"] = &handle_path;
-	handler["root"] = &handle_root;
+	handler["root"] = &handle_location_root;
 	handler["index"] = &handle_index;
 	handler["upload_dir"] = &handle_upload_dir;
 	handler["cgi_extension"] = &handle_cgi_extension;
 	handler["redirect"] = &handle_redirect;
+	handler["rewrite"] = &handle_rewrite;
 	handler["autoindex"] = &handle_autoindex;
 }
 
@@ -507,15 +506,21 @@ void handle_port(std::vector<std::string> & directive_values, ServerConfig & con
 	if (directive_values.empty())
 		throw std::runtime_error("Error: 'port' directive has no value."); 
 
-	for (std::vector<std::string>::iterator it = directive_values.begin(); it != directive_values.end(); ++it)
-	{
-		std::string directive_value = *it;
-		std::stringstream ss;
-		ss << directive_value;
-		int port;
-		ss >> port;
-		config.ports.push_back(port);
-	}
+	std::string directive_value = directive_values.front();
+	std::stringstream ss;
+	ss << directive_value;
+	int port;
+	ss >> port;
+	config.ports.front() = port;
+	// for (std::vector<std::string>::iterator it = directive_values.begin(); it != directive_values.end(); ++it)
+	// {
+	// 	std::string directive_value = *it;
+	// 	std::stringstream ss;
+	// 	ss << directive_value;
+	// 	int port;
+	// 	ss >> port;
+	// 	config.ports.push_back(port);
+	// }
 
 }
 
@@ -544,7 +549,9 @@ void handle_error_page(std::vector<std::string> & directive_values, ServerConfig
 	ss << directive_values[0];
 	int error_code;
 	ss >> error_code;
-	config.error_pages[error_code] = directive_values[1];
+
+	std::string error_page = directive_values[1];
+	config.error_pages[error_code] = error_page[0] == '/' ? error_page.substr(1) : error_page;
 }
 
 void handle_http_method(std::vector<std::string> & directive_values, LocationConfig & location)
@@ -554,7 +561,6 @@ void handle_http_method(std::vector<std::string> & directive_values, LocationCon
 	// debug(location.path);
 	for (std::vector<std::string>::iterator it = directive_values.begin(); it != directive_values.end(); ++it)
 	{
-
 		location.methods.push_back(*it);
 	}
 	
@@ -567,18 +573,22 @@ void handle_path(std::vector<std::string> & directive_values, LocationConfig & l
 	location.path = directive_values[0];
 }
 
-void handle_root(std::vector<std::string> & directive_values, LocationConfig & location)
+void handle_location_root(std::vector<std::string> & directive_values, LocationConfig & location)
 {
 	if (directive_values.size() != 1)
 		throw std::runtime_error("Error: 'root' directive requires exactly one value."); 
-	location.root = directive_values[0];
+	std::string root = directive_values.front();
+	// Add ending slash if it's missing
+	location.root = root[root.size() - 1] != '/' ? root + "/" : root;
 }
 
-void handle_root(std::vector<std::string> & directive_values, ServerConfig & server)
+void handle_server_root(std::vector<std::string> & directive_values, ServerConfig & server)
 {
 	if (directive_values.size() != 1)
 		throw std::runtime_error("Error: 'root' directive requires exactly one value."); 
-	server.root = directive_values[0];
+	std::string root = directive_values.front();
+	// Add ending slash if it's missing
+	server.root = root[root.size() - 1] != '/' ? root + "/" : root;
 }
 
 void handle_index(std::vector<std::string> & directive_values, LocationConfig & location)
@@ -623,6 +633,13 @@ void handle_redirect(std::vector<std::string> & directive_values, LocationConfig
 	location.redirect_path = directive_values[1];
 }
 
+void handle_rewrite(std::vector<std::string> & directive_values, LocationConfig & location)
+{
+	if (directive_values.size() != 1)
+		throw std::runtime_error("Error: 'rewrite' directive requires exactly one value."); 
+
+	location.rewrite = directive_values[0];
+}
 
 const LocationConfig * findMatchingLocation(const std::string normalized_uri, const std::vector<LocationConfig> & locations)
 {
@@ -678,4 +695,15 @@ std::string joinMethods(const std::vector<std::string>& methods) {
             oss << ", ";
     }
     return oss.str();
+}
+
+void init_default_values(ServerConfig & server_config)
+{
+	server_config.client_max_body_size = DEFAULT_MAX_BODY_SIZE;
+	// server_config.error_pages
+	server_config.host = DEFAULT_HOST;
+	// server_config.locations
+	server_config.ports.push_back(DEFAULT_PORT);
+	server_config.root = DEFAULT_ROOT;
+	server_config.serverNames.push_back(DEFAULT_SERVER_NAME);
 }

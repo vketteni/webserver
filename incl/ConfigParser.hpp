@@ -13,10 +13,27 @@
 #include <map>
 #include "Debug.hpp"
 
+# ifndef DEFAULT_PORT
+ # define DEFAULT_PORT 8080
+# endif
+# ifndef DEFAULT_MAX_BODY_SIZE
+ # define DEFAULT_MAX_BODY_SIZE 10280
+# endif
+# ifndef DEFAULT_HOST
+ # define DEFAULT_HOST "127.0.0.1"
+# endif
+# ifndef DEFAULT_ROOT
+ # define DEFAULT_ROOT "path/from/root/"
+# endif
+# ifndef DEFAULT_SERVER_NAME
+ # define DEFAULT_SERVER_NAME "localhost"
+# endif
+
 struct LocationConfig
 {
     std::string path;
     std::string root;
+    std::string rewrite;
     std::string index;
     std::string autoindex;
     std::string upload_dir;
@@ -31,11 +48,14 @@ struct LocationConfig
 struct ServerConfig
 {
     std::string root;
+    std::string host;
 	int client_max_body_size;
     std::vector<int> ports;
     std::vector<std::string> serverNames;
     std::vector<LocationConfig> locations;
     std::map<int, std::string> error_pages;
+
+	ServerConfig() : client_max_body_size(0) {}
 };
 
 class IConfigNode
@@ -99,6 +119,7 @@ class ConfigParser
 		// Create Server Configs
 		void parseServerBlock(BlockNode* server_block, ServerConfig & server_config);
 		void parseLocationBlock(BlockNode* location_block, ServerConfig & server_config);
+
 };
 
 struct MatchDirectiveKey
@@ -123,21 +144,24 @@ void handle_client_max_body_size(std::vector<std::string> & directive_values, Se
 void handle_port(std::vector<std::string> & directive_values, ServerConfig & config);
 void handle_host(std::vector<std::string> & directive_values, ServerConfig & config);
 void handle_server_name(std::vector<std::string> & directive_values, ServerConfig & config);
-void handle_root(std::vector<std::string> & directive_values, ServerConfig & server);
+void handle_server_root(std::vector<std::string> & directive_values, ServerConfig & server);
 void handle_autoindex(std::vector<std::string> & directive_values, LocationConfig & location);
 // void handle_location(std::vector<std::string> & directive_values, ServerConfig & config);
 void handle_error_page(std::vector<std::string> & directive_values, ServerConfig & config);
 
 void handle_http_method(std::vector<std::string> & directive_values, LocationConfig & location);
 void handle_path(std::vector<std::string> & directive_values, LocationConfig & location);
-void handle_root(std::vector<std::string> & directive_values, LocationConfig & location);
+void handle_location_root(std::vector<std::string> & directive_values, LocationConfig & location);
 void handle_index(std::vector<std::string> & directive_values, LocationConfig & location);
 void handle_upload_dir(std::vector<std::string> & directive_values, LocationConfig & location);
 void handle_cgi_extension(std::vector<std::string> & directive_values, LocationConfig & location);
 void handle_redirect(std::vector<std::string> & directive_values, LocationConfig & location);
+void handle_rewrite(std::vector<std::string> & directive_values, LocationConfig & location);
 
 const LocationConfig * findMatchingLocation(const std::string normalized_uri, const std::vector<LocationConfig> & locations);
 void printConfigLocations(const ServerConfig & config);
 std::string joinMethods(const std::vector<std::string>& methods);
+
+void init_default_values(ServerConfig & server_config);
 
 #endif 
