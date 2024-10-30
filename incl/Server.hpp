@@ -40,7 +40,7 @@ class Server {
 		std::vector<struct pollfd> _poll_fds;
 		std::map<int, ServerConfig> _host_configs;
 		bool _running;
-		Logger logger;
+		Logger _logger;
 
 		// Server Setup
 		bool parseConfig();

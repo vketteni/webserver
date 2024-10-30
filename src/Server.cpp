@@ -28,7 +28,7 @@ void	signalHandler(int signum)
 
 // Constructor
 Server::Server(const std::string &config_path)
-	: _config_path(config_path), _running(false), logger("access.log", "error.log", INFO)
+	: _config_path(config_path), _running(false), _logger("access.log", "error.log", INFO)
 {
 }
 
@@ -143,12 +143,12 @@ bool Server::start()
 {
 	if (!parseConfig())
 	{
-		logger.logError(400, "Failed to parse config file.");
+		_logger.logError(400, "Failed to parse config file.");
 		return (false);
 	}
 	if (!setupServerSockets())
 	{
-		logger.logError(400, "Failed to setup server sockets.");
+		_logger.logError(400, "Failed to setup server sockets.");
 		return (false);
 	}
 	this->_running = true;
@@ -176,7 +176,7 @@ void Server::stop()
  */
 void Server::eventLoop()
 {
-	std::cout << "Server is _running. Press Ctrl+C to stop.\n";
+	std::cout << "Server is running. Press Ctrl+C to stop.\n";
 	while (this->_running && g_keep__running)
 	{
 		int poll_result = poll(_poll_fds.data(), _poll_fds.size(), -1);
@@ -188,7 +188,7 @@ void Server::eventLoop()
 				continue ; // Interrupted by signal
 			}
 			perror("poll");
-			logger.logError(500, "Poll error.");
+			_logger.logError(500, "Poll error.");
 			break ;
 		}
 		if (poll_result == 0)
@@ -198,8 +198,8 @@ void Server::eventLoop()
 		}
 		processIOEvents();
 		checkTimeouts();
-		logger.rotateLogs(logger.accessLogFile, "access.log");
-		logger.rotateLogs(logger.errorLogFile, "error.log");
+		_logger.rotateLogs(_logger.accessLogFile, "access.log");
+		_logger.rotateLogs(_logger.errorLogFile, "error.log");
 	}
 }
 
