@@ -64,19 +64,19 @@ void Server::set_non_blocking_and_start_listen(int host_fd)
 	if ((flags = fcntl(host_fd, F_GETFL, 0)) == -1)
 	{
 		perror("fcntl F_GETFL");
-		throw std::runtime_error("Error: Failed to get file descriptor flags: F_GETFL"); 
+		throw std::runtime_error("Error: Failed to get file descriptor flags: F_GETFL");
 	}
 	if (fcntl(host_fd, F_SETFL, flags | O_NONBLOCK) == -1)
 	{
 		perror("fcntl F_SETFL O_NONBLOCK");
-		throw std::runtime_error("Error: Failed to set flags on host file descriptor: O_NONBLOCK."); 
+		throw std::runtime_error("Error: Failed to set flags on host file descriptor: O_NONBLOCK.");
 	}
 
 	if (listen(host_fd, BACKLOG) == -1)
 	{
 		perror("listen");
 		close(host_fd);
-		throw std::runtime_error("Error: Failed to listen to host file descriptor."); 
+		throw std::runtime_error("Error: Failed to listen to host file descriptor.");
 	}
 }
 
@@ -91,7 +91,7 @@ void Server::bind_port_to_interfaces(int host_port, int host_fd, ServerConfig & 
 		{
 			perror("bind");
 			close(host_fd);
-			throw std::runtime_error("Error: Failed to bind to a host port."); 
+			throw std::runtime_error("Error: Failed to bind to a host port.");
 		}
 }
 
@@ -104,7 +104,7 @@ void Server::allow_address_reuse(int host_fd)
 	{
 		perror("setsockopt SO_REUSEADDR");
 		close(host_fd);
-		throw std::runtime_error("Error: Failed to set socket option SO_REUSEADDR."); 
+		throw std::runtime_error("Error: Failed to set socket option SO_REUSEADDR.");
 	}
 }
 
@@ -209,8 +209,6 @@ void Server::eventLoop()
 		}
 		processIOEvents();
 		checkTimeouts();
-		_logger.rotateLogs(_logger.accessLogFile, "access.log");
-		_logger.rotateLogs(_logger.errorLogFile, "error.log");
 	}
 }
 
@@ -229,6 +227,30 @@ void Server::closeAllSockets()
 
 void Server::checkTimeouts(void)
 {
+time_t currentTime = std::time(NULL);
+
+    // Verwende explizite Typen statt `auto`
+    for (std::vector<struct pollfd>::iterator poll_iterator = _poll_fds.begin();
+         poll_iterator != _poll_fds.end(); ++poll_iterator) {
+
+        std::list<ClientConnection>::iterator client_iterator =
+            std::find_if(_client_connections.begin(), _client_connections.end(),
+                         MatchClientFd(poll_iterator->fd));
+
+        if (client_iterator != _client_connections.end()) {
+            if (difftime(currentTime, client_iterator->getLastActivity()) > client_iterator->timeout) {
+                std::cout << "Client on fd " << client_iterator->fd << " timed out. Disconnecting...\n";
+                close(client_iterator->fd);
+
+                // Entferne Client aus beiden Datenstrukturen
+                _client_connections.erase(client_iterator);
+                poll_iterator = _poll_fds.erase(poll_iterator);
+                --poll_iterator;  // Iterator anpassen, um die Schleife nicht zu überspringen
+            }
+        }
+    }
+}
+
 	//time_t	last_activity;
 
 	/* time_t currentTime = std::time(NULL);
@@ -248,7 +270,7 @@ void Server::checkTimeouts(void)
 			}
 		}
 	} */
-}
+
 
 bool Server::isHostSocket(int fd)
 {
@@ -357,7 +379,7 @@ bool Server::acceptNewClient(const std::vector<struct pollfd>::const_iterator po
     // Add client to _poll_fds
     struct pollfd pfd;
     pfd.fd = client_fd;
-    pfd.events = POLLIN | POLLOUT;
+    pfd.events = POLLIN;  //| POLLOUT; //hier der change von POLLIN | POLLOUT zu nur POLLIN Cpu 100 problem geloest
     pfd.revents = 0;
     _poll_fds.push_back(pfd);
 

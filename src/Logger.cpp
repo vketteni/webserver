@@ -20,14 +20,14 @@ Logger::~Logger()
 	if (errorLogFile.is_open()) errorLogFile.close();
 }
 
-void Logger::logRequest(const std::string &clientIp, const std::string &method, const std::string &path, int statusCode)
-{
-	rotateLogs(accessLogFile, accessLogPath);
-	std::stringstream ss;
-	ss << "Client IP: " << clientIp << ", Method: " << method << ", Path: " << path << ", Status Code: " << statusCode;
-	std::string	message = ss.str();
-	logMessage(statusCode, message, INFO, accessLogFile);
-}
+// void Logger::logRequest(const std::string &clientIp, const std::string &method, const std::string &path, int statusCode)
+// {
+// 	rotateLogs(accessLogFile, accessLogPath);
+// 	std::stringstream ss;
+// 	ss << "Client IP: " << clientIp << ", Method: " << method << ", Path: " << path << ", Status Code: " << statusCode;
+// 	std::string	message = ss.str();
+// 	logMessage(statusCode, message, INFO, accessLogFile);
+// }
 
 void Logger::logError(int statusCode, const std::string &errorMessage)
 {

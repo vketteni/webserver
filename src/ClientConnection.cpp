@@ -113,7 +113,7 @@ void ClientConnection::handleErrorResponse(Response & response, ServerConfig & s
 		case 500: status_message = "Internal Server Error"; break;
 		default: status_message = "Error"; break;
 	}
-	
+
 	_logger.logError(status_code, "Error: " + status_message + " for request to " ); // + response.getPath()
 
 	std::string file_path = server_config.root + server_config.error_pages[status_code];
@@ -124,7 +124,7 @@ void ClientConnection::handleErrorResponse(Response & response, ServerConfig & s
 		if (file)
 		{
 			std::string error_page_content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-			pretty_debug(error_page_content);
+			
 			response.setBody(error_page_content);
 			response.setHeader("Content-Typr", "text/html; charset=utf-8");
 			std::ostringstream oss;

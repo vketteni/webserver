@@ -42,7 +42,7 @@ class Logger {
 		~Logger();
 
 		void			rotateLogs(std::ofstream &logFile, const std::string &logFilePath);
-		void			logRequest(const std::string& clientIp, const std::string& method, const std::string& path, int statusCode);
+		//void			logRequest(const std::string& clientIp, const std::string& method, const std::string& path, int statusCode);
 		void			logError(int statusCode, const std::string& errorMessage);
 		void			logDebug(int statusCode, const std::string& debugMessage);
 		void			logWarning(int statusCode, const std::string& warningMessage);
