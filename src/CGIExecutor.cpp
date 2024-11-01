@@ -70,7 +70,7 @@ bool CGIExecutor::executeCGI(Request & request, Response & response)
         close(stdin_pipe[0]);   // stdin: Lesen geschlossen
 
         // Body comes from ** env
-        std::string body = request.getBody(); 
+        std::string body = request.getBody();
         write(stdin_pipe[1], body.c_str(), body.size());
 
         // Schließe stdin-Pipe nach dem Schreiben
@@ -115,7 +115,7 @@ char** CGIExecutor::createCGIEnvironment(Request& request)
     env_map["SERVER_PROTOCOL"] = request.getVersion();
 
 	if (request.getMethod() == "GET")
-		env_map["QUERY_STRING="] = request.buildQueryString();
+		env_map["QUERY_STRING"] = request.buildQueryString();
 	else if (request.getMethod() == "POST")
 	{
 		env_map["CONTENT_TYPE"] = request.getHeaderOrDefault("Content-Type", "");
@@ -134,7 +134,7 @@ char** CGIExecutor::createCGIEnvironment(Request& request)
     env[i] = NULL;
     return env;
 }
-		
+
 bool isCGI(const std::string & path)
 {
 	return path.find("/cgi-bin/") == 0 || path.find(".cgi") != std::string::npos

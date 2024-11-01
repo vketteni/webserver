@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <netinet/in.h>
+#include <sys/epoll.h>  // Epoll-Header
 #include <poll.h>
 #include <arpa/inet.h>
 #include <csignal>
@@ -23,7 +24,9 @@
 #include "Logger.hpp"
 
 // Constants
-const int BACKLOG = 10000;
+const int BACKLOG = 128;
+const int MAX_EVENTS = 10; // Maximum events für epoll_wait
+
 
 class Server {
 	public:
@@ -40,6 +43,7 @@ class Server {
 		std::map<int, ServerConfig> _host_configs;
 		bool _running;
 		Logger _logger;
+		int _epoll_fd;
 
 		// Server Setup
 		bool parseConfig();
@@ -52,9 +56,9 @@ class Server {
 		// Event Loop
 		void eventLoop();
 		void processIOEvents();
-		bool acceptNewClient(const std::vector<struct pollfd>::const_iterator poll_iterator);
+		bool acceptNewClient(int host_fd);
 		void checkTimeouts(void);
-		void disconnectClient(std::vector<struct pollfd >::iterator poll_iterator);
+		void disconnectClient(int client_fd);
 		// std::string getRedirect(const std::string& requested_path);
 
 

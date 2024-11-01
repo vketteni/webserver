@@ -28,7 +28,7 @@ Server::~Server()
 bool Server::parseConfig()
 {
  	ConfigParser config_parser(_config_path);
-
+	debug(_config_path);
 	if (!config_parser.parse())
 		return false;
 	config_parser.buildServerConfigs(_host_configs);
@@ -59,48 +59,48 @@ bool Server::parseConfig()
 */
 void Server::set_non_blocking_and_start_listen(int host_fd)
 {
-	int	flags;
+	std::cout << "set_non_blocking_and_start_listen called for fd: " << host_fd << std::endl;
 
-	if ((flags = fcntl(host_fd, F_GETFL, 0)) == -1)
-	{
-		perror("fcntl F_GETFL");
-		throw std::runtime_error("Error: Failed to get file descriptor flags: F_GETFL");
-	}
-	if (fcntl(host_fd, F_SETFL, flags | O_NONBLOCK) == -1)
-	{
-		perror("fcntl F_SETFL O_NONBLOCK");
-		throw std::runtime_error("Error: Failed to set flags on host file descriptor: O_NONBLOCK.");
-	}
+    // Überprüfe, ob der File Descriptor gültig ist
+    if (host_fd < 0) {
+        std::cerr << "Invalid socket fd: " << host_fd << std::endl;
+        throw std::runtime_error("Error: Invalid socket file descriptor.");
+    }
 
-	if (listen(host_fd, BACKLOG) == -1)
-	{
-		perror("listen");
-		close(host_fd);
-		throw std::runtime_error("Error: Failed to listen to host file descriptor.");
-	}
+    // Setze den Socket in den nicht-blockierenden Modus
+    if (fcntl(host_fd, F_SETFL, O_NONBLOCK) == -1) {
+        perror("fcntl F_SETFL O_NONBLOCK");
+        throw std::runtime_error("Error: Failed to set flags on host file descriptor: O_NONBLOCK.");
+    }
+
+    // Setze den Socket in den Listenmodus
+    if (listen(host_fd, BACKLOG) == -1) {
+        std::cerr << "Failed to listen on fd: " << host_fd << std::endl;
+        perror("listen");
+        throw std::runtime_error("Error: Failed to listen to host file descriptor.");
+    }
 }
 
 void Server::bind_port_to_interfaces(int host_port, int host_fd, ServerConfig & host_config)
 {
-		struct sockaddr_in addr;
-		std::memset(&addr, 0, sizeof(addr));
-		addr.sin_family = AF_INET;
-		addr.sin_addr.s_addr = inet_addr(host_config.host.c_str()); // 0.0.0.0
-		addr.sin_port = htons(host_port);
-		if (bind(host_fd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
-		{
-			perror("bind");
-			close(host_fd);
-			throw std::runtime_error("Error: Failed to bind to a host port.");
-		}
+	struct sockaddr_in addr;
+    std::memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = inet_addr(host_config.host.c_str()); // 0.0.0.0
+    addr.sin_port = htons(host_port);
+
+    if (bind(host_fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+        perror("bind");
+        close(host_fd);
+        throw std::runtime_error("Error: Failed to bind to a host port.");
+    }
 }
 
 void Server::allow_address_reuse(int host_fd)
 {
 	int	opt;
 	opt = 1;
-	if (setsockopt(host_fd, SOL_SOCKET, SO_REUSEADDR, &opt,
-			sizeof(opt)) == -1)
+	if (setsockopt(host_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
 	{
 		perror("setsockopt SO_REUSEADDR");
 		close(host_fd);
@@ -110,6 +110,12 @@ void Server::allow_address_reuse(int host_fd)
 
 bool Server::setupServerSockets()
 {
+	_epoll_fd = epoll_create(1); // epoll-File-Descriptor erstellen
+	if (_epoll_fd == -1) {
+		perror("epoll_create");
+		return false;
+	}
+
 	std::map<int, ServerConfig>::iterator host_it = _host_configs.begin();
 	for (; host_it != _host_configs.end(); ++host_it)
 	{
@@ -131,16 +137,17 @@ bool Server::setupServerSockets()
 		// Start listening
 		set_non_blocking_and_start_listen(host_fd);
 
+		struct epoll_event event;
+        event.data.fd = host_fd;
+        event.events = EPOLLIN;
+        if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, host_fd, &event) == -1) {
+            perror("epoll_ctl: host_fd");
+            close(host_fd);
+            return false;
+		}
+
 		// Create internal mapping between host port and file descriptor
 		_host_port_and_fds.push_back(std::make_pair(host_port, host_fd));
-
-		// Add pollfd to this instance
-		struct pollfd pfd;
-		pfd.fd = host_fd;
-		pfd.events = POLLIN;
-		pfd.revents = 0;
-		_poll_fds.push_back(pfd);
-
 		std::cout << "Listening on port " << host_port << " with fd " << host_fd << "\n";
 	}
 	return (true);
@@ -188,27 +195,29 @@ void Server::stop()
 void Server::eventLoop()
 {
 	std::cout << "Server is running. Press Ctrl+C to stop.\n";
+	struct epoll_event events[MAX_EVENTS];
+
 	while (this->_running && g_keep__running)
 	{
-		int poll_result = poll(_poll_fds.data(), _poll_fds.size(), -1);
-			// 1-second timeout
-		if (poll_result == -1)
-		{
-			if (errno == EINTR)
-			{
-				continue ; // Interrupted by signal
-			}
-			perror("poll");
-			_logger.logError(500, "Poll error.");
-			break ;
-		}
-		if (poll_result == 0)
-		{
-			checkTimeouts();
-			continue ;
-		}
-		processIOEvents();
-		checkTimeouts();
+		int event_count = epoll_wait(_epoll_fd, events, MAX_EVENTS, -1);
+        if (event_count == -1) {
+            if (errno == EINTR) continue;  // Signal ignorieren
+            perror("epoll_wait");
+            _logger.logError(500, "Epoll wait error.");
+            break;
+        }
+
+        for (int i = 0; i < event_count; ++i) {
+            int event_fd = events[i].data.fd;
+            if (events[i].events & EPOLLIN) {
+                if (isHostSocket(event_fd)) {
+                    acceptNewClient(event_fd);
+                } else {
+                    processIOEvents();
+                }
+            }
+        }
+        checkTimeouts();
 	}
 }
 
@@ -218,11 +227,12 @@ void Server::eventLoop()
 */
 void Server::closeAllSockets()
 {
-	for (std::vector<struct pollfd>::iterator it = _poll_fds.begin(); it != _poll_fds.end(); ++it)
-	{
-		close((*it).fd);
-	}
-	_poll_fds.clear();
+    std::vector<std::pair<int, int> >::iterator it;
+    for (it = _host_port_and_fds.begin(); it != _host_port_and_fds.end(); ++it) {
+        epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, it->second, NULL);
+        close(it->second);
+    }
+    close(_epoll_fd);
 }
 
 void Server::checkTimeouts(void)
@@ -292,45 +302,47 @@ bool Server::isClientSocket(int fd)
 
 void Server::processIOEvents()
 {
-	int	fd;
+struct epoll_event events[MAX_EVENTS];
+	int event_count = epoll_wait(_epoll_fd, events, MAX_EVENTS, -1);
 
-	for (size_t i = 0; i < _poll_fds.size(); ++i)
-	{
-		fd = _poll_fds[i].fd;
-		if (!(_poll_fds[i].revents & (POLLIN | POLL_OUT)))
-			continue;
-		if (isHostSocket(fd))
-		{
-			// Event on host socket, accept new connection
-			if (!acceptNewClient(_poll_fds.begin() + i))
-			{
-				std::cerr << "Failed to handle new connection on fd " << fd << "\n";
-			}
-		}
-		else
-		{
-			std::list<ClientConnection>::iterator client;
-			if ((client = std::find_if(_client_connections.begin(), _client_connections.end(), MatchClientFd(fd))) == _client_connections.end())
-			{
-				_logger.logError(400, "Client does not exist.");
-				std::cout << "Disconnecting client on fd " << fd << "\n";
-				disconnectClient(_poll_fds.begin() + i);
-				--i;
-				continue ;
-			}
-			else if (!client->processRequest())
-			{
-				_logger.logWarning(500, "Failed to process request from client.");
-				std::cout << "Disconnecting client on fd " << fd << "\n";
-				disconnectClient(_poll_fds.begin() + i);
-				--i;
-				continue ;
-			}
-			else
-				_logger.logDebug(200, "Processed request successfully.");
+	if (event_count == -1) {
+		perror("epoll_wait");
+		_logger.logError(500, "Epoll wait error.");
+		return;
+	}
 
-			client->setLastActivity(std::time(NULL));
+	for (int i = 0; i < event_count; ++i) {
+		int fd = events[i].data.fd;
 
+		if (events[i].events & EPOLLIN) {
+			if (isHostSocket(fd)) {
+				// Handle new client connection
+				if (!acceptNewClient(fd)) {
+					std::cerr << "Failed to handle new connection on fd " << fd << "\n";
+				}
+			} else {
+				// Process client request
+				std::list<ClientConnection>::iterator client_it = std::find_if(_client_connections.begin(),
+					_client_connections.end(),MatchClientFd(fd));
+
+				if (client_it == _client_connections.end()) {
+					_logger.logError(400, "Client does not exist.");
+					std::cout << "Disconnecting client on fd " << fd << "\n";
+					disconnectClient(fd);
+					continue;
+				}
+
+				// Process request and handle any issues
+				if (!client_it->processRequest()) {
+					_logger.logWarning(500, "Failed to process request from client.");
+					std::cout << "Disconnecting client on fd " << fd << "\n";
+					disconnectClient(fd);
+					continue;
+				} else {
+					_logger.logDebug(200, "Processed request successfully.");
+					client_it->setLastActivity(std::time(NULL));
+				}
+			}
 		}
 	}
 }
@@ -341,19 +353,11 @@ void Server::processIOEvents()
 					Wraps the socked file descriptor and the accepting host configuration inside an instance of ClientConnection.
 					Also saves the socket file descriptor inside this instance of Server.
 */
-bool Server::acceptNewClient(const std::vector<struct pollfd>::const_iterator poll_iterator)
+bool Server::acceptNewClient(int host_fd)
 {
 	struct sockaddr_in client_addr;
-
-	if (!isHostSocket(poll_iterator->fd))
-	{
-		std::cerr << "Error: Host doesn't exist." << std::endl;
-		return false;
-	}
-
 	socklen_t client_len = sizeof(client_addr);
-	int client_fd = accept(poll_iterator->fd, (struct sockaddr *)&client_addr,
-			&client_len);
+	int client_fd = accept(host_fd, (struct sockaddr *)&client_addr, &client_len);
 	if (client_fd == -1)
 	{
 		if (errno != EWOULDBLOCK && errno != EAGAIN)
@@ -365,43 +369,45 @@ bool Server::acceptNewClient(const std::vector<struct pollfd>::const_iterator po
         return true; // No pending connections
     }
 
-	// TODO: make descriptive smaller function
-	for (int i = 0; i < (int)_host_port_and_fds.size(); ++i)
-	{
-		if (_host_port_and_fds[i].second == poll_iterator->fd)
-		{
-			int port = _host_port_and_fds[i].first;
-			ClientConnection new_connection(client_fd, _host_configs[port], port, _logger);
-			_client_connections.push_back(new_connection);
-		}
-	}
+    set_non_blocking_and_start_listen(client_fd);
 
-    // Add client to _poll_fds
-    struct pollfd pfd;
-    pfd.fd = client_fd;
-    pfd.events = POLLIN;  //| POLLOUT; //hier der change von POLLIN | POLLOUT zu nur POLLIN Cpu 100 problem geloest
-    pfd.revents = 0;
-    _poll_fds.push_back(pfd);
+    struct epoll_event event;
+    event.data.fd = client_fd;
+    event.events = EPOLLIN | EPOLLET; // Edge Triggering
+    if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd, &event) == -1) {
+        perror("epoll_ctl: client_fd");
+        close(client_fd);
+        return false;
+    }
 
-    char client_ip[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
- 	std::stringstream ss;
- 	ss << "Accepted connection from " << client_ip << ":" << ntohs(client_addr.sin_port);
- 	_logger.logInfo(200, ss.str());
-
+    // Fügt den Client zur Liste hinzu
+    std::vector<std::pair<int, int> >::iterator it;
+    for (it = _host_port_and_fds.begin(); it != _host_port_and_fds.end(); ++it) {
+        if (it->second == host_fd) {
+            _client_connections.push_back(ClientConnection(client_fd, _host_configs[it->first], it->first, _logger));
+            break;
+        }
+    }
     return true;
 }
 
-void Server::disconnectClient(std::vector<struct pollfd>::iterator poll_iterator)
+void Server::disconnectClient(int client_fd)
 {
+	// Entferne den Client vom epoll
+	if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, client_fd, NULL) == -1) {
+		perror("epoll_ctl: client_fd remove");
+		_logger.logError(500, "Failed to remove client from epoll.");
+	}
+
+	// Entferne den Client aus der Liste der ClientConnections
 	std::list<ClientConnection>::iterator client_it = std::find_if(
 		_client_connections.begin(),
 		_client_connections.end(),
-		MatchClientFd(poll_iterator->fd)
-		);
-	if (client_it != _client_connections.end())
+		MatchClientFd(client_fd)
+	);
+	if (client_it != _client_connections.end()) {
 		_client_connections.erase(client_it);
+	}
 
-	close(poll_iterator->fd);
-	_poll_fds.erase(poll_iterator);
+	close(client_fd);
 }
