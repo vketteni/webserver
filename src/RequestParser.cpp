@@ -68,8 +68,11 @@ bool RequestParser::extractRequestLine(void)
     if (!(iss >> method >> uri >> http_version)) {
         throw std::invalid_argument("Invalid request line");
     }
+	if (uri[0] == '/')
+		_request.setUri(uri.substr(1));
+	else
+		_request.setUri(uri);
     _request.setMethod(method);
-    _request.setUri(uri);
     _request.setVersion(http_version);
     pretty_debug("Method: " + method);
     pretty_debug("URI: " + uri);

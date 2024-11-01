@@ -114,7 +114,7 @@ std::string Request::removeDotSegments(const std::string& path)
 		{
 			// Copy segment to result
             std::string::size_type next_slash = path.find('/', i);
-            result += "/";
+			i == 0 ? result += "" : result += "/";
             if (next_slash != std::string::npos)
 			{
                 result += path.substr(i, next_slash - i);
@@ -125,6 +125,7 @@ std::string Request::removeDotSegments(const std::string& path)
                 result += path.substr(i);
                 break;
             }
+			i++;
         }
     }
 

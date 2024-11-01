@@ -12,6 +12,7 @@
 #include <list>
 #include <map>
 #include "Debug.hpp"
+#include "Utils.hpp"
 
 # ifndef DEFAULT_PORT
  # define DEFAULT_PORT 8080

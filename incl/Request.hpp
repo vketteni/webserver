@@ -36,11 +36,11 @@ class Request : public AMessage
 		const std::string buildFirstLine() const;
 		const std::string buildQueryString() const;
 
-		std::string normalizeUri(const std::string& raw_uri);
+		static std::string normalizeUri(const std::string& raw_uri);
 		
 	private:
-		std::string removeDotSegments(const std::string& path);
-		std::string decodePercentEncoding(const std::string& uri);
+		static std::string removeDotSegments(const std::string& path);
+		static std::string decodePercentEncoding(const std::string& uri);
 };
 
 #endif

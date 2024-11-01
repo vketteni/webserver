@@ -39,8 +39,8 @@ bool ClientConnection::processResponse(Request & request, Response & response)
 {
 	headerHandler(request, response);
 
-    std::string normalized_uri = (request.getUri());
-    // std::string normalized_uri = request.normalizeUri(request.getUri());
+    std::string normalized_uri = Request::normalizeUri(request.getUri());
+	request.setUri(normalized_uri);
     const LocationConfig* matching_location = findMatchingLocation(normalized_uri, _host_config.locations);
 
     if (matching_location && matching_location->redirect_status != 0)
@@ -92,6 +92,7 @@ void ClientConnection::methodHandler(Request & request, Response & response, con
 	if (method_handler)
 	{
 		method_handler->invoke(request, response, location, server_config);
+
 	}
 	free(method_handler);
 

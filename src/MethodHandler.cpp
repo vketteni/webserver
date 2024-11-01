@@ -58,7 +58,7 @@ void GetRequestHandler::invoke(Request& request, Response& response, const Locat
 	{
 		uri_path = uri_path.substr(0, uri_path.find('?')); // Remove query string
 	}
-	std::string relative_path = uri_path.substr(location.path.length());
+	std::string relative_path = Utils::trim(uri_path.substr(location.path.length()), "/");
 	std::string file_path = root + relative_path;
 
     pretty_debug(file_path);

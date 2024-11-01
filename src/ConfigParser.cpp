@@ -393,9 +393,8 @@ void ConfigParser::parseLocationBlock(BlockNode* location_block, ServerConfig & 
 {
 	LocationConfig location;
 	DirectiveNode * directive;
-	location.root = server_config.root;
-	location.path = location_block->parameters.front();
-
+	location.root = server_config.root.find_last_of('/') == server_config.root.size() - 1 ? server_config.root : server_config.root + "/";
+	location.path = Utils::trim(location_block->parameters.front(), "/");
 
 	std::map<std::string, LocationDirectiveHandler> directive_handlers;
 	setup_directive_handlers(directive_handlers);
@@ -670,8 +669,8 @@ const LocationConfig * findMatchingLocation(const std::string normalized_uri, co
 	std::vector<LocationConfig>::const_iterator location_it = locations.begin();
 	for (; location_it != locations.end(); ++location_it)																				// std::vector<LocationConfig>::iterator location_it = std::find_if(_host_config.locations.begin(), _host_config.locations.end(), MatchRoute(request.getUri()));
 	{
-		// Allow / as default fall back
-		if (!best_match && location_it->path == "/")
+		// Allow empty as default fall back
+		if (!best_match && location_it->path == "") 
 		{
 			best_match = &(*location_it);
 			pretty_debug((*location_it).methods.front());
