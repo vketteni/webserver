@@ -23,7 +23,7 @@
 #include "Logger.hpp"
 
 // Constants
-const int BACKLOG = 10000;
+const int BACKLOG = 126;
 
 class Server {
 	public:
