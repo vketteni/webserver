@@ -115,7 +115,7 @@ char** CGIExecutor::createCGIEnvironment(Request& request)
     env_map["SERVER_PROTOCOL"] = request.getVersion();
 
 	if (request.getMethod() == "GET")
-		env_map["QUERY_STRING="] = request.buildQueryString();
+		env_map["QUERY_STRING"] = request.buildQueryString();
 	else if (request.getMethod() == "POST")
 	{
 		env_map["CONTENT_TYPE"] = request.getHeaderOrDefault("Content-Type", "");

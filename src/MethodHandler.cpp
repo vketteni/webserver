@@ -118,7 +118,7 @@ void PostRequestHandler::invoke(Request& request, Response& response, const Loca
 	}
 	std::string relative_path = uri_path.substr(location.path.length());
 	std::string file_path = root + relative_path;
-
+    request.setUri(file_path);
     if (isCGI(request.getUri()))
     {
 		CGIExecutor cgi;
