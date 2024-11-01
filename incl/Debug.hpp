@@ -34,6 +34,6 @@
 #define pretty_debug(msg) \
     std::cerr << COLOR_BLUE << "[DEBUG] " \
               << COLOR_MAGENTA << __FILE__ << ":" << __LINE__ << " " \
-              << COLOR_YELLOW << __PRETTY_FUNCTION__ << "(): " \
               << COLOR_RESET << msg << std::endl;
+              /* << COLOR_YELLOW << __PRETTY_FUNCTION__ << "(): " \ */
 #endif
