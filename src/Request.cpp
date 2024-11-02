@@ -118,18 +118,17 @@ std::string Request::removeDotSegments(const std::string& path)
             if (next_slash != std::string::npos)
 			{
                 result += path.substr(i, next_slash - i);
-                i = next_slash;
+                i = next_slash + 1;
             }
 			else
 			{
                 result += path.substr(i);
                 break;
             }
-			i++;
         }
     }
 
-    if (result.length() > 1 && result[result.length() - 1] == '/')
+    if (result[result.length() - 1] == '/')
 		result.erase(result.length() - 1);
 
 	return result;

@@ -30,7 +30,7 @@ bool RequestParser::parse() {
 
 				case READ_BODY:
 					if (!extractBody()) return true;
-					printMultipartBody(_request.getBody(), getBoundaryFromHeader(_request.getHeaderOrDefault("Content-Length", "")));
+					printMultipartBody(_request.getBody(), getBoundaryFromHeader(_request.getHeaderOrDefault("Content-Type", "")));
 					_state = COMPLETE;
 					break;
 

@@ -159,7 +159,8 @@ void handle_cgi_extension(std::vector<std::string> & directive_values, LocationC
 void handle_redirect(std::vector<std::string> & directive_values, LocationConfig & location);
 void handle_rewrite(std::vector<std::string> & directive_values, LocationConfig & location);
 
-const LocationConfig * findMatchingLocation(const std::string normalized_uri, const std::vector<LocationConfig> & locations);
+const LocationConfig * findMatchingLocation(const std::string & normalized_uri, const std::vector<LocationConfig> & locations);
+
 void printConfigLocations(const ServerConfig & config);
 std::string joinMethods(const std::vector<std::string>& methods);
 

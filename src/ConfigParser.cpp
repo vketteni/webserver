@@ -435,7 +435,7 @@ void ConfigParser::parseLocationBlock(BlockNode* location_block, ServerConfig & 
 	// Other not specified
 	location.autoindex = location.autoindex.empty() ? "off" : location.autoindex;
 	location.cgi_extension = location.cgi_extension.empty() ? ".py" : location.autoindex;
-	location.index = location.index.empty() ? "index.html" : location.autoindex;
+	location.index = location.index.empty() ? "index.html" : location.index;
 	location.upload_dir = location.upload_dir.empty() ? "upload/" : location.autoindex;
 	
 	server_config.locations.push_back(location);
@@ -661,27 +661,50 @@ void handle_rewrite(std::vector<std::string> & directive_values, LocationConfig 
 	location.rewrite = directive_values.front();
 }
 
-const LocationConfig * findMatchingLocation(const std::string normalized_uri, const std::vector<LocationConfig> & locations)
+const LocationConfig * findMatchingLocation(const std::string &normalized_uri, const std::vector<LocationConfig> &locations)
 {
 	// Longest Match Approach
 	// This function selects the most specific match
 	const LocationConfig * best_match = NULL;
-	std::vector<LocationConfig>::const_iterator location_it = locations.begin();
-	for (; location_it != locations.end(); ++location_it)																				// std::vector<LocationConfig>::iterator location_it = std::find_if(_host_config.locations.begin(), _host_config.locations.end(), MatchRoute(request.getUri()));
+	for (std::vector<LocationConfig>::const_iterator location_it = locations.begin(); location_it != locations.end(); ++location_it)
 	{
-		// Allow empty as default fall back
-		if (!best_match && location_it->path == "") 
+		const std::string & path = location_it->path;
+		// Allow empty path as default fallback
+		if (!best_match && path.empty()) 
 		{
 			best_match = &(*location_it);
-			pretty_debug((*location_it).methods.front());
-			continue ;
+			continue;
 		}
-		size_t pos;
-		// Check if location path is a prefix of normalized_uri and validate boundaries
-		if ((pos = normalized_uri.find(location_it->path)) == 0 &&
-			(normalized_uri.size() == location_it->path.size() || normalized_uri[location_it->path.size()] == '/'))
+	
+		// ** Case 1: Exact or Prefix Match (e.g., `/put_test/*`)
+		if (path[path.size() - 1] == '*' && path.size() > 1) // Ensure it's a wildcard prefix
 		{
-			if (!best_match || (best_match->path).size() < (location_it->path).size())
+			std::string prefix = path[path.size() - 2] == '/' ? path.substr(0, path.size() - 2) : path.substr(0, path.size() - 1); // Remove trailing '*'
+			if (normalized_uri.find(prefix) == 0) // Matches prefix
+			{
+				// Ensure longest match takes precedence
+				if (!best_match || best_match->path.size() < path.size())
+					best_match = &(*location_it);
+			}
+		}
+		// ** Case 2: Suffix Match (e.g., `*.bla`)
+		else if (path[0] == '*' && path.size() > 1) // Ensure it's a wildcard suffix
+		{
+			std::string suffix = path.substr(1); // Remove leading '*'
+			if (normalized_uri.size() >= suffix.size() &&
+				normalized_uri.compare(normalized_uri.size() - suffix.size(), suffix.size(), suffix) == 0) // Matches suffix
+			{
+				// Ensure longest match takes precedence
+				if (!best_match || best_match->path.size() < path.size())
+					best_match = &(*location_it);
+			}
+		}
+		// ** Case 3: Exact or Default Prefix Match
+		else if ((normalized_uri.find(path)) == 0 &&
+				 (normalized_uri.size() == path.size() || normalized_uri[path.size()] == '/'))
+		{
+			// Regular prefix match, prioritize longest match
+			if (!best_match || best_match->path.size() < path.size())
 				best_match = &(*location_it);
 		}
 	}

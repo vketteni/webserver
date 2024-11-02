@@ -118,7 +118,7 @@ void ClientConnection::handleErrorResponse(Response & response, ServerConfig & s
 	_logger.logError(status_code, "Error: " + status_message + " for request to " ); // + response.getPath()
 
 	std::string file_path = server_config.root + server_config.error_pages[status_code];
-	pretty_debug(file_path);
+	// pretty_debug(file_path);
 	if (!server_config.error_pages[status_code].empty() && fileExists(file_path))
 	{
 		std::ifstream file(file_path.c_str());
