@@ -1,5 +1,5 @@
 #include "../incl/RequestParser.hpp"
-RequestParser::RequestParser() : _state(READ_REQUEST_LINE) {}
+RequestParser::RequestParser(const ServerConfig & config) : _state(READ_REQUEST_LINE), _config(config) {}
 
 void printMultipartBody(const std::string& body, const std::string& boundary);
 std::string getBoundaryFromHeader(const std::string& header);
@@ -143,7 +143,7 @@ bool RequestParser::processHeadersBeforeBody(void)
 	std::map<std::string, HeaderHandler> handlers;
 	std::set<std::string> required;
 
-	HeaderProcessor hp(_request, _response);
+	HeaderProcessor hp(_request, _response, _config);
 	setup_pre_body_handlers(handlers, required);
 	
 	if (!hp.processHeaders(handlers, required))

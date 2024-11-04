@@ -1,7 +1,7 @@
 #include "../incl/ClientConnection.hpp"
 
 ClientConnection::ClientConnection(int client_fd, ServerConfig host_config, int port, Logger &logger)
-    : _logger(logger), _lastActivity(std::time(NULL)), _host_config(host_config), fd(client_fd), host_port(port), timeout(TIMEOUT_DURATION)
+    : _logger(logger), _lastActivity(std::time(NULL)), _host_config(host_config), _request_parser(RequestParser(host_config)), fd(client_fd), host_port(port), timeout(TIMEOUT_DURATION)
 {}
 
 
@@ -70,7 +70,7 @@ void ClientConnection::headerHandler(Request & request, Response & response)
 
 	setup_post_body_handlers(handlers, required);
 
-	HeaderProcessor hp(request, response);
+	HeaderProcessor hp(request, response, _host_config);
 	hp.processHeaders(handlers, required);
 
 	return ;

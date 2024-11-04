@@ -28,9 +28,10 @@ class RequestParser
 		Request 			_request;
 		Response 			_response;
 		RequestState		_state;
+		const ServerConfig & _config;
 
 	public:
-		RequestParser();
+		RequestParser(const ServerConfig & config);
 
 		bool readAndParse(int client_fd);
 		bool isComplete() const;

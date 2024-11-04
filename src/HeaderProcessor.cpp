@@ -1,7 +1,7 @@
 #include "../incl/HeaderProcessor.hpp"
 
-HeaderProcessor::HeaderProcessor(Request & request, Response & response)
-	: _request(request), _response(response)
+HeaderProcessor::HeaderProcessor(Request & request, Response & response, const ServerConfig & config)
+	: _request(request), _response(response), _config(config)
 {}
 
 bool HeaderProcessor::processHeaders(std::map<std::string, HeaderHandler> & handlers, std::set<std::string> & required_headers)
@@ -16,7 +16,7 @@ bool HeaderProcessor::processHeaders(std::map<std::string, HeaderHandler> & hand
 		if (handler_it != handlers.end())
 		{
 			// Call the handler and check for validation errors
-			HeaderValidationStatus status = (*(handler_it->second))(_request, _response);
+			HeaderValidationStatus status = (*(handler_it->second))(_request, _response, _config);
 			if (status != SUCCESS)
 			{
 				handleInvalidValue(it->first, status);
@@ -73,18 +73,26 @@ void HeaderProcessor::handleMissingHeaders(const std::set<std::string> &missing_
 	// Additional error handling (e.g., setting response status to 400 Bad Request)
 }
 
-HeaderValidationStatus processContentLength(Request & request, Response & response)
+HeaderValidationStatus processContentLength(Request & request, Response & response, const ServerConfig & config)
 {
-	(void)request;
+	(void)config;
 	(void)response;
+	std::string request_content_length = request.getHeaderOrDefault("Content-Length", "");
 
-	// std::cout << "Processing Content-Length: " << request.getHeaderOrDefault("Content-Length", "") << std::endl;
-	// Handle Content-Length logic
+	std::stringstream ss;
+	ss << request.getHeaderOrDefault("Content-Length", "0");
+	size_t content_length = std::atoi(ss.str().c_str());
+
+	if (content_length != request.getBody().size())
+		return INVALID_VALUE;
+	if (content_length > config.client_max_body_size)
+		return INVALID_VALUE;
 	return SUCCESS;
 }
 
-HeaderValidationStatus processHost(Request & request, Response & response)
+HeaderValidationStatus processHost(Request & request, Response & response, const ServerConfig & config)
 {
+	(void)config;	
 	std::string request_host = request.getHeaderOrDefault("Host", "");
 	// std::cout << "Processing Host: " << request_host << std::endl;
 	if (request_host.empty()) return INVALID_VALUE;
@@ -92,8 +100,9 @@ HeaderValidationStatus processHost(Request & request, Response & response)
 	return SUCCESS;
 }
 
-HeaderValidationStatus processConnection(Request & request, Response & response)
+HeaderValidationStatus processConnection(Request & request, Response & response, const ServerConfig & config)
 {
+	(void)config;
 	// std::cout << "Processing Connection: " << request.getHeaderOrDefault("Connection", "") << std::endl;
 	std::string request_header = request.getHeaderOrDefault("Connection", "");
 	response.setHeader("Connection", request_header);
@@ -106,10 +115,11 @@ HeaderValidationStatus processConnection(Request & request, Response & response)
 	return SUCCESS;
 }
 
-HeaderValidationStatus processExpect(Request & request, Response & response)
+HeaderValidationStatus processExpect(Request & request, Response & response, const ServerConfig & config)
 {
 	(void)request;
 	(void)response;
+	(void)config;
 
 	// std::cout << "Processing Expect: " << request.getHeaderOrDefault("Expect", "") << std::endl;
 	// Handle Expect logic
@@ -117,20 +127,22 @@ HeaderValidationStatus processExpect(Request & request, Response & response)
 }
 
 
-HeaderValidationStatus processTransferEncoding(Request & request, Response & response)
+HeaderValidationStatus processTransferEncoding(Request & request, Response & response, const ServerConfig & config)
 {
 	(void)request;
 	(void)response;
+	(void)config;
 
 	// std::cout << "Processing Transfer-Encoding: " << request.getHeaderOrDefault("Transfer-Encoding", "") << std::endl;
 	// Handle Transfer-Encoding logic
 	return SUCCESS;
 }
 
-HeaderValidationStatus processContentType(Request & request, Response & response)
+HeaderValidationStatus processContentType(Request & request, Response & response, const ServerConfig & config)
 {
 	(void)request;
 	(void)response;
+	(void)config;
 
 	// std::cout << "Processing Content-Type: " << response.getHeaderOrDefault("Content-Type", "") << std::endl;
 	// Handle Content-Type logic
@@ -141,8 +153,9 @@ HeaderValidationStatus processContentType(Request & request, Response & response
 	return SUCCESS;
 }
 
-HeaderValidationStatus processAccept(Request & request, Response & response)
+HeaderValidationStatus processAccept(Request & request, Response & response, const ServerConfig & config)
 {
+	(void)config;
 	// std::cout << "Processing Accept: " << request.getHeaderOrDefault("Accept", "") << std::endl;
 	std::string request_header = request.getHeaderOrDefault("Accept", "");
 
@@ -159,60 +172,66 @@ HeaderValidationStatus processAccept(Request & request, Response & response)
 	return SUCCESS;
 }
 
-HeaderValidationStatus processUserAgent(Request & request, Response & response)
+HeaderValidationStatus processUserAgent(Request & request, Response & response, const ServerConfig & config)
 {
 	(void)request;
 	(void)response;
+	(void)config;
 
 	// std::cout << "Processing User-Agent: " << request.getHeaderOrDefault("User-Agent", "") << std::endl;
 	// Handle User-Agent logic
 	return SUCCESS;
 }
 
-HeaderValidationStatus processAuthorization(Request & request, Response & response)
+HeaderValidationStatus processAuthorization(Request & request, Response & response, const ServerConfig & config)
 {
 	(void)request;
 	(void)response;
+	(void)config;
 
 	// std::cout << "Processing Authorization: " << request.getHeaderOrDefault("Authorization", "") << std::endl;
 	// Handle Authorization logic
 	return SUCCESS;
 }
 
-HeaderValidationStatus processReferer(Request & request, Response & response)
+HeaderValidationStatus processReferer(Request & request, Response & response, const ServerConfig & config)
 {
 	(void)request;
 	(void)response;
+	(void)config;
 
 	// std::cout << "Processing Referer: " << request.getHeaderOrDefault("Referer", "") << std::endl;
 	// Handle Referer logic
 	return SUCCESS;
 }
 
-HeaderValidationStatus processCookie(Request & request, Response & response)
+HeaderValidationStatus processCookie(Request & request, Response & response, const ServerConfig & config)
 {
 	(void)request;
 	(void)response;
+	(void)config;
 
 	// std::cout << "Processing Cookie: " << request.getHeaderOrDefault("Cookie", "") << std::endl;
 	// Handle Cookie logic
 	return SUCCESS;
 }
 
-HeaderValidationStatus processIfModifiedSince(Request & request, Response & response)
+HeaderValidationStatus processIfModifiedSince(Request & request, Response & response, const ServerConfig & config)
 {
 	(void)request;
 	(void)response;
+	(void)config;
 
 	// std::cout << "Processing If-Modified-Since: " << request.getHeaderOrDefault("If-Modified-Since", "") << std::endl;
 	// Handle If-Modified-Since logic
 	return SUCCESS;
 }
 
-HeaderValidationStatus processLastModified(Request & request, Response & response)
+HeaderValidationStatus processLastModified(Request & request, Response & response, const ServerConfig & config)
 {
 	(void)request;
 	(void)response;
+	(void)config;
 
 	// std::cout << "Processing Last-Modified: " << request.getHeaderOrDefault("Last-Modified", "") << std::endl;
 	// Handle Last-Modified logic
@@ -236,10 +255,11 @@ HeaderValidationStatus processLastModified(Request & request, Response & respons
 }
 
 
-HeaderValidationStatus processIfNoneMatch(Request & request, Response & response)
+HeaderValidationStatus processIfNoneMatch(Request & request, Response & response, const ServerConfig & config)
 {
 	(void)request;
 	(void)response;
+	(void)config;
 	// std::cout << "Processing If-None-Match: " << request.getHeaderOrDefault("If-None-Match", "") << std::endl;
 	// Handle If-None-Match logic
 	return SUCCESS;

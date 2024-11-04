@@ -50,7 +50,7 @@ struct ServerConfig
 {
     std::string root;
     std::string host;
-	int client_max_body_size;
+	size_t client_max_body_size;
     std::vector<int> ports;
     std::vector<std::string> serverNames;
     std::vector<LocationConfig> locations;
