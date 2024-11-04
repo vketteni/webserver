@@ -49,7 +49,7 @@
         .input-box input[type="submit"]:hover, .input-box button:hover {
             background-color: #ff0000;
         }
-        #spiritAnimal, #flower, #superpowerBox, #superpowerFormSection, #thankYouMessage {
+        #spiritAnimal, #flower, #superpowerBox, #uploadBox, #thankYouMessage {
             display: none;
         }
     </style>
@@ -78,26 +78,19 @@
 
     <!-- Superpower input box, initially hidden -->
     <div class="input-box" id="superpowerBox">
-        <form id="superpowerForm">
+        <form id="superpowerForm" action="/cgi_bin/submit-superpower.py" method="POST" onsubmit="openCGIInNewTab(event)">
             <label for="superpowerInput">What's your superpower? 💪</label><br>
-            <input type="text" id="superpowerInput" name="superpowerInput" placeholder="Answer me please...">
+            <input type="text" id="superpowerInput" name="superpowerInput" placeholder="Answer me please..." required>
             <input type="submit" value="Submit">
         </form>
     </div>
 
-    <!-- Superpower upload section -->
-    <div id="superpowerFormSection">
-        <h1>Superpower Formular</h1>
-        <form action="/cgi_bin/submit-superpower.py" method="post">
-            <label for="superpower">What's your superSuperpower? 💪</label><br>
-            <input type="text" id="superpower" name="superpower" required><br><br>
-            <input type="submit" value="Absenden">
-        </form>
-
+    <!-- Upload section, initially hidden -->
+    <div class="input-box" id="uploadBox">
         <h1>Datei hochladen</h1>
-        <form action="/uploads/" method="POST" enctype="multipart/form-data">
+        <form id="uploadForm" action="/uploads/" method="POST" enctype="multipart/form-data" onsubmit="handleUpload(event)">
             <label for="file">Datei auswählen:</label>
-            <input type="file" id="file" name="file"><br><br>
+            <input type="file" id="file" name="file" required><br><br>
             <button type="submit">Hochladen</button>
         </form>
     </div>
@@ -122,6 +115,65 @@
             "https://www.google.com/search?sca_esv=381a7a3a6a330f37&q=Leichenblume+(Amorphophallus+titanum)"
         ];
 
+        function openCGIInNewTab(event) {
+            event.preventDefault(); // Prevent the default form submission
+            const form = event.target;
+            const action = form.action; // Get the action URL from the form
+
+            // Create a FormData object to send the form data
+            const formData = new FormData(form);
+
+            // Create an XMLHttpRequest to handle the request
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', action);
+
+            // Create a new tab and submit the form data there
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    // Open the response in a new tab
+                    const newTab = window.open();
+                    newTab.document.write(xhr.responseText);
+                    newTab.document.close();
+                    // Show the thank you message after submitting the superpower
+                    document.getElementById("thankYouMessage").style.display = "block";
+                    // Show the upload box
+                    document.getElementById("uploadBox").style.display = "block";
+                } else {
+                    console.error('Error with the request:', xhr.statusText);
+                }
+            };
+
+            // Send the form data
+            xhr.send(formData);
+        }
+
+        function handleUpload(event) {
+            event.preventDefault(); // Prevent the default form submission
+            const form = event.target; // Get the form element
+            const action = form.action; // Get the action URL from the form
+
+            // Create a FormData object to send the form data
+            const formData = new FormData(form);
+
+            // Create an XMLHttpRequest to handle the request
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', action);
+
+            // Set up the onload function to open a new tab with the success message
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    const newTab = window.open();
+                    newTab.document.write("<h1>Upload successful!</h1><p>You can check the uploaded file in the webserv directory /www/uploads</p>");
+                    newTab.document.close();
+                } else {
+                    console.error('Error with the upload:', xhr.statusText);
+                }
+            };
+
+            // Send the form data
+            xhr.send(formData);
+        }
+
         document.getElementById("numberForm").addEventListener("submit", function(event) {
             event.preventDefault();
             const userInput = document.getElementById("userInput").value;
@@ -131,25 +183,19 @@
                 document.getElementById("spiritAnimal").style.display = "block";
 
                 document.getElementById("flowerLink").href = flowerLinks[index];
+                document.getElementById("flower").style.display = "block"; // Ensure flower section is shown
             } else {
                 alert("Please enter a number between 0 and 99.");
             }
         });
 
         document.getElementById("spiritLink").addEventListener("click", function(event) {
-            window.open(event.target.href, '_blank'); // Öffnet den Link in einem neuen Tab
-            document.getElementById("flower").style.display = "block";
+            window.open(event.target.href, '_blank'); // Open the link in a new tab
         });
 
         document.getElementById("flowerLink").addEventListener("click", function(event) {
-            window.open(event.target.href, '_blank'); // Öffnet den Link in einem neuen Tab
-            document.getElementById("superpowerBox").style.display = "block";
-        });
-
-        document.getElementById("superpowerForm").addEventListener("submit", function(event) {
-            event.preventDefault();
-            document.getElementById("superpowerFormSection").style.display = "block";
-            document.getElementById("thankYouMessage").style.display = "block";
+            window.open(event.target.href, '_blank'); // Open the link in a new tab
+            document.getElementById("superpowerBox").style.display = "block"; // Show superpower input
         });
     </script>
 </body>

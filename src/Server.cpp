@@ -154,12 +154,12 @@ bool Server::start()
 {
 	if (!parseConfig())
 	{
-		_logger.logError(400, "Failed to parse config file.");
+	//	_logger.logError(400, "Failed to parse config file.");
 		return (false);
 	}
 	if (!setupServerSockets())
 	{
-		_logger.logError(400, "Failed to setup server sockets.");
+	//	_logger.logError(400, "Failed to setup server sockets.");
 		return (false);
 	}
 	this->_running = true;
@@ -379,7 +379,7 @@ bool Server::acceptNewClient(const std::vector<struct pollfd>::const_iterator po
     // Add client to _poll_fds
     struct pollfd pfd;
     pfd.fd = client_fd;
-    pfd.events = POLLIN;  //| POLLOUT; //hier der change von POLLIN | POLLOUT zu nur POLLIN Cpu 100 problem geloest
+    pfd.events = POLLIN | POLLOUT; //hier der change von POLLIN | POLLOUT zu nur POLLIN Cpu 100 problem geloest
     pfd.revents = 0;
     _poll_fds.push_back(pfd);
 
@@ -387,7 +387,7 @@ bool Server::acceptNewClient(const std::vector<struct pollfd>::const_iterator po
     inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
  	std::stringstream ss;
  	ss << "Accepted connection from " << client_ip << ":" << ntohs(client_addr.sin_port);
- 	_logger.logInfo(200, ss.str());
+	_logger.logInfo(200, ss.str());
 
     return true;
 }
