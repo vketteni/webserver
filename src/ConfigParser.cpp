@@ -342,8 +342,8 @@ void ConfigParser::buildServerConfigs(std::map<int, ServerConfig> & server_confi
 				if (block_directive->name == "server")
 				{
 					ServerConfig server_config;
-
 					init_default_values(server_config);
+
 					parseServerBlock(block_directive, server_config);
 					server_configs[server_config.ports.front()] = server_config;
 				}
@@ -393,8 +393,9 @@ void ConfigParser::parseLocationBlock(BlockNode* location_block, ServerConfig & 
 {
 	LocationConfig location;
 	DirectiveNode * directive;
-	location.root = server_config.root.find_last_of('/') == server_config.root.size() - 1 ? server_config.root : server_config.root + "/";
-	location.path = Utils::trim(location_block->parameters.front(), "/");
+
+	std::string location_path = location_block->parameters.front();
+	location.path = location_path.find_first_of('/') == 0 ? location_path.substr(1) : location_path;
 
 	std::map<std::string, LocationDirectiveHandler> directive_handlers;
 	setup_directive_handlers(directive_handlers);
