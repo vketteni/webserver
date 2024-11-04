@@ -540,9 +540,10 @@ void handle_port(std::vector<std::string> & directive_values, ServerConfig & con
 
 void handle_host(std::vector<std::string> & directive_values, ServerConfig & config)
 {
-	(void)directive_values;
-	(void)config;
-	// Todo: implement host directive
+	if (directive_values.empty())
+		throw std::runtime_error("Error: 'handle_host' directive has no value.");
+
+	config.host = directive_values.front();
 }
 
 void handle_server_name(std::vector<std::string> & directive_values, ServerConfig & config)
