@@ -40,3 +40,24 @@ std::string Utils::replaceChars(const std::string& input, const std::string& cha
     
     return result;
 }
+
+std::string Utils::build_relative_path_from_location_match(const std::string & request_uri, const std::string & match)
+{
+	std::string relative_path;
+	if (match[0] == '*')
+	{
+		size_t match_start = request_uri.find(match.substr(1));
+		relative_path = (match_start != std::string::npos) ? request_uri.substr(match_start + match.size() - 1) : "";
+	}
+	else if (match[match.size() - 1] == '*')
+	{
+		size_t match_start = request_uri.find(match.substr(0, match.size() - 1));
+		relative_path = (match_start != 0 || match_start == std::string::npos) ? "" : request_uri.substr(match.find('*'));
+	}
+	else
+	{
+		size_t match_start = request_uri.find(match);
+		relative_path = (match_start != 0 || match_start == std::string::npos) ? "" : request_uri.substr(match_start + match.size() - 1);
+	}
+	return relative_path;
+}

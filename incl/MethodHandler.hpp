@@ -10,6 +10,7 @@
 #include "CGIExecutor.hpp"
 #include "ConfigParser.hpp"
 #include "Debug.hpp"
+#include "Utils.hpp"
 
 
 class AbstractMethodHandler

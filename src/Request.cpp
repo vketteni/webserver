@@ -62,77 +62,55 @@ std::string Request::decodePercentEncoding(const std::string& uri)
     return result;
 }
 
+#include <sstream>
+#include <vector>
+#include <string>
+
 std::string Request::removeDotSegments(const std::string& path)
 {
-    std::string result;
-    std::string::size_type i = 0;
+    // Edge case: empty path
+    if (path.empty()) return "";
 
-    while (i < path.length())
-	{
-		// If path begins with "./" or "/./", remove the leading "."
-        if (path.substr(i, 2) == "./") {
-			i += 2;
-		}
-		else if (path.substr(i, 3) == "/./") {
-			i += 2;
-		}
-		// If path begins with "../" or "/../", move up one directory level	
-        else if (path.substr(i, 3) == "../") {
-			i += 3;
-		}
-		else if (path.substr(i, 4) == "/../")
-		{
-			// Remove last segment in result
-            if (!result.empty())
-			{
-                std::string::size_type pos = result.find_last_of('/');
-                if (pos != std::string::npos)
-                    result.erase(pos);
-                else
-                    result.clear();
+    std::vector<std::string> segments;
+    std::stringstream ss(path);
+    std::string segment;
+
+    // Split the path into segments using '/' as a delimiter
+    while (std::getline(ss, segment, '/'))
+    {
+        if (segment == "" || segment == ".") {
+            // Skip empty segments or "." segments
+            continue;
+        } else if (segment == "..") {
+            // Go up one level, if possible
+            if (!segments.empty() && segments.back() != "..") {
+                segments.pop_back();
+            } else if (path[0] == '/') {
+                // If path is absolute, ignore ".." at the root
+                continue;
+            } else {
+                // If relative path and no previous segment, keep ".."
+                segments.push_back("..");
             }
-            i += 3;
-        }
-		// If path is "." or "/.", remove the "."	
-        else if (path.substr(i, 1) == "." && (i + 1 == path.length() || path[i + 1] == '/')) {
-			++i;
-		}
-		// If path is ".." or "/..", move up one directory level
-        else if (path.substr(i, 2) == ".." && (i + 2 == path.length() || path[i + 2] == '/'))
-		{
-            if (!result.empty())
-			{
-                std::string::size_type pos = result.find_last_of('/');
-                if (pos != std::string::npos)
-                    result.erase(pos);
-                else
-                    result.clear();
-            }
-            i += 2;
-        }
-		else
-		{
-			// Copy segment to result
-            std::string::size_type next_slash = path.find('/', i);
-			i == 0 ? result += "" : result += "/";
-            if (next_slash != std::string::npos)
-			{
-                result += path.substr(i, next_slash - i);
-                i = next_slash + 1;
-            }
-			else
-			{
-                result += path.substr(i);
-                break;
-            }
+        } else {
+            // Normal segment, add to stack
+            segments.push_back(segment);
         }
     }
 
-    if (result[result.length() - 1] == '/')
-		result.erase(result.length() - 1);
+    // Join segments back into a single normalized path
+    std::string result = (path[0] == '/' ? "/" : ""); // Keep leading '/' for absolute paths
+    for (size_t i = 0; i < segments.size(); ++i) {
+        result += segments[i];
+        if (i < segments.size() - 1 || (path[path.size() - 1] == '/' && !segments.empty())) {
+            // Append '/' between segments and at the end if the original path had a trailing slash
+            result += "/";
+        }
+    }
 
-	return result;
+    return result;
 }
+
 
 std::string Request::normalizeUri(const std::string& uri)
 {
