@@ -1,7 +1,7 @@
 #include "../incl/ClientConnection.hpp"
 
-ClientConnection::ClientConnection(int client_fd, ServerConfig host_config, int port, Logger &logger)
-    : _logger(logger), _lastActivity(std::time(NULL)), _host_config(host_config), _request_parser(RequestParser(host_config)), fd(client_fd), host_port(port), timeout(TIMEOUT_DURATION)
+ClientConnection::ClientConnection(int client_fd, const ServerConfig & host_config, int port, Logger &logger)
+    : _logger(logger), _lastActivity(std::time(NULL)), _host_config(host_config), _request_parser(host_config), fd(client_fd), host_port(port), timeout(TIMEOUT_DURATION)
 {}
 
 
@@ -20,6 +20,17 @@ void ClientConnection::setLastActivity(time_t last_activity)
 
 bool ClientConnection::processRequest()
 {
+
+    pretty_debug(_host_config.client_max_body_size);
+    pretty_debug(_host_config.host);
+    pretty_debug(_host_config.serverNames.front());
+    pretty_debug(_host_config.root);
+
+	pretty_debug(_request_parser.getConfig().client_max_body_size);
+    pretty_debug(_request_parser.getConfig().host);
+    // pretty_debug(_request_parser.getConfig().serverNames.front());
+    pretty_debug(_request_parser.getConfig().root);
+
 	if (!_request_parser.readAndParse(this->fd))
 		return false;
     if (_request_parser.isComplete())
@@ -99,7 +110,7 @@ void ClientConnection::methodHandler(Request & request, Response & response, con
 	return ;
 }
 
-void ClientConnection::handleErrorResponse(Response & response, ServerConfig & server_config)
+void ClientConnection::handleErrorResponse(Response & response, const ServerConfig & server_config)
 {
 	//(void) server_config;
 	int status_code = response.getStatusCode();
@@ -117,15 +128,15 @@ void ClientConnection::handleErrorResponse(Response & response, ServerConfig & s
 
 	_logger.logError(status_code, "Error: " + status_message + " for request to " ); // + response.getPath()
 
-	std::string file_path = server_config.root + server_config.error_pages[status_code];
+	std::string file_path = server_config.root + server_config.error_pages.find(status_code)->second;
 	// pretty_debug(file_path);
-	if (!server_config.error_pages[status_code].empty() && fileExists(file_path))
+	if (!server_config.error_pages.find(status_code)->second.empty() && fileExists(file_path))
 	{
 		std::ifstream file(file_path.c_str());
 		if (file)
 		{
 			std::string error_page_content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-			
+
 			response.setBody(error_page_content);
 			response.setHeader("Content-Typr", "text/html; charset=utf-8");
 			std::ostringstream oss;

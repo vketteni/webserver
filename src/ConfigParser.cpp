@@ -438,7 +438,7 @@ void ConfigParser::parseLocationBlock(BlockNode* location_block, ServerConfig & 
 	location.cgi_extension = location.cgi_extension.empty() ? ".py" : location.autoindex;
 	location.index = location.index.empty() ? "index.html" : location.index;
 	location.upload_dir = location.upload_dir.empty() ? "upload/" : location.autoindex;
-	
+
 	server_config.locations.push_back(location);
 }
 
@@ -509,7 +509,7 @@ void handle_client_max_body_size(std::vector<std::string> & directive_values, Se
 	std::string directive_value = directive_values.front();
 	std::stringstream ss;
 	ss << directive_value;
-	int client_max_body_size;
+	size_t client_max_body_size;
 	ss >> client_max_body_size;
 
 	config.client_max_body_size = client_max_body_size;
@@ -544,7 +544,7 @@ void handle_host(std::vector<std::string> & directive_values, ServerConfig & con
 	if (directive_values.empty())
 		throw std::runtime_error("Error: 'handle_host' directive has no value.");
 
-	config.host = directive_values.front();
+	config.host = std::string(directive_values.front());
 }
 
 void handle_server_name(std::vector<std::string> & directive_values, ServerConfig & config)
@@ -553,7 +553,7 @@ void handle_server_name(std::vector<std::string> & directive_values, ServerConfi
 		throw std::runtime_error("Error: 'server_name' directive has no value.");
 
 	for (std::vector<std::string>::iterator it = directive_values.begin(); it != directive_values.end(); ++it)
-		config.serverNames.push_back(*it);
+		config.serverNames.push_back(std::string(*it));
 }
 
 void handle_error_page(std::vector<std::string> & directive_values, ServerConfig & config)
@@ -672,12 +672,12 @@ const LocationConfig * findMatchingLocation(const std::string &normalized_uri, c
 	{
 		const std::string & path = location_it->path;
 		// Allow empty path as default fallback
-		if (!best_match && path.empty()) 
+		if (!best_match && path.empty())
 		{
 			best_match = &(*location_it);
 			continue;
 		}
-	
+
 		// ** Case 1: Exact or Prefix Match (e.g., `/put_test/*`)
 		if (path[path.size() - 1] == '*' && path.size() > 1) // Ensure it's a wildcard prefix
 		{

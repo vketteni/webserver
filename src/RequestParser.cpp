@@ -145,7 +145,7 @@ bool RequestParser::processHeadersBeforeBody(void)
 
 	HeaderProcessor hp(_request, _response, _config);
 	setup_pre_body_handlers(handlers, required);
-	
+
 	if (!hp.processHeaders(handlers, required))
 		return false;
 	return true;
@@ -153,6 +153,10 @@ bool RequestParser::processHeadersBeforeBody(void)
 
 bool RequestParser::readAndParse(int client_fd)
 {
+    pretty_debug(_config.client_max_body_size);
+    pretty_debug(_config.host);
+    pretty_debug(_config.serverNames.front());
+    pretty_debug(_config.root);
 	_buffer.resize(BUFFER_SIZE);
     ssize_t bytes_read = recv(client_fd, _buffer.data(), BUFFER_SIZE, 0);
     if (bytes_read <= 0)
@@ -160,6 +164,11 @@ bool RequestParser::readAndParse(int client_fd)
         // Handle disconnection or error
         return false;
     }
+    pretty_debug(_config.client_max_body_size);
+    pretty_debug(_config.host);
+    pretty_debug(_config.serverNames.front());
+    pretty_debug(_config.root);
+
 	_buffer.resize(bytes_read);
     if (!parse())
 	{
@@ -184,6 +193,11 @@ const Request & RequestParser::getRequest(void) const
 const Response & RequestParser::getResponse(void) const
 {
 	return _response;
+}
+
+const ServerConfig & RequestParser::getConfig(void) const
+{
+	return _config;
 }
 
 RequestState RequestParser::getState(void) const
@@ -212,7 +226,7 @@ void printMultipartBody(const std::string& body, const std::string& boundary) {
         std::cerr << "Start delimiter not found" << std::endl;
         return;
     }
-    
+
     size_t end_pos = body.find(end_delimiter, start_pos);
     if (end_pos == std::string::npos) {
         std::cerr << "End delimiter not found" << std::endl;

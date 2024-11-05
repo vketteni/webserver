@@ -28,7 +28,7 @@ class RequestParser
 		Request 			_request;
 		Response 			_response;
 		RequestState		_state;
-		const ServerConfig & _config;
+		const ServerConfig  _config;
 
 	public:
 		RequestParser(const ServerConfig & config);
@@ -40,6 +40,7 @@ class RequestParser
 		RequestState getState(void) const;
 		const Request & getRequest(void) const;
 		const Response & getResponse(void) const;
+		const ServerConfig & getConfig(void) const;
 
 	private:
 		bool parse(void);

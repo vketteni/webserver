@@ -27,7 +27,7 @@ class ClientConnection
 	private:
 		Logger&			_logger;
 		time_t			_lastActivity;
-		ServerConfig	_host_config;
+		const ServerConfig	_host_config;
 		RequestParser	_request_parser;
 
 	public:
@@ -35,7 +35,7 @@ class ClientConnection
 		const int		host_port;
 		const int		timeout;
 
-		ClientConnection(int client_fd, ServerConfig host_config, int port, Logger &logger);
+		ClientConnection(int client_fd, const ServerConfig &host_config, int port, Logger &logger);
 		~ClientConnection();
 
 		time_t		getLastActivity(void);
@@ -51,7 +51,7 @@ class ClientConnection
 
 		void		headerHandler(Request & request, Response & response);
 		void		methodHandler(Request & request, Response & response, const LocationConfig & location, const ServerConfig & config);
-		void		handleErrorResponse(Response & response, ServerConfig & config);
+		void		handleErrorResponse(Response & response, const ServerConfig & server_config);
 		std::string	generateErrorPage(int status_code, const std::string &status_message);
 		void setErrorResponse(Response& response, int statusCode, const std::string& message);
 		void buildResponse(Response& response, int statusCode, const std::string& statusMessage, const std::string& body, const std::string& connection);

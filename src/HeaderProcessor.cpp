@@ -57,7 +57,7 @@ void HeaderProcessor::handleInvalidValue(const std::string &header, HeaderValida
 		status_str = "missing";
 	else if (status == INVALID_VALUE)
 		status_str = "invalid value";
-	
+
 	std::cerr << "Error: Bad value for " << header << " (" << status_str << ")" << std::endl;
 }
 
@@ -75,7 +75,7 @@ void HeaderProcessor::handleMissingHeaders(const std::set<std::string> &missing_
 
 HeaderValidationStatus processContentLength(Request & request, Response & response, const ServerConfig & config)
 {
-	(void)config;
+	// (void)config;ake
 	(void)response;
 	std::string request_content_length = request.getHeaderOrDefault("Content-Length", "");
 
@@ -83,8 +83,6 @@ HeaderValidationStatus processContentLength(Request & request, Response & respon
 	ss << request.getHeaderOrDefault("Content-Length", "0");
 	size_t content_length = std::atoi(ss.str().c_str());
 
-	if (content_length != request.getBody().size())
-		return INVALID_VALUE;
 	if (content_length > config.client_max_body_size)
 		return INVALID_VALUE;
 	return SUCCESS;
@@ -92,7 +90,7 @@ HeaderValidationStatus processContentLength(Request & request, Response & respon
 
 HeaderValidationStatus processHost(Request & request, Response & response, const ServerConfig & config)
 {
-	(void)config;	
+	(void)config;
 	std::string request_host = request.getHeaderOrDefault("Host", "");
 	// std::cout << "Processing Host: " << request_host << std::endl;
 	if (request_host.empty()) return INVALID_VALUE;
@@ -287,7 +285,7 @@ void setup_pre_body_handlers(std::map<std::string, HeaderHandler> & handlers, st
 	handlers["User-Agent"] = &processUserAgent;
 	handlers["Authorization"] = &processAuthorization;
 	handlers["Referer"] = &processReferer;
-	handlers["Cookie"] = &processCookie;	
+	handlers["Cookie"] = &processCookie;
 }
 
 /*
