@@ -30,7 +30,7 @@ bool RequestParser::parse() {
 
 				case READ_BODY:
 					if (!extractBody()) return true;
-					printMultipartBody(_request.getBody(), getBoundaryFromHeader(_request.getHeaderOrDefault("Content-Type", "")));
+					// printMultipartBody(_request.getBody(), getBoundaryFromHeader(_request.getHeaderOrDefault("Content-Type", "")));
 					_state = COMPLETE;
 					break;
 
@@ -111,7 +111,7 @@ bool RequestParser::extractHeaders()
 
         headers[name] = value;
 
-        pretty_debug(name + "=" + value);
+        // pretty_debug(name + "=" + value);
     }
 
     _buffer.erase(_buffer.begin(), _buffer.begin() + 2);

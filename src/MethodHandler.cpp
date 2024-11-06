@@ -60,10 +60,10 @@ void GetRequestHandler::invoke(Request& request, Response& response, const Locat
 	}
 	std::string relative_path = Utils::trim(uri_path.substr(location.path.length()), "/");
 	relative_path = relative_path.size() == 0 && !location.index.empty() ? location.index : relative_path;
-	std::string file_path = root + relative_path;
+	std::string absolute_path = root + relative_path;
 
-    pretty_debug("File Path: " + file_path);
-    if (isCGI(file_path))
+    pretty_debug("File Path: " + absolute_path);
+    if (isCGI(absolute_path))
     {
 		CGIExecutor cgi;
 		if (!cgi.executeCGI(request, response))
@@ -72,17 +72,17 @@ void GetRequestHandler::invoke(Request& request, Response& response, const Locat
     }
 
 
-	if (isDirectory(file_path))
+	if (isDirectory(absolute_path))
 	{
         std::string index_file = location.index;
-        std::string index_path = file_path + "/" + index_file;
+        std::string index_path = Utils::trim(absolute_path, "/") + "/" + index_file;
         if (fileExists(index_path))
-            file_path = index_path;
+            absolute_path = index_path;
 		else if (location.autoindex == "on")
 		{
             // Generate directory listing
             response.setStatusCode(200);
-            response.setBody(generateDirectoryListing(file_path, uri_path));
+            response.setBody(generateDirectoryListing(absolute_path, uri_path));
             response.setHeader("Content-Type", "text/html");
             return;
         }
@@ -94,7 +94,7 @@ void GetRequestHandler::invoke(Request& request, Response& response, const Locat
         }
     }
 
-	std::ifstream file(file_path.c_str());
+	std::ifstream file(absolute_path.c_str());
     if (!file)
     {
 		response.setStatusCode(404);
@@ -120,8 +120,8 @@ void PostRequestHandler::invoke(Request& request, Response& response, const Loca
 	// std::string relative_path = uri_path.substr(location.path.length());
 	std::string relative_path = Utils::build_relative_path_from_location_match(request.getUri(), location.path);
 
-	std::string file_path = root + relative_path;
-    request.setUri(file_path);
+	std::string absolute_path = root + relative_path;
+    request.setUri(absolute_path);
     if (isCGI(request.getUri()))
     {
 		CGIExecutor cgi;
@@ -159,11 +159,11 @@ void DeleteRequestHandler::invoke(Request& request, Response& response, const Lo
 {
     std::string file_name = extractFileName(request.getUri());
     std::string upload_folder = "www/uploads/";
-    std::string file_path = upload_folder + file_name;
+    std::string absolute_path = upload_folder + file_name;
    (void) location;
     (void) config;
    
-    if (deleteFile(file_path ))
+    if (deleteFile(absolute_path ))
     {
        response.setStatusCode(200);
     }

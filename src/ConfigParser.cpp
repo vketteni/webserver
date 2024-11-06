@@ -436,8 +436,8 @@ void ConfigParser::parseLocationBlock(BlockNode* location_block, ServerConfig & 
 	// Other not specified
 	location.autoindex = location.autoindex.empty() ? "off" : location.autoindex;
 	location.cgi_extension = location.cgi_extension.empty() ? ".py" : location.autoindex;
-	location.index = location.index.empty() ? "index.html" : location.index;
-	location.upload_dir = location.upload_dir.empty() ? "upload/" : location.autoindex;
+	location.index = location.index.empty() ? "" : location.index;
+	location.upload_dir = location.upload_dir.empty() ? "uploads/" : location.autoindex;
 
 	server_config.locations.push_back(location);
 }
@@ -702,8 +702,7 @@ const LocationConfig * findMatchingLocation(const std::string &normalized_uri, c
 			}
 		}
 		// ** Case 3: Exact or Default Prefix Match
-		else if ((normalized_uri.find(path)) == 0 &&
-				 (normalized_uri.size() == path.size() || normalized_uri[path.size()] == '/'))
+		else if ((normalized_uri.find(path)) == 0)
 		{
 			// Regular prefix match, prioritize longest match
 			if (!best_match || best_match->path.size() < path.size())
