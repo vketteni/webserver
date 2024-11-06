@@ -57,7 +57,7 @@ std::string Utils::build_relative_path_from_location_match(const std::string & r
 	else
 	{
 		size_t match_start = request_uri.find(match);
-		relative_path = (match_start != 0 || match_start == std::string::npos) ? "" : request_uri.substr(match_start + match.size() - 1);
+		relative_path = (match_start != 0 || match_start == std::string::npos) ? "" : request_uri.substr(match_start + match.size());
 	}
 	return relative_path;
 }

@@ -7,29 +7,28 @@ OBJ_DIR= obj/
 SRC_DIR= src/
 LOG_DIR= log/
 
-DEFAULT_PORT = 8080
-DEFAULT_MAX_BODY_SIZE = 10280
-DEFAULT_HOST = "127.0.0.1"
-DEFAULT_ROOT = "path/from/root/"
-DEFAULT_SERVER_NAME = "localhost"
+DEFAULT_PORT=8080
+DEFAULT_MAX_BODY_SIZE=10280000000
+DEFAULT_HOST="127.0.0.1"
+DEFAULT_ROOT="path/from/root/"
 
 SRCS = $(addprefix $(SRC_DIR), $(addsuffix .cpp, $(MAIN)))
 
 OBJS = $(SRCS:src/%.cpp=$(OBJ_DIR)%.o)
 
-FLAGS=-Wall -Werror -Wextra -std=c++98 -g
+FLAGS=-Wall -Werror -Wextra -std=c++98 -g \
+        -D DEFAULT_HOST=\"$(DEFAULT_HOST)\" \
+        -D DEFAULT_MAX_BODY_SIZE=$(DEFAULT_MAX_BODY_SIZE) \
+        -D DEFAULT_PORT=$(DEFAULT_PORT) \
+        -D DEFAULT_ROOT=\"$(DEFAULT_ROOT)\" \
+
 # FLAGS+= -DNDEBUG
 INC= -I incl/
 
 all: $(NAME)
 
 $(NAME):  $(OBJS)
-		$(CC) $(FLAGS) $(INC) $(OBJS) -o $(NAME) \
- 		-D DEFAULT_HOST=$(DEFAULT_HOST) \
- 		-D DEFAULT_MAX_BODY_SIZE=$(DEFAULT_MAX_BODY_SIZE) \
- 		-D DEFAULT_PORT=$(DEFAULT_PORT) \
- 		-D DEFAULT_ROOT=$(DEFAULT_ROOT) \
- 		-D DEFAULT_SERVER_NAME=$(DEFAULT_SERVER_NAME) \
+		$(CC) $(FLAGS) $(INC) $(OBJS) -o $(NAME)
 
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)

@@ -18,16 +18,13 @@
  # define DEFAULT_PORT 8080
 # endif
 # ifndef DEFAULT_MAX_BODY_SIZE
- # define DEFAULT_MAX_BODY_SIZE 10280
+ # define DEFAULT_MAX_BODY_SIZE 1028000000
 # endif
 # ifndef DEFAULT_HOST
  # define DEFAULT_HOST "127.0.0.1"
 # endif
 # ifndef DEFAULT_ROOT
  # define DEFAULT_ROOT "path/from/root/"
-# endif
-# ifndef DEFAULT_SERVER_NAME
- # define DEFAULT_SERVER_NAME "localhost"
 # endif
 
 struct LocationConfig
@@ -52,7 +49,6 @@ struct ServerConfig
     std::string host;
 	size_t client_max_body_size;
     std::vector<int> ports;
-    std::vector<std::string> serverNames;
     std::vector<LocationConfig> locations;
     std::map<int, std::string> error_pages;
 
@@ -96,7 +92,7 @@ class ConfigParser
 		bool parse();
 		void buildServerConfigs(std::map<int, ServerConfig> & server_configs);
 		void printConfig() const;
-		
+
 
 	private:
 		std::string filename;
@@ -144,7 +140,6 @@ void setup_directive_handlers(std::map<std::string, LocationDirectiveHandler> & 
 void handle_client_max_body_size(std::vector<std::string> & directive_values, ServerConfig & config);
 void handle_port(std::vector<std::string> & directive_values, ServerConfig & config);
 void handle_host(std::vector<std::string> & directive_values, ServerConfig & config);
-void handle_server_name(std::vector<std::string> & directive_values, ServerConfig & config);
 void handle_server_root(std::vector<std::string> & directive_values, ServerConfig & server);
 void handle_autoindex(std::vector<std::string> & directive_values, LocationConfig & location);
 // void handle_location(std::vector<std::string> & directive_values, ServerConfig & config);
@@ -166,4 +161,4 @@ std::string joinMethods(const std::vector<std::string>& methods);
 
 void init_default_values(ServerConfig & server_config);
 
-#endif 
+#endif

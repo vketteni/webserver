@@ -81,6 +81,7 @@ HeaderValidationStatus processContentLength(Request & request, Response & respon
 
 	std::stringstream ss;
 	ss << request.getHeaderOrDefault("Content-Length", "0");
+	pretty_debug(ss.str());
 	size_t content_length = std::atoi(ss.str().c_str());
 
 	if (content_length > config.client_max_body_size)

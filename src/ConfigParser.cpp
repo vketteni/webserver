@@ -479,7 +479,6 @@ void setup_directive_handlers(std::map<std::string, ServerDirectiveHandler> & ha
 	handler["client_max_body_size"] = &handle_client_max_body_size;
 	handler["listen"] = &handle_port;
 	handler["host"] = &handle_host;
-	handler["server_name"] = &handle_server_name;
 	// handler["location"] = &handle_location;
 	handler["error_page"] = &handle_error_page;
 	handler["root"] = &handle_server_root;
@@ -547,14 +546,6 @@ void handle_host(std::vector<std::string> & directive_values, ServerConfig & con
 	config.host = std::string(directive_values.front());
 }
 
-void handle_server_name(std::vector<std::string> & directive_values, ServerConfig & config)
-{
-	if (directive_values.empty())
-		throw std::runtime_error("Error: 'server_name' directive has no value.");
-
-	for (std::vector<std::string>::iterator it = directive_values.begin(); it != directive_values.end(); ++it)
-		config.serverNames.push_back(std::string(*it));
-}
 
 void handle_error_page(std::vector<std::string> & directive_values, ServerConfig & config)
 {
@@ -749,5 +740,4 @@ void init_default_values(ServerConfig & server_config)
 	// server_config.locations
 	server_config.ports.push_back(DEFAULT_PORT);
 	server_config.root = DEFAULT_ROOT;
-	server_config.serverNames.push_back(DEFAULT_SERVER_NAME);
 }

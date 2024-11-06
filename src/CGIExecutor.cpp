@@ -13,16 +13,28 @@ CGIExecutor::~CGIExecutor()
 bool CGIExecutor::executeCGI(Request & request, Response & response)
 {
     char **env = createCGIEnvironment(request);
-    // show the every value in **env
-    // for (int i = 0; env[i] != NULL; i++) {
-    //     std::cout << env[i] << std::endl;
-    // }
-    // // debug body
-    // debug("body: " + request.getBody() + "\n");
 
-    const char *path = request.getUri().c_str();
-    char *argv[1];
-    argv[0] = NULL;
+    // Umwandeln von const char* in std::string
+    std::string path = request.getUri();
+
+    char *argv[3];  // Array für Interpreter, Skript und NULL
+    argv[2] = NULL; // NULL für das Ende der Argumente
+
+    // Erkennen des Interpreters und Skripts
+    std::string interpreter;
+    if (path.find(".py") != std::string::npos) {
+        interpreter = "/usr/bin/python3"; // Python-Interpreter
+    }
+    else if (path.find(".php") != std::string::npos) {
+        interpreter = "/usr/bin/php-cgi"; // PHP-Interpreter
+    } else {
+        std::cerr << "Unsupported CGI script type" << std::endl;
+        return false;
+    }
+
+    // Setze die Argumente für execve
+    argv[0] = const_cast<char*>(interpreter.c_str());  // Interpreter
+    argv[1] = const_cast<char*>(path.c_str());        // Skript-Pfad
 
     int stdout_pipe[2];  // Pipe für stdout
     int stdin_pipe[2];   // Pipe für stdin (POST Body)
@@ -56,8 +68,8 @@ bool CGIExecutor::executeCGI(Request & request, Response & response)
         close(stdout_pipe[1]);
         close(stdin_pipe[0]);
 
-        // Führe das CGI-Skript aus
-        if (execve(path, argv, env) == -1)
+        // Führe das CGI-Skript mit dem entsprechenden Interpreter aus
+        if (execve(argv[0], argv, env) == -1)
         {
             perror("CGI execution failed");
             exit(1);
@@ -69,8 +81,8 @@ bool CGIExecutor::executeCGI(Request & request, Response & response)
         close(stdout_pipe[1]);  // stdout: Schreiben geschlossen
         close(stdin_pipe[0]);   // stdin: Lesen geschlossen
 
-        // Body comes from ** env
-        std::string body = request.getBody(); 
+        // Body kommt aus dem POST-Body
+        std::string body = request.getBody();
         write(stdin_pipe[1], body.c_str(), body.size());
 
         // Schließe stdin-Pipe nach dem Schreiben
@@ -106,6 +118,7 @@ bool CGIExecutor::executeCGI(Request & request, Response & response)
 }
 
 
+
 char** CGIExecutor::createCGIEnvironment(Request& request)
 {
     std::map<std::string, std::string> env_map;
@@ -134,10 +147,10 @@ char** CGIExecutor::createCGIEnvironment(Request& request)
     env[i] = NULL;
     return env;
 }
-		
+
 bool isCGI(const std::string & path)
 {
 	return path.find("/cgi-bin/") == 0 || path.find(".cgi") != std::string::npos
-		|| path.find(".py") != std::string::npos;
+		|| path.find(".py") != std::string::npos || path.find(".php") != std::string::npos;
 }
 

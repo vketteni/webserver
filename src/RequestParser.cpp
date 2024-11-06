@@ -155,7 +155,6 @@ bool RequestParser::readAndParse(int client_fd)
 {
     pretty_debug(_config.client_max_body_size);
     pretty_debug(_config.host);
-    pretty_debug(_config.serverNames.front());
     pretty_debug(_config.root);
 	_buffer.resize(BUFFER_SIZE);
     ssize_t bytes_read = recv(client_fd, _buffer.data(), BUFFER_SIZE, 0);
@@ -166,7 +165,6 @@ bool RequestParser::readAndParse(int client_fd)
     }
     pretty_debug(_config.client_max_body_size);
     pretty_debug(_config.host);
-    pretty_debug(_config.serverNames.front());
     pretty_debug(_config.root);
 
 	_buffer.resize(bytes_read);
