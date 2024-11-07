@@ -18,7 +18,6 @@ bool CGIExecutor::executeCGI(Request & request, Response & response)
     std::string path = request.getUri();
 
     char *argv[3];  // Array für Interpreter, Skript und NULL
-    argv[2] = NULL; // NULL für das Ende der Argumente
 
     // Erkennen des Interpreters und Skripts
     std::string interpreter;
@@ -26,7 +25,7 @@ bool CGIExecutor::executeCGI(Request & request, Response & response)
         interpreter = "/usr/bin/python3"; // Python-Interpreter
     }
     else if (path.find(".php") != std::string::npos) {
-        interpreter = "/usr/bin/php-cgi"; // PHP-Interpreter
+        interpreter = "/usr/bin/php"; // PHP-Interpreter
     } else {
         std::cerr << "Unsupported CGI script type" << std::endl;
         return false;
@@ -34,8 +33,11 @@ bool CGIExecutor::executeCGI(Request & request, Response & response)
 
     // Setze die Argumente für execve
     argv[0] = const_cast<char*>(interpreter.c_str());  // Interpreter
-    argv[1] = const_cast<char*>(path.c_str());        // Skript-Pfad
-
+   // argv[1] = const_cast<char*>(path.c_str());        // Skript-Pfad
+   argv[1] = const_cast<char*>("/home/hwiemann/Core/webserv/webserv/www/cgi_bin/superpower.php");
+    argv[2] = NULL; // NULL für das Ende der Argumente
+    pretty_debug(argv[0]);
+    pretty_debug(argv[1]);
     int stdout_pipe[2];  // Pipe für stdout
     int stdin_pipe[2];   // Pipe für stdin (POST Body)
 

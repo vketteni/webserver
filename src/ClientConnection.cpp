@@ -20,6 +20,16 @@ void ClientConnection::setLastActivity(time_t last_activity)
 
 bool ClientConnection::processRequest()
 {
+
+
+    pretty_debug(_host_config.client_max_body_size);
+    pretty_debug(_host_config.host);
+    pretty_debug(_host_config.root);
+
+	pretty_debug(_request_parser.getConfig().client_max_body_size);
+    pretty_debug(_request_parser.getConfig().host);
+    pretty_debug(_request_parser.getConfig().root);
+
 	if (!_request_parser.readAndParse(this->fd))
 		return false;
     if (_request_parser.isComplete())
