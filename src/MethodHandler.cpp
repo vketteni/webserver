@@ -1,5 +1,18 @@
 #include "../incl/MethodHandler.hpp"
 
+std::string extractSessionId(const std::string &cookie){
+    std::string session_id;
+    std::string::size_type start = cookie.find("session_id=");
+    if (start != std::string::npos) {
+        start += 10; // Length of "session_id="
+        std::string::size_type end = cookie.find(";", start);
+        if (end == std::string::npos) {
+            end = cookie.length();
+        }
+        session_id = cookie.substr(start, end - start);
+    }
+    return session_id;
+};
 	// if (method == "GET") {
     //     // Serve the file
     //     if (fileExists(filePath)) {
@@ -71,6 +84,18 @@ void GetRequestHandler::invoke(Request& request, Response& response, const Locat
 		return ;
     }
 
+    // if cookie is set in header do something else proceed
+    if (request.getHeaders().find("Cookie") != request.getHeaders().end())
+    {
+        std::string cookie = request.getHeaders().at("Cookie");
+        std::string session_id = extractSessionId(cookie);
+        if (!session_id.empty())
+        {
+            response.setBody("Session ID: " + session_id);
+            response.setStatusCode(200);
+            return;
+        }
+    }
 
 	if (isDirectory(absolute_path))
 	{
@@ -106,6 +131,8 @@ void GetRequestHandler::invoke(Request& request, Response& response, const Locat
 
 	response.setBody(contents.str());
 	response.setHeader("Connection", "keep-alive");
+    // this is for the bonus, do uncomment and recompile 
+   // response.setHeader("Set-Cookie", "session_id=1234; Max-Age=12; Path=/; HttpOnly");
 }
 
 void PostRequestHandler::invoke(Request& request, Response& response, const LocationConfig & location, const ServerConfig & config)

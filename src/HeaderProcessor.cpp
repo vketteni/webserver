@@ -206,12 +206,10 @@ HeaderValidationStatus processReferer(Request & request, Response & response, co
 
 HeaderValidationStatus processCookie(Request & request, Response & response, const ServerConfig & config)
 {
-	(void)request;
 	(void)response;
 	(void)config;
 
-	// std::cout << "Processing Cookie: " << request.getHeaderOrDefault("Cookie", "") << std::endl;
-	// Handle Cookie logic
+	 std::cout << "Processing Cookie: " << request.getHeaderOrDefault("Cookie", "") << std::endl;
 	return SUCCESS;
 }
 
