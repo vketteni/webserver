@@ -74,8 +74,6 @@ void GetRequestHandler::invoke(Request& request, Response& response, const Locat
 	std::string relative_path = Utils::trim(uri_path.substr(location.path.length()), "/");
 	relative_path = relative_path.size() == 0 && !location.index.empty() ? location.index : relative_path;
 	std::string absolute_path = root + relative_path;
-
-    pretty_debug("File Path: " + absolute_path);
     if (isCGI(absolute_path))
     {
 		CGIExecutor cgi;
