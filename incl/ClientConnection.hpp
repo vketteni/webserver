@@ -51,9 +51,6 @@ class ClientConnection
 		void		methodHandler(Request & request, Response & response, const LocationConfig & location, const ServerConfig & config);
 		void		handleErrorResponse(Response & response, const ServerConfig & server_config);
 		std::string	generateErrorPage(int status_code, const std::string &status_message);
-		void		setErrorResponse(Response& response, int statusCode, const std::string& message);
-		void		buildResponse(Response& response, int statusCode, const std::string& statusMessage, const std::string& body, const std::string& connection);
-
 };
 
 struct MatchRoute

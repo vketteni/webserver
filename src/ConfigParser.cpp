@@ -432,9 +432,7 @@ void ConfigParser::parseLocationBlock(BlockNode* location_block, ServerConfig & 
 
 	// Other not specified
 	location.autoindex = location.autoindex.empty() ? "off" : location.autoindex;
-	location.cgi_extension = location.cgi_extension.empty() ? ".py" : location.autoindex;
 	location.index = location.index.empty() ? "" : location.index;
-	location.upload_dir = location.upload_dir.empty() ? "uploads/" : location.autoindex;
 
 	server_config.locations.push_back(location);
 }
@@ -488,10 +486,7 @@ void setup_directive_handlers(std::map<std::string, LocationDirectiveHandler> & 
 	handler["methods"] = &handle_http_method;
 	handler["root"] = &handle_location_root;
 	handler["index"] = &handle_index;
-	handler["upload_dir"] = &handle_upload_dir;
-	handler["cgi_extension"] = &handle_cgi_extension;
 	handler["redirect"] = &handle_redirect;
-	handler["rewrite"] = &handle_rewrite;
 	handler["autoindex"] = &handle_autoindex;
 }
 
@@ -530,7 +525,6 @@ void handle_host(std::vector<std::string> & directive_values, ServerConfig & con
 
 	config.host = std::string(directive_values.front());
 }
-
 
 void handle_error_page(std::vector<std::string> & directive_values, ServerConfig & config)
 {
@@ -602,21 +596,6 @@ void handle_autoindex(std::vector<std::string> & directive_values, LocationConfi
 	location.autoindex = autoindex;
 }
 
-void handle_upload_dir(std::vector<std::string> & directive_values, LocationConfig & location)
-{
-	if (directive_values.size() != 1)
-		throw std::runtime_error("Error: 'upload_dir' directive requires exactly one value.");
-	location.upload_dir = directive_values.front();
-}
-
-void handle_cgi_extension(std::vector<std::string> & directive_values, LocationConfig & location)
-{
-	if (directive_values.size() != 1)
-		throw std::runtime_error("Error: 'cgi_extension' directive requires exactly one value.");
-	location.cgi_extension = directive_values.front();
-}
-
-
 void handle_redirect(std::vector<std::string> & directive_values, LocationConfig & location)
 {
 	if (directive_values.size() != 2)
@@ -628,14 +607,6 @@ void handle_redirect(std::vector<std::string> & directive_values, LocationConfig
 	ss >> status_code;
 	location.redirect_status = status_code;
 	location.redirect_path = directive_values[1];
-}
-
-void handle_rewrite(std::vector<std::string> & directive_values, LocationConfig & location)
-{
-	if (directive_values.size() != 1)
-		throw std::runtime_error("Error: 'rewrite' directive requires exactly one value.");
-
-	location.rewrite = directive_values.front();
 }
 
 const LocationConfig * findMatchingLocation(const std::string &normalized_uri, const std::vector<LocationConfig> &locations)

@@ -69,7 +69,7 @@ void GetRequestHandler::invoke(Request& request, Response& response, const Locat
 	if (isDirectory(absolute_path))
 	{
         std::string index_file = location.index;
-        std::string index_path = Utils::trim(absolute_path, "/") + "/" + index_file;
+        std::string index_path = Utils::trim(absolute_path, "/") + "/" + relative_path;
         if (fileExists(index_path))
             absolute_path = index_path;
 		else if (location.autoindex == "on")
