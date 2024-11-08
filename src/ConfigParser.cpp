@@ -736,7 +736,7 @@ void init_default_values(ServerConfig & server_config)
 {
 	server_config.client_max_body_size = DEFAULT_MAX_BODY_SIZE;
 	// server_config.error_pages
-	server_config.host = DEFAULT_HOST;
+	//server_config.host = DEFAULT_HOST;
 	// server_config.locations
 	server_config.ports.push_back(DEFAULT_PORT);
 	server_config.root = DEFAULT_ROOT;

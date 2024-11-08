@@ -85,7 +85,8 @@ void Server::bind_port_to_interfaces(int host_port, int host_fd, ServerConfig & 
 		struct sockaddr_in addr;
 		std::memset(&addr, 0, sizeof(addr));
 		addr.sin_family = AF_INET;
-		addr.sin_addr.s_addr = inet_addr(host_config.host.c_str()); // 0.0.0.0
+		//addr.sin_addr.s_addr = inet_addr(host_config.host.c_str()); // 0.0.0.0
+		addr.sin_addr.s_addr = host_config.host.empty() ? INADDR_ANY : inet_addr(host_config.host.c_str());
 		addr.sin_port = htons(host_port);
 		if (bind(host_fd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
 		{
