@@ -33,11 +33,8 @@ bool CGIExecutor::executeCGI(Request & request, Response & response)
 
     // Setze die Argumente für execve
     argv[0] = const_cast<char*>(interpreter.c_str());  // Interpreter
-   // argv[1] = const_cast<char*>(path.c_str());        // Skript-Pfad
-   argv[1] = const_cast<char*>("/home/hwiemann/Core/webserv/webserv/www/cgi_bin/superpower.php");
+    argv[1] = const_cast<char*>(path.c_str());        // Skript-Pfad
     argv[2] = NULL; // NULL für das Ende der Argumente
-    pretty_debug(argv[0]);
-    pretty_debug(argv[1]);
     int stdout_pipe[2];  // Pipe für stdout
     int stdin_pipe[2];   // Pipe für stdin (POST Body)
 
