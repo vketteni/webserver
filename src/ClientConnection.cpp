@@ -22,13 +22,13 @@ bool ClientConnection::processRequest()
 {
 
 
-    pretty_debug(_host_config.client_max_body_size);
-    pretty_debug(_host_config.host);
-    pretty_debug(_host_config.root);
+    // pretty_debug(_host_config.client_max_body_size);
+    // pretty_debug(_host_config.host);
+    // pretty_debug(_host_config.root);
 
-	pretty_debug(_request_parser.getConfig().client_max_body_size);
-    pretty_debug(_request_parser.getConfig().host);
-    pretty_debug(_request_parser.getConfig().root);
+	// pretty_debug(_request_parser.getConfig().client_max_body_size);
+    // pretty_debug(_request_parser.getConfig().host);
+    // pretty_debug(_request_parser.getConfig().root);
 
 	if (!_request_parser.readAndParse(this->fd))
 		return false;
@@ -52,7 +52,6 @@ bool ClientConnection::processResponse(Request & request, Response & response)
     std::string normalized_uri = Request::normalizeUri(request.getUri());
 	request.setUri(normalized_uri);
     const LocationConfig* matching_location = findMatchingLocation(normalized_uri, _host_config.locations);
-
     if (matching_location && matching_location->redirect_status != 0)
 	{
         response.setStatusCode(matching_location->redirect_status);
@@ -60,14 +59,17 @@ bool ClientConnection::processResponse(Request & request, Response & response)
         return true;
     }
     else if (matching_location)
+	{
+		pretty_debug("Matching location path: '" + matching_location->path + "'");
         methodHandler(request, response, *matching_location, _host_config);
+	}
 	else
         response.setStatusCode(404);
 
     if (response.getStatusCode() >= 400)
 		handleErrorResponse(response, _host_config);
 	else {
-        _logger.logInfo(response.getStatusCode(), "Successfully processed request to " ); //+ response.getPath()
+        _logger.logInfo(response.getStatusCode(), "Successfully processed request");
     }
 
 	return true;

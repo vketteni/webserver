@@ -155,12 +155,12 @@ bool Server::start()
 {
 	if (!parseConfig())
 	{
-	//	_logger.logError(400, "Failed to parse config file.");
+		//_logger.logError(400, "Failed to parse config file.");
 		return (false);
 	}
 	if (!setupServerSockets())
 	{
-	//	_logger.logError(400, "Failed to setup server sockets.");
+		//_logger.logError(400, "Failed to setup server sockets.");
 		return (false);
 	}
 	this->_running = true;
