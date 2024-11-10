@@ -42,8 +42,6 @@ class ClientConnection
 		void		setLastActivity(time_t last_activity);
 		bool		processRequest(void);
 
-		// void sendRedirect(const std::string& redirect_url, int statusCode = 301);
-
 	private:
 		bool		processResponse(Request & request, Response & response);
 		bool		sendResponse(Response & response);
@@ -53,14 +51,14 @@ class ClientConnection
 		void		methodHandler(Request & request, Response & response, const LocationConfig & location, const ServerConfig & config);
 		void		handleErrorResponse(Response & response, const ServerConfig & server_config);
 		std::string	generateErrorPage(int status_code, const std::string &status_message);
-		void setErrorResponse(Response& response, int statusCode, const std::string& message);
-		void buildResponse(Response& response, int statusCode, const std::string& statusMessage, const std::string& body, const std::string& connection);
+		void		setErrorResponse(Response& response, int statusCode, const std::string& message);
+		void		buildResponse(Response& response, int statusCode, const std::string& statusMessage, const std::string& body, const std::string& connection);
 
 };
 
 struct MatchRoute
 {
-    const std::string & route;
+	const std::string & route;
 
 	/*
 		Match object to find LocationConfig.path in search collection

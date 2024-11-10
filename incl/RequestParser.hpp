@@ -33,21 +33,21 @@ class RequestParser
 	public:
 		RequestParser(const ServerConfig & config);
 
-		bool readAndParse(int client_fd);
-		bool isComplete() const;
-		void reset(void);
+		bool				readAndParse(int client_fd);
+		bool				isComplete() const;
+		void				reset(void);
 
-		RequestState getState(void) const;
-		const Request & getRequest(void) const;
-		const Response & getResponse(void) const;
-		const ServerConfig & getConfig(void) const;
+		RequestState		getState(void) const;
+		const Request		& getRequest(void) const;
+		const Response 		& getResponse(void) const;
+		const ServerConfig	& getConfig(void) const;
 
 	private:
-		bool parse(void);
-		bool extractBody();
-		bool extractRequestLine(void);
-		bool extractHeaders(void);
-		bool processHeadersBeforeBody(void);
+		bool				parse(void);
+		bool				extractBody();
+		bool				extractRequestLine(void);
+		bool				extractHeaders(void);
+		bool				processHeadersBeforeBody(void);
 };
 
 #endif

@@ -42,7 +42,7 @@ bool HeaderProcessor::processHeaders(std::map<std::string, HeaderHandler> & hand
 void HeaderProcessor::initDefaultHeaders()
 {
 	_response.setHeader("Date", getCurrentTime());
-	_response.setHeader("Server", "webserver/1.0");// TODO: Use config file server name;
+	_response.setHeader("Server", "webserver/1.0");
 	if (_request.getHeaderOrDefault("Connection", "").empty())
 	{
 		_response.setHeader("Connection", "close");
@@ -69,8 +69,6 @@ void HeaderProcessor::handleMissingHeaders(const std::set<std::string> &missing_
 		std::cerr << *it << " ";
 	}
 	std::cerr << std::endl;
-
-	// Additional error handling (e.g., setting response status to 400 Bad Request)
 }
 
 HeaderValidationStatus processContentLength(Request & request, Response & response, const ServerConfig & config)
@@ -81,7 +79,6 @@ HeaderValidationStatus processContentLength(Request & request, Response & respon
 
 	std::stringstream ss;
 	ss << request.getHeaderOrDefault("Content-Length", "0");
-	pretty_debug(ss.str());
 	size_t content_length = std::atoi(ss.str().c_str());
 
 	if (content_length > config.client_max_body_size)
@@ -121,7 +118,6 @@ HeaderValidationStatus processExpect(Request & request, Response & response, con
 	(void)config;
 
 	// std::cout << "Processing Expect: " << request.getHeaderOrDefault("Expect", "") << std::endl;
-	// Handle Expect logic
 	return SUCCESS;
 }
 
@@ -134,40 +130,6 @@ HeaderValidationStatus processTransferEncoding(Request & request, Response & res
 
 	// std::cout << "Processing Transfer-Encoding: " << request.getHeaderOrDefault("Transfer-Encoding", "") << std::endl;
 	// Handle Transfer-Encoding logic
-	return SUCCESS;
-}
-
-HeaderValidationStatus processContentType(Request & request, Response & response, const ServerConfig & config)
-{
-	(void)request;
-	(void)response;
-	(void)config;
-
-	// std::cout << "Processing Content-Type: " << response.getHeaderOrDefault("Content-Type", "") << std::endl;
-	// Handle Content-Type logic
-	if (response.getHeaderOrDefault("Content-Type", "").empty())
-	{
-		response.setHeader("Content-Type", "application/octet-stream");
-	}
-	return SUCCESS;
-}
-
-HeaderValidationStatus processAccept(Request & request, Response & response, const ServerConfig & config)
-{
-	(void)config;
-	// std::cout << "Processing Accept: " << request.getHeaderOrDefault("Accept", "") << std::endl;
-	std::string request_header = request.getHeaderOrDefault("Accept", "");
-
-	if (request_header.find("application/json") != std::string::npos)
-	{
-		response.setHeader("Content-Type", "application/json");
-	} else if (request_header.find("text/html") != std::string::npos)
-	{
-		response.setHeader("Content-Type", "text/html");
-	} else
-	{
-		response.setHeader("Content-Type", "application/octet-stream");
-	}
 	return SUCCESS;
 }
 
@@ -204,12 +166,14 @@ HeaderValidationStatus processReferer(Request & request, Response & response, co
 	return SUCCESS;
 }
 
-HeaderValidationStatus processCookie(Request & request, Response & response, const ServerConfig & config)
+
+HeaderValidationStatus processIfNoneMatch(Request & request, Response & response, const ServerConfig & config)
 {
+	(void)request;
 	(void)response;
 	(void)config;
-
-	 std::cout << "Processing Cookie: " << request.getHeaderOrDefault("Cookie", "") << std::endl;
+	// std::cout << "Processing If-None-Match: " << request.getHeaderOrDefault("If-None-Match", "") << std::endl;
+	// Handle If-None-Match logic
 	return SUCCESS;
 }
 
@@ -223,6 +187,54 @@ HeaderValidationStatus processIfModifiedSince(Request & request, Response & resp
 	// Handle If-Modified-Since logic
 	return SUCCESS;
 }
+
+HeaderValidationStatus processContentType(Request & request, Response & response, const ServerConfig & config)
+{
+	(void)request;
+	(void)response;
+	(void)config;
+
+	// std::cout << "Processing Content-Type: " << response.getHeaderOrDefault("Content-Type", "") << std::endl;
+	// Handle Content-Type logic
+	if (response.getHeaderOrDefault("Content-Type", "").empty())
+	{
+		response.setHeader("Content-Type", "application/octet-stream");
+	}
+	return SUCCESS;
+}
+
+
+
+HeaderValidationStatus processAccept(Request & request, Response & response, const ServerConfig & config)
+{
+	(void)config;
+	// std::cout << "Processing Accept: " << request.getHeaderOrDefault("Accept", "") << std::endl;
+	std::string request_header = request.getHeaderOrDefault("Accept", "");
+
+	if (request_header.find("application/json") != std::string::npos)
+	{
+		response.setHeader("Content-Type", "application/json");
+	} else if (request_header.find("text/html") != std::string::npos)
+	{
+		response.setHeader("Content-Type", "text/html");
+	} else
+	{
+		response.setHeader("Content-Type", "application/octet-stream");
+	}
+	return SUCCESS;
+}
+
+
+
+HeaderValidationStatus processCookie(Request & request, Response & response, const ServerConfig & config)
+{
+	(void)response;
+	(void)config;
+
+	 std::cout << "Processing Cookie: " << request.getHeaderOrDefault("Cookie", "") << std::endl;
+	return SUCCESS;
+}
+
 
 HeaderValidationStatus processLastModified(Request & request, Response & response, const ServerConfig & config)
 {
@@ -252,15 +264,7 @@ HeaderValidationStatus processLastModified(Request & request, Response & respons
 }
 
 
-HeaderValidationStatus processIfNoneMatch(Request & request, Response & response, const ServerConfig & config)
-{
-	(void)request;
-	(void)response;
-	(void)config;
-	// std::cout << "Processing If-None-Match: " << request.getHeaderOrDefault("If-None-Match", "") << std::endl;
-	// Handle If-None-Match logic
-	return SUCCESS;
-}
+
 
 /*
 	Description: Initializes handlers to be applied before the body is parsed
@@ -271,8 +275,6 @@ HeaderValidationStatus processIfNoneMatch(Request & request, Response & response
 void setup_pre_body_handlers(std::map<std::string, HeaderHandler> & handlers, std::set<std::string> & required_headers)
 {
 	(void)required_headers;
-	// required_headers.insert("Host");
-	// required_headers.insert("Content-Length");
 
 	handlers["Host"] = &processHost;
 	handlers["Connection"] = &processConnection;

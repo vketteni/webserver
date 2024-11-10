@@ -37,7 +37,7 @@ struct LocationConfig
     std::string upload_dir;
     std::string cgi_extension;
     std::vector<std::string> methods;
-    int redirect_status;
+    int			redirect_status;
     std::string redirect_path;
 
     LocationConfig() : redirect_status(0) {}
@@ -47,7 +47,7 @@ struct ServerConfig
 {
     std::string root;
     std::string host;
-	size_t client_max_body_size;
+	size_t 		client_max_body_size;
     std::vector<int> ports;
     std::vector<LocationConfig> locations;
     std::map<int, std::string> error_pages;
@@ -65,8 +65,8 @@ class IConfigNode
 class DirectiveNode : public IConfigNode
 {
 	public:
-		std::string key;
-		std::vector<std::string> values;
+		std::string					key;
+		std::vector<std::string>	values;
 
 		DirectiveNode(const std::string& k) : key(k) {}
 		void print(int indent = 0) const;
@@ -75,9 +75,9 @@ class DirectiveNode : public IConfigNode
 class BlockNode : public IConfigNode
 {
 	public:
-		std::string name;
-		std::vector<std::string> parameters;
-		std::list<IConfigNode*> children;
+		std::string					name;
+		std::vector<std::string>	parameters;
+		std::list<IConfigNode*>		children;
 
 		BlockNode(const std::string& n) : name(n) {}
 		~BlockNode();
@@ -95,11 +95,11 @@ class ConfigParser
 
 
 	private:
-		std::string filename;
-		std::string fileContent;
-		std::list<std::string> tokens;
-		std::list<IConfigNode*> config_tree;
-		std::string _cwd;
+		std::string				filename;
+		std::string				fileContent;
+		std::list<std::string>	tokens;
+		std::list<IConfigNode*>	config_tree;
+		std::string				_cwd;
 
 		bool readFile(const std::string& fname, std::string& content); // TODO: Use FileManager Class
 
@@ -142,7 +142,6 @@ void handle_port(std::vector<std::string> & directive_values, ServerConfig & con
 void handle_host(std::vector<std::string> & directive_values, ServerConfig & config);
 void handle_server_root(std::vector<std::string> & directive_values, ServerConfig & server);
 void handle_autoindex(std::vector<std::string> & directive_values, LocationConfig & location);
-// void handle_location(std::vector<std::string> & directive_values, ServerConfig & config);
 void handle_error_page(std::vector<std::string> & directive_values, ServerConfig & config);
 
 void handle_http_method(std::vector<std::string> & directive_values, LocationConfig & location);

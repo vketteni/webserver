@@ -1,11 +1,9 @@
 
 #include "../incl/CGIExecutor.hpp"
 
-// Default constructor
 CGIExecutor::CGIExecutor()
 { return; }
 
-// Default destructor
 CGIExecutor::~CGIExecutor()
 { return; }
 
@@ -13,32 +11,27 @@ CGIExecutor::~CGIExecutor()
 bool CGIExecutor::executeCGI(Request & request, Response & response)
 {
     char **env = createCGIEnvironment(request);
-
-    // Umwandeln von const char* in std::string
     std::string path = request.getUri();
 
     char *argv[3];  // Array für Interpreter, Skript und NULL
 
-    // Erkennen des Interpreters und Skripts
     std::string interpreter;
     if (path.find(".py") != std::string::npos) {
-        interpreter = "/usr/bin/python3"; // Python-Interpreter
+        interpreter = "/usr/bin/python3";
     }
     else if (path.find(".php") != std::string::npos) {
-        interpreter = "/usr/bin/php"; // PHP-Interpreter
+        interpreter = "/usr/bin/php";
     } else {
         std::cerr << "Unsupported CGI script type" << std::endl;
         return false;
     }
 
-    // Setze die Argumente für execve
-    argv[0] = const_cast<char*>(interpreter.c_str());  // Interpreter
-    argv[1] = const_cast<char*>(path.c_str());        // Skript-Pfad
-    argv[2] = NULL; // NULL für das Ende der Argumente
-    int stdout_pipe[2];  // Pipe für stdout
-    int stdin_pipe[2];   // Pipe für stdin (POST Body)
+    argv[0] = const_cast<char*>(interpreter.c_str());
+    argv[1] = const_cast<char*>(path.c_str());
+    argv[2] = NULL;
+    int stdout_pipe[2];
+    int stdin_pipe[2];
 
-    // Erstelle die Pipes
     if (pipe(stdout_pipe) == -1 || pipe(stdin_pipe) == -1)
     {
         perror("Pipe creation failed");
@@ -54,44 +47,35 @@ bool CGIExecutor::executeCGI(Request & request, Response & response)
 
     if (pid == 0)  // Kindprozess
     {
-        // Schließe unnötige Enden der Pipes
-        close(stdout_pipe[0]);  // stdout-Pipe: Lesen geschlossen
-        close(stdin_pipe[1]);   // stdin-Pipe: Schreiben geschlossen
+        close(stdout_pipe[0]);
+        close(stdin_pipe[1]);
 
-        // Umleiten von stdout und stdin
         dup2(stdout_pipe[1], STDOUT_FILENO);
         dup2(stdout_pipe[1], STDERR_FILENO);
         dup2(stdin_pipe[0], STDIN_FILENO);
 
-        // Schließe die nicht mehr benötigten Enden
         close(stdout_pipe[1]);
         close(stdin_pipe[0]);
 
-        // Führe das CGI-Skript mit dem entsprechenden Interpreter aus
         if (execve(argv[0], argv, env) == -1)
         {
             perror("CGI execution failed");
             exit(1);
         }
     }
-    else  // Elternprozess
+    else
     {
-        // Schließe unnötige Enden der Pipes
-        close(stdout_pipe[1]);  // stdout: Schreiben geschlossen
-        close(stdin_pipe[0]);   // stdin: Lesen geschlossen
+        close(stdout_pipe[1]);
+        close(stdin_pipe[0]);
 
-        // Body kommt aus dem POST-Body
         std::string body = request.getBody();
         write(stdin_pipe[1], body.c_str(), body.size());
 
-        // Schließe stdin-Pipe nach dem Schreiben
         close(stdin_pipe[1]);
 
-        // Warte auf den CGI-Prozess
         int status;
         waitpid(pid, &status, 0);
 
-        // Lese die Ausgabe des CGI-Skripts von stdout
         std::string output;
         char buffer[128];
         ssize_t bytes_read;
@@ -102,10 +86,8 @@ bool CGIExecutor::executeCGI(Request & request, Response & response)
         }
         close(stdout_pipe[0]);
 
-        // Setze die CGI-Antwort im Response-Objekt
         response.setBody(output);
 
-        // Fehlerprüfung für den CGI-Prozess
         if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
         {
             std::cerr << "CGI failed with error code " << WEXITSTATUS(status) << std::endl;

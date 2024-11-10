@@ -16,13 +16,6 @@ bool FileManager::constructSafePath(const std::string& file_path, std::string& o
 {
     char real_path[PATH_MAX];
     std::string full_path = base_directory + file_path;
-
-    // TODO: Find C++98 replacement for realpath
-    // if (realpath(full_path.c_str(), real_path) == NULL)
-	// {
-    //     return false;
-    // }
-
     std::string resolved_path(real_path);
 
     if (resolved_path.find(base_directory) != 0)
@@ -52,13 +45,6 @@ bool FileManager::readFile(const std::string& file_path, std::string& out_data)
 	{
         return false;
     }
-
-    // TODO: compile error
-    // if (file_stat.st_size > max_file_size)
-	// {
-    //     return false;
-    // }
-
     std::ifstream file(safe_path.c_str(), std::ios::in | std::ios::binary);
     if (!file.is_open())
 	{
@@ -202,8 +188,6 @@ std::string extractBoundary(const std::map<std::string, std::string>& headers) {
     return boundary;
 }
 
-// this is the actual stuff we are using 
-
 bool parseMultipartData(const std::string& body, const std::string& boundary, std::string& out_filename, std::vector<char>& out_filecontent) {
     // Finde die Start-Boundary
     size_t boundary_pos = body.find("--" + boundary);
@@ -282,19 +266,6 @@ bool writeFileDirectly(const std::string& directory, const std::string& filename
     file.close();
     return true;
 }
-
-/* std::string url_encode(const std::string& value) {
-    std::ostringstream encoded;
-    for (char c : value) {
-        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
-            encoded << c;
-        } else {
-            encoded << '%' << std::uppercase << std::setw(2) << std::setfill('0') 
-                    << static_cast<int>(static_cast<unsigned char>(c));
-        }
-    }
-    return encoded.str();
-} */
 
 bool deleteFile(const std::string& file_path) {
     if (remove(file_path.c_str()) != 0) {

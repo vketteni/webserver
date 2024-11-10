@@ -38,27 +38,27 @@ class HeaderProcessor
 		void handleMissingHeaders(const std::set<std::string> &missing_headers);
 };
 
-// Handlers 
-HeaderValidationStatus processHost(Request & request, Response & response, const ServerConfig & config);
-HeaderValidationStatus processConnection(Request & request, Response & response, const ServerConfig & config);
-HeaderValidationStatus processExpect(Request & request, Response & response, const ServerConfig & config);
-HeaderValidationStatus processContentLength(Request & request, Response & response, const ServerConfig & config);
-HeaderValidationStatus processTransferEncoding(Request & request, Response & response, const ServerConfig & config);
-HeaderValidationStatus processContentType(Request & request, Response & response, const ServerConfig & config);
-HeaderValidationStatus processAccept(Request & request, Response & response, const ServerConfig & config);
-HeaderValidationStatus processUserAgent(Request & request, Response & response, const ServerConfig & config);
-HeaderValidationStatus processAuthorization(Request & request, Response & response, const ServerConfig & config);
-HeaderValidationStatus processReferer(Request & request, Response & response, const ServerConfig & config);
-HeaderValidationStatus processCookie(Request & request, Response & response, const ServerConfig & config);
-HeaderValidationStatus processIfModifiedSince(Request & request, Response & response, const ServerConfig & config);
-HeaderValidationStatus processIfNoneMatch(Request & request, Response & response, const ServerConfig & config);
+// Handlers
+HeaderValidationStatus	processHost(Request & request, Response & response, const ServerConfig & config);
+HeaderValidationStatus	processConnection(Request & request, Response & response, const ServerConfig & config);
+HeaderValidationStatus	processExpect(Request & request, Response & response, const ServerConfig & config);
+HeaderValidationStatus	processContentLength(Request & request, Response & response, const ServerConfig & config);
+HeaderValidationStatus	processTransferEncoding(Request & request, Response & response, const ServerConfig & config);
+HeaderValidationStatus	processContentType(Request & request, Response & response, const ServerConfig & config);
+HeaderValidationStatus	processAccept(Request & request, Response & response, const ServerConfig & config);
+HeaderValidationStatus	processUserAgent(Request & request, Response & response, const ServerConfig & config);
+HeaderValidationStatus	processAuthorization(Request & request, Response & response, const ServerConfig & config);
+HeaderValidationStatus	processReferer(Request & request, Response & response, const ServerConfig & config);
+HeaderValidationStatus	processCookie(Request & request, Response & response, const ServerConfig & config);
+HeaderValidationStatus	processIfModifiedSince(Request & request, Response & response, const ServerConfig & config);
+HeaderValidationStatus	processIfNoneMatch(Request & request, Response & response, const ServerConfig & config);
 
 // Handler Setup
-void setup_pre_body_handlers(std::map<std::string, HeaderHandler> & handlers, std::set<std::string> & required);
-void setup_post_body_handlers(std::map<std::string, HeaderHandler> & handlers, std::set<std::string> & required);
+void					setup_pre_body_handlers(std::map<std::string, HeaderHandler> & handlers, std::set<std::string> & required);
+void					setup_post_body_handlers(std::map<std::string, HeaderHandler> & handlers, std::set<std::string> & required);
 
 // Util
-std::string getCurrentTime();
-std::string getContentType(const std::string& path);
+std::string				getCurrentTime();
+std::string				getContentType(const std::string& path);
 
 #endif

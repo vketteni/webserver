@@ -85,7 +85,6 @@ void Server::bind_port_to_interfaces(int host_port, int host_fd, ServerConfig & 
 		struct sockaddr_in addr;
 		std::memset(&addr, 0, sizeof(addr));
 		addr.sin_family = AF_INET;
-		//addr.sin_addr.s_addr = inet_addr(host_config.host.c_str()); // 0.0.0.0
 		addr.sin_addr.s_addr = host_config.host.empty() ? INADDR_ANY : inet_addr(host_config.host.c_str());
 		addr.sin_port = htons(host_port);
 		if (bind(host_fd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
@@ -155,12 +154,10 @@ bool Server::start()
 {
 	if (!parseConfig())
 	{
-		//_logger.logError(400, "Failed to parse config file.");
 		return (false);
 	}
 	if (!setupServerSockets())
 	{
-		//_logger.logError(400, "Failed to setup server sockets.");
 		return (false);
 	}
 	this->_running = true;
@@ -251,27 +248,6 @@ time_t currentTime = std::time(NULL);
         }
     }
 }
-
-	//time_t	last_activity;
-
-	/* time_t currentTime = std::time(NULL);
-	for (std::vector<struct pollfd>::iterator poll_iterator = _poll_fds.begin(); poll_iterator != _poll_fds.end(); ++poll_iterator)
-	{
-		std::vector<ClientConnection>::iterator client_iterator = std::find_if(_client_connections.begin(),
-				_client_connections.end(), MatchClientFd(poll_iterator->fd));
-		if (client_iterator != _client_connections.end())
-		{
-			last_activity = client_iterator->getLastActivity();
-			if (difftime(currentTime, last_activity) > client_iterator->timeout)
-			{
-				std::cout << "Client on fd " << client_iterator->fd << " timed out. Disconnecting...\n";
-				close(client_iterator->fd);
-				_client_connections.erase(client_iterator);
-				poll_iterator = _poll_fds.erase(poll_iterator);
-			}
-		}
-	} */
-
 
 bool Server::isHostSocket(int fd)
 {
@@ -380,7 +356,7 @@ bool Server::acceptNewClient(const std::vector<struct pollfd>::const_iterator po
     // Add client to _poll_fds
     struct pollfd pfd;
     pfd.fd = client_fd;
-    pfd.events = POLLIN | POLLOUT; //hier der change von POLLIN | POLLOUT zu nur POLLIN Cpu 100 problem geloest
+    pfd.events = POLLIN | POLLOUT;
     pfd.revents = 0;
     _poll_fds.push_back(pfd);
 

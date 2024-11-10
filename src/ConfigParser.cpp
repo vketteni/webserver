@@ -233,11 +233,9 @@ IConfigNode* ConfigParser::handleInclude(std::list<std::string>::iterator& it)
 	}
 	++it; // Skip ';'
 
-	// Remove quotes if present
 	if (!includeFile.empty() && (includeFile[0] == '"' || includeFile[0] == '\''))
 		includeFile = includeFile.substr(1, includeFile.size() - 2);
 
-	// Read the included file
 	std::string includedContent;
 	if (!readFile(includeFile, includedContent))
 	{
@@ -309,7 +307,6 @@ void ConfigParser::tokenizeString(const std::string& content, std::list<std::str
 			}
 			else if (ch == '#')
 			{
-				// Skip the rest of the line (comment)
 				if (!currentToken.empty())
 				{
 					tokenList.push_back(currentToken);
@@ -479,7 +476,6 @@ void setup_directive_handlers(std::map<std::string, ServerDirectiveHandler> & ha
 	handler["client_max_body_size"] = &handle_client_max_body_size;
 	handler["listen"] = &handle_port;
 	handler["host"] = &handle_host;
-	// handler["location"] = &handle_location;
 	handler["error_page"] = &handle_error_page;
 	handler["root"] = &handle_server_root;
 
@@ -490,7 +486,6 @@ void setup_directive_handlers(std::map<std::string, LocationDirectiveHandler> & 
 {
 	handler.clear();
 	handler["methods"] = &handle_http_method;
-	// handler["path"] = &handle_path;
 	handler["root"] = &handle_location_root;
 	handler["index"] = &handle_index;
 	handler["upload_dir"] = &handle_upload_dir;
@@ -526,16 +521,6 @@ void handle_port(std::vector<std::string> & directive_values, ServerConfig & con
 	int port;
 	ss >> port;
 	config.ports.front() = port;
-	// for (std::vector<std::string>::iterator it = directive_values.begin(); it != directive_values.end(); ++it)
-	// {
-	// 	std::string directive_value = *it;
-	// 	std::stringstream ss;
-	// 	ss << directive_value;
-	// 	int port;
-	// 	ss >> port;
-	// 	config.ports.push_back(port);
-	// }
-
 }
 
 void handle_host(std::vector<std::string> & directive_values, ServerConfig & config)
@@ -566,7 +551,6 @@ void handle_http_method(std::vector<std::string> & directive_values, LocationCon
 {
 	if (directive_values.empty())
 		throw std::runtime_error("Error: 'method' directive was declared but has no value.");
-	// debug(location.path);
 	for (std::vector<std::string>::iterator it = directive_values.begin(); it != directive_values.end(); ++it)
 	{
 		location.methods.push_back(*it);
@@ -735,9 +719,6 @@ std::string joinMethods(const std::vector<std::string>& methods) {
 void init_default_values(ServerConfig & server_config)
 {
 	server_config.client_max_body_size = DEFAULT_MAX_BODY_SIZE;
-	// server_config.error_pages
-	//server_config.host = DEFAULT_HOST;
-	// server_config.locations
 	server_config.ports.push_back(DEFAULT_PORT);
 	server_config.root = DEFAULT_ROOT;
 }

@@ -60,7 +60,6 @@ bool ClientConnection::processResponse(Request & request, Response & response)
     }
     else if (matching_location)
 	{
-		pretty_debug("Matching location path: '" + matching_location->path + "'");
         methodHandler(request, response, *matching_location, _host_config);
 	}
 	else
@@ -201,16 +200,19 @@ bool ClientConnection::sendResponse(Response & response)
 	const std::string new_line = "\r\n";
 	std::ostringstream oss;
 	oss << response.getVersion() << " " << response.getStatusCode() << " " << response.getStatusMessage() << new_line;
+//	oss << "Content-Type: " << "text/html; charset=utf-8" << new_line;
+	oss << "Content-Length: " << response.getBody().size() << new_line;
 	const std::map<std::string, std::string> & headers = response.getHeaders();
 	for (std::map<std::string, std::string>::const_iterator headerIterator = headers.begin(); headerIterator != headers.end(); ++headerIterator)
 	{
 
 		oss << headerIterator->first << ": " << headerIterator->second << new_line;
+		// pretty_debug(headerIterator->first);
+		// pretty_debug(headerIterator->second);
 	}
 	oss << new_line;
 	oss << response.getBody();
 	std::string responseStr = oss.str();
-	pretty_debug(responseStr);
 	ssize_t bytesSent = send(fd, responseStr.c_str(), responseStr.size(), 0);
 	return bytesSent == static_cast<ssize_t>(responseStr.size());
 }

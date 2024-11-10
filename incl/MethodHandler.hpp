@@ -20,7 +20,6 @@ class AbstractMethodHandler
 		virtual ~AbstractMethodHandler() {}
 };
 
-// TODO: Implement as dependency injection (*)-(*)
 AbstractMethodHandler* getHandlerForMethod(const std::string& method);
 
 /*
@@ -36,7 +35,7 @@ class PostRequestHandler : public AbstractMethodHandler
 {
 	public:
 		void invoke(Request& request, Response& response, const LocationConfig & location, const ServerConfig & config);
-		
+
 };
 
 class DeleteRequestHandler : public AbstractMethodHandler

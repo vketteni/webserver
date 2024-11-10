@@ -153,7 +153,6 @@ bool RequestParser::processHeadersBeforeBody(void)
 
 bool RequestParser::readAndParse(int client_fd)
 {
-    pretty_debug(_config.client_max_body_size);
     pretty_debug(_config.host);
     pretty_debug(_config.root);
 	_buffer.resize(BUFFER_SIZE);
@@ -163,10 +162,6 @@ bool RequestParser::readAndParse(int client_fd)
         // Handle disconnection or error
         return false;
     }
-    pretty_debug(_config.client_max_body_size);
-    pretty_debug(_config.host);
-    pretty_debug(_config.root);
-
 	_buffer.resize(bytes_read);
     if (!parse())
 	{

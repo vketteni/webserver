@@ -32,7 +32,7 @@
 
 // Das Pretty Debug Makro (ohne Zeitstempel)
 #define pretty_debug(msg) \
-    std::cerr << COLOR_BLUE << "[DEBUG] " \
+    std::cerr << COLOR_BLUE << "[VinOmHenni] " \
               << COLOR_MAGENTA << __FILE__ << ":" << __LINE__ << " " \
               << COLOR_RESET << msg << std::endl;
               /* << COLOR_YELLOW << __PRETTY_FUNCTION__ << "(): " \ */

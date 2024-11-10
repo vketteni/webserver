@@ -19,28 +19,22 @@ class Request : public AMessage
 		std::string							_method;
 		std::string							_uri;
 
-/* 	Inherited members:
-		std::string _first_line;
-		std::string _protocol_version;
-		std::string _body;
-		std::map<std::string, std::string> _headers; */
-
 	public:
 		Request();
 
-		const std::string &getMethod() const;
-		const std::string &getUri() const;
-		void setMethod(const std::string & method);
-		void setUri(const std::string & uri);
+		const std::string	&getMethod() const;
+		const std::string	&getUri() const;
+		void 				setMethod(const std::string & method);
+		void 				setUri(const std::string & uri);
 
-		const std::string buildFirstLine() const;
-		const std::string buildQueryString() const;
+		const std::string	buildFirstLine() const;
+		const std::string	buildQueryString() const;
 
-		static std::string normalizeUri(const std::string& raw_uri);
-		
+		static std::string	normalizeUri(const std::string& raw_uri);
+
 	private:
-		static std::string removeDotSegments(const std::string& path);
-		static std::string decodePercentEncoding(const std::string& uri);
+		static std::string	removeDotSegments(const std::string& path);
+		static std::string	decodePercentEncoding(const std::string& uri);
 };
 
 #endif

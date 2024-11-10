@@ -29,7 +29,7 @@ class Logger {
 		LogLevel		currentLog;
 		std::string		accessLogPath;
 		std::string		errorLogPath;
-		size_t			maxLogFileSize; //in bytes
+		size_t			maxLogFileSize;
 
 		void			logMessage(int statusCode, const std::string &message, LogLevel level, std::ofstream &logFile);
 		std::string		getCurrentTime();
@@ -42,7 +42,6 @@ class Logger {
 		~Logger();
 
 		void			rotateLogs(std::ofstream &logFile, const std::string &logFilePath);
-		//void			logRequest(const std::string& clientIp, const std::string& method, const std::string& path, int statusCode);
 		void			logError(int statusCode, const std::string& errorMessage);
 		void			logDebug(int statusCode, const std::string& debugMessage);
 		void			logWarning(int statusCode, const std::string& warningMessage);

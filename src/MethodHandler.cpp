@@ -13,38 +13,7 @@ std::string extractSessionId(const std::string &cookie){
     }
     return session_id;
 };
-	// if (method == "GET") {
-    //     // Serve the file
-    //     if (fileExists(filePath)) {
-    //         response.statusCode = 200; // OK
-    //         response.body = readFile(filePath);
-    //         response.headers["Content-Type"] = getContentType(filePath);
-    //     } else {
-    //         // File not found
-    //         response.statusCode = 404; // Not Found
-    //         response.body = "404 Not Found";
-    //     }
-    // } else if (method == "POST") {
-    //     // Handle file upload
-    //     if (!locationConfig.upload_dir.empty()) {
-    //         std::string uploadPath = locationConfig.upload_dir + "/" + extractFileName(request.uri);
-    //         if (saveFile(uploadPath, request.body)) {
-    //             response.statusCode = 201; // Created
-    //             response.body = "File uploaded successfully.";
-    //         } else {
-    //             response.statusCode = 500; // Internal Server Error
-    //             response.body = "Failed to upload file.";
-    //         }
-    //     } else {
-    //         response.statusCode = 403; // Forbidden
-    //         response.body = "Upload directory not configured.";
-    //     }
-    // } else {
-    //     // Other methods are not implemented
-    //     response.statusCode = 501; // Not Implemented
-    //     response.body = "501 Not Implemented";
-    // }
-	
+
 AbstractMethodHandler* getHandlerForMethod(const std::string& method)
 {
     if (method == "GET")
@@ -74,6 +43,8 @@ void GetRequestHandler::invoke(Request& request, Response& response, const Locat
 	std::string relative_path = Utils::trim(uri_path.substr(location.path.length()), "/");
 	relative_path = relative_path.size() == 0 && !location.index.empty() ? location.index : relative_path;
 	std::string absolute_path = root + relative_path;
+
+    pretty_debug("File Path: " + absolute_path);
     if (isCGI(absolute_path))
     {
 		CGIExecutor cgi;
@@ -129,8 +100,9 @@ void GetRequestHandler::invoke(Request& request, Response& response, const Locat
 
 	response.setBody(contents.str());
 	response.setHeader("Connection", "keep-alive");
-    // this is for the bonus, do uncomment and recompile 
-   // response.setHeader("Set-Cookie", "session_id=1234; Max-Age=12; Path=/; HttpOnly");
+
+    /* this is for the bonus, do uncomment and recompile */
+    //response.setHeader("Set-Cookie", "session_id=1234; Max-Age=12; Path=/; HttpOnly");
 }
 
 void PostRequestHandler::invoke(Request& request, Response& response, const LocationConfig & location, const ServerConfig & config)
@@ -142,7 +114,6 @@ void PostRequestHandler::invoke(Request& request, Response& response, const Loca
 	{
 		uri_path = uri_path.substr(0, uri_path.find('?')); // Remove query string
 	}
-	// std::string relative_path = uri_path.substr(location.path.length());
 	std::string relative_path = Utils::build_relative_path_from_location_match(request.getUri(), location.path);
 
 	std::string absolute_path = root + relative_path;
@@ -158,7 +129,7 @@ void PostRequestHandler::invoke(Request& request, Response& response, const Loca
 		return ;
     }
 
-    std::string boundary = extractBoundary(request.getHeaders()); // Die Boundary extrahieren
+    std::string boundary = extractBoundary(request.getHeaders());
     std::string filename;
     std::vector<char> file_content;
 
@@ -187,7 +158,7 @@ void DeleteRequestHandler::invoke(Request& request, Response& response, const Lo
     std::string absolute_path = upload_folder + file_name;
    (void) location;
     (void) config;
-   
+
     if (deleteFile(absolute_path ))
     {
        response.setStatusCode(200);
