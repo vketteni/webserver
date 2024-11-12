@@ -414,6 +414,7 @@ void ConfigParser::parseLocationBlock(BlockNode* location_block, ServerConfig & 
 			}
 			else
 			{
+				debug(directive->key);
 				throw std::runtime_error("Error: Unknown directive name in 'location' directive");
 			}
 

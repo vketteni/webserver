@@ -21,15 +21,6 @@ void ClientConnection::setLastActivity(time_t last_activity)
 bool ClientConnection::processRequest()
 {
 
-
-    // pretty_debug(_host_config.client_max_body_size);
-    // pretty_debug(_host_config.host);
-    // pretty_debug(_host_config.root);
-
-	// pretty_debug(_request_parser.getConfig().client_max_body_size);
-    // pretty_debug(_request_parser.getConfig().host);
-    // pretty_debug(_request_parser.getConfig().root);
-
 	if (!_request_parser.readAndParse(this->fd))
 		return false;
     if (_request_parser.isComplete())
@@ -89,7 +80,6 @@ void ClientConnection::headerHandler(Request & request, Response & response)
 
 void ClientConnection::methodHandler(Request & request, Response & response, const LocationConfig & location, const ServerConfig & server_config)
 {
-	// printConfigLocations(server_config);
 	std::string request_method = request.getMethod();
 
     if (std::find_if(location.methods.begin(), location.methods.end(), MatchMethod(request_method)) == location.methods.end())
