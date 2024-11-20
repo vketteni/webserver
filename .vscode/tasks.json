@@ -1,0 +1,26 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+	  {
+		"label": "build webserv",
+		"type": "shell",
+		"command": "make",
+		"args": ["$MY_WEBCONFIG"],
+		"group": {
+		  "kind": "build",
+		  "isDefault": true
+		},
+		"problemMatcher": ["$gcc"],
+		"detail": "Build task for the webserv project using makefile"
+	  },
+	  {
+		"label": "clean webserv",
+		"type": "shell",
+		"command": "make",
+		"args": ["clean"],
+		"group": "build",
+		"problemMatcher": ["$gcc"],
+		"detail": "Clean build files"
+	  }
+	]
+  }
